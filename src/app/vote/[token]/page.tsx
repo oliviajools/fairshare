@@ -347,6 +347,14 @@ export default function VotePage() {
                     </div>
                   )}
 
+                  {/* Trust and Privacy Information */}
+                  <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <p className="text-sm text-gray-700 text-center">
+                      <strong>FairShare ist Vertrauen.</strong> Niemand sieht deine Angaben. 
+                      Die Deepvelop-Geschäftsführung behält sich Stichproben vor.
+                    </p>
+                  </div>
+
                   {!isSubmitted && (
                     <p className="text-sm text-gray-600 mt-3">
                       Du kannst deine Angaben ändern, solange die Session offen ist.
