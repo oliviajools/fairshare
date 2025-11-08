@@ -43,7 +43,6 @@ export default function VotePage() {
   const token = params.token as string
 
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [session, setSession] = useState<Session | null>(null)
   const [ballot, setBallot] = useState<Ballot | null>(null)
@@ -56,7 +55,22 @@ export default function VotePage() {
 
   useEffect(() => {
     fetchVoteData()
-  }, [token])
+    
+    // Poll for session status updates every 10 seconds
+    const interval = setInterval(() => {
+      if (!isSubmitted) return // Only poll if user has submitted
+      fetchVoteData()
+    }, 10000)
+    
+    return () => clearInterval(interval)
+  }, [token, isSubmitted])
+
+  // Handle redirect when session is closed
+  useEffect(() => {
+    if (session?.status === 'CLOSED') {
+      router.push(`/results/${session.id}`)
+    }
+  }, [session?.status, session?.id, router])
 
   const fetchVoteData = async () => {
     try {
@@ -77,7 +91,14 @@ export default function VotePage() {
       } else if (response.status === 404) {
         setError('Ungültiger Einladungslink')
       } else if (response.status === 403) {
-        setError('Diese Session ist bereits geschlossen')
+        // Session is closed - get session data for redirect
+        const data = await response.json()
+        if (data.session) {
+          setSession(data.session)
+          // The render logic will handle the redirect
+        } else {
+          setError('Diese Session ist bereits geschlossen')
+        }
       } else {
         setError('Fehler beim Laden der Session')
       }
@@ -96,36 +117,6 @@ export default function VotePage() {
     }
   }
 
-  const saveVotes = async () => {
-    setSaving(true)
-    try {
-      const voteArray = Object.entries(votes)
-        .filter(([_, percent]) => percent > 0)
-        .map(([personId, percent]) => ({ personId, percent }))
-
-      const response = await fetch(`/api/vote/${token}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          votes: voteArray
-        }),
-      })
-
-      if (response.ok) {
-        const updatedBallot = await response.json()
-        setBallot(updatedBallot)
-      } else {
-        throw new Error('Failed to save votes')
-      }
-    } catch (error) {
-      console.error('Error saving votes:', error)
-      alert('Fehler beim Speichern. Bitte versuche es erneut.')
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const submitVotes = async () => {
     // Validate 100% total before submitting
@@ -137,20 +128,37 @@ export default function VotePage() {
     setSubmitting(true)
     setError('')
     try {
-      // First save the current votes
-      await saveVotes()
-      
-      // Then submit
+      const voteArray = Object.entries(votes)
+        .filter(([_, percent]) => percent > 0)
+        .map(([personId, percent]) => ({ personId, percent }))
+
+      // Submit votes directly
       const response = await fetch(`/api/vote/${token}/submit`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          votes: voteArray
+        }),
       })
 
       if (response.ok) {
+        const result = await response.json()
         setIsSubmitted(true)
-        // Check if session is now closed and redirect to results
-        setTimeout(() => {
-          fetchVoteData()
-        }, 1000)
+        
+        // Check if session was automatically closed
+        if (result.sessionClosed) {
+          alert('Alle haben abgestimmt! Die Session wurde automatisch geschlossen.')
+          setTimeout(() => {
+            window.location.href = `/results/${session?.id}`
+          }, 2000)
+        } else {
+          // Keep current votes in state, just refresh ballot status
+          setTimeout(() => {
+            fetchVoteData()
+          }, 500)
+        }
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Fehler beim Abgeben der Stimmen')
@@ -196,30 +204,20 @@ export default function VotePage() {
     return null
   }
 
-  // If session is closed, show results or redirect
+  // If session is closed, show loading state while redirecting
   if (session.status === 'CLOSED') {
+    // Redirect is handled by useEffect above
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto text-center">
-            <Card>
-              <CardContent className="py-8">
-                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                  Session geschlossen
-                </h2>
-                <p className="text-gray-600 mb-4">
-                  Die Bewertung für "{session.title}" ist abgeschlossen.
-                </p>
-                <Button
-                  onClick={() => router.push(`/results/${session.id}`)}
-                  className="bg-sky-500 hover:bg-sky-600"
-                >
-                  Ergebnisse anzeigen
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50 flex items-center justify-center">
+        <div className="text-center">
+          <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Session geschlossen
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Weiterleitung zu den Ergebnissen...
+          </p>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500 mx-auto"></div>
         </div>
       </div>
     )
@@ -265,7 +263,7 @@ export default function VotePage() {
                 <CardHeader>
                   <CardTitle>Bewertung abgeben</CardTitle>
                   <CardDescription>
-                    Gib für jede Person einen Prozentwert an (0-100%). Du musst nicht alle Felder ausfüllen.
+                    Gib für jede Person einen Prozentwert an (0-100%). Du musst nicht alle Felder ausfüllen. Fehlende Stimmen werden ignoriert
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -284,7 +282,7 @@ export default function VotePage() {
                             value={votes[participant.id] || ''}
                             onChange={(e) => updateVote(participant.id, e.target.value)}
                             placeholder="0"
-                            disabled={isSubmitted}
+                            disabled={session?.status === 'CLOSED'}
                             className="text-right"
                           />
                         </div>
@@ -321,29 +319,22 @@ export default function VotePage() {
                     )}
                   </div>
 
-                  <div className="mt-4 text-sm text-gray-600">
-                    <p>* Fehlende Stimmen werden ignoriert</p>
-                  </div>
 
-                  {!isSubmitted && (
-                    <div className="flex gap-3 mt-6">
-                      <Button
-                        variant="outline"
-                        onClick={saveVotes}
-                        disabled={saving}
-                        className="flex-1"
-                      >
-                        <Save className="mr-2 h-4 w-4" />
-                        {saving ? 'Speichere...' : 'Zwischenspeichern'}
-                      </Button>
+                  {session?.status === 'OPEN' && (
+                    <div className="mt-6">
                       <Button
                         onClick={submitVotes}
                         disabled={submitting || Object.keys(votes).length === 0 || Math.abs(totalPercentage - 100) > 0.01}
-                        className="flex-1 bg-sky-500 hover:bg-sky-600"
+                        className="w-full bg-sky-500 hover:bg-sky-600"
                       >
                         <Send className="mr-2 h-4 w-4" />
-                        {submitting ? 'Sende...' : 'Abgeben'}
+                        {submitting ? 'Sende...' : isSubmitted ? 'Bewertung aktualisieren' : 'Bewertung abgeben'}
                       </Button>
+                      {isSubmitted && (
+                        <p className="text-sm text-green-600 mt-2 text-center">
+                          ✓ Bewertung abgegeben. Du kannst sie noch ändern, bis alle abgestimmt haben.
+                        </p>
+                      )}
                     </div>
                   )}
 

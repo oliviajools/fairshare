@@ -21,7 +21,6 @@ interface Session {
   title: string
   date: string
   status: 'OPEN' | 'CLOSED'
-  mode: 'IGNORE_MISSING' | 'COUNT_MISSING_AS_ZERO'
   participants: Participant[]
   _count: {
     ballots: number
@@ -325,12 +324,9 @@ export default function OrganizerPage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-medium">Aggregationsmodus:</span>
+                    <span className="font-medium">Bewertungsmodus:</span>
                     <p className="text-gray-600">
-                      {session.mode === 'IGNORE_MISSING' 
-                        ? 'Fehlende Stimmen werden ignoriert' 
-                        : 'Fehlende Stimmen werden als 0% gezählt'
-                      }
+                      Anonyme Gruppenbewertung
                     </p>
                   </div>
                   <div>

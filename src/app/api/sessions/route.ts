@@ -13,11 +13,14 @@ export async function POST(request: NextRequest) {
       evaluationInfo: evaluationInfo || null,
     }
     
-    if (date) {
+    // Handle date - if provided and not empty, parse it, otherwise set to current date
+    if (date && date.trim() !== '') {
       sessionData.date = new Date(date)
+    } else {
+      sessionData.date = new Date()
     }
     
-    if (time) {
+    if (time && time.trim() !== '') {
       sessionData.time = time
     }
     

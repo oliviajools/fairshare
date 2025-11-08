@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Download, Calendar, Users, Trophy, FileText } from 'lucide-react'
+import { ArrowLeft, Download, Calendar, Users, Trophy, FileText, KeyRound } from 'lucide-react'
 
 interface Result {
   participantId: string
@@ -203,6 +203,7 @@ export default function ResultsPage() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
                           {getRankIcon(index)}
+                          <KeyRound className="h-4 w-4 text-gray-500" />
                           <h3 className="font-semibold text-lg">{result.displayName}</h3>
                         </div>
                         <div className="text-right">
@@ -259,7 +260,7 @@ export default function ResultsPage() {
                 <CardTitle>Statistiken</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                   <div>
                     <div className="text-2xl font-bold text-sky-600">{data.results.length}</div>
                     <div className="text-sm text-gray-600">Bewertete Personen</div>
@@ -273,12 +274,6 @@ export default function ResultsPage() {
                       {maxPercent.toFixed(1)}%
                     </div>
                     <div className="text-sm text-gray-600">Höchste Bewertung</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-sky-600">
-                      {(data.results.reduce((sum, r) => sum + r.meanPercent, 0) / data.results.length).toFixed(1)}%
-                    </div>
-                    <div className="text-sm text-gray-600">Durchschnitt</div>
                   </div>
                 </div>
               </CardContent>
