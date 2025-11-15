@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Disable static export for now - we'll use development mode for the app
-  // output: 'export',
+  // Use standalone output for Capacitor with API routes
+  output: 'standalone',
   trailingSlash: true,
   images: {
     unoptimized: true

@@ -6,7 +6,6 @@ const config: CapacitorConfig = {
   webDir: '.next',
   server: {
     androidScheme: 'https',
-    // For development, use local server
     url: 'http://localhost:3000',
     cleartext: true
   },
