@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     // Für Entwicklung: Dev-Server URL - später durch Produktions-URL ersetzen
-    url: 'https://teampayer-fxml24w93-provoid-team.vercel.app',
+    url: 'https://teampayer.vercel.app',
     cleartext: true
   },
   plugins: {
