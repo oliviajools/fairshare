@@ -74,7 +74,7 @@ export default function Home() {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              FairShare
+              TeamPayer
             </h1>
             <p className="text-xl text-gray-600 mb-8">
               Der fairste Verteilungsschlüssel aller Zeiten

@@ -1,13 +1,13 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.fairshare.app',
-  appName: 'FairShare',
+  appId: 'com.teampayer.app',
+  appName: 'TeamPayer',
   webDir: '.next',
   server: {
     androidScheme: 'https',
     // Für Entwicklung: Dev-Server URL - später durch Produktions-URL ersetzen
-    url: 'teampayer-fxml24w93-provoid-team.vercel.app',
+    url: 'https://teampayer-fxml24w93-provoid-team.vercel.app',
     cleartext: true
   },
   plugins: {

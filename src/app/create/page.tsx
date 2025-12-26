@@ -204,8 +204,8 @@ export default function CreateSession() {
                             <Button
                               variant="outline"
                               onClick={() => {
-                                const subject = encodeURIComponent(`FairShare Einladung: ${formData.title}`)
-                                const body = encodeURIComponent(`Hallo ${invite.name},\n\ndu wurdest zur FairShare Session "${formData.title}" eingeladen.\n\nKlicke auf den folgenden Link, um deine Bewertung abzugeben:\n${invite.link}\n\nViele Grüße`)
+                                const subject = encodeURIComponent(`TeamPayer Einladung: ${formData.title}`)
+                                const body = encodeURIComponent(`Hallo ${invite.name},\n\ndu wurdest zur TeamPayer Session "${formData.title}" eingeladen.\n\nKlicke auf den folgenden Link, um deine Bewertung abzugeben:\n${invite.link}\n\nViele Grüße`)
                                 window.open(`mailto:${invite.email}?subject=${subject}&body=${body}`)
                               }}
                             >

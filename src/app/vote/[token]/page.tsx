@@ -341,7 +341,7 @@ export default function VotePage() {
                   {/* Trust and Privacy Information */}
                   <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
                     <p className="text-sm text-gray-700 text-center">
-                      <strong>FairShare ist Vertrauen.</strong> Niemand sieht deine Angaben. 
+                      <strong>TeamPayer ist Vertrauen.</strong> Niemand sieht deine Angaben. 
                       Die Deepvelop-Geschäftsführung behält sich Stichproben vor.
                     </p>
                   </div>
