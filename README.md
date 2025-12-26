@@ -216,3 +216,4 @@ MIT License - siehe [LICENSE](LICENSE) Datei.
 ## 📞 Support
 
 Bei Fragen oder Problemen erstelle ein [Issue](https://github.com/your-repo/fairshare/issues) im Repository.
+# fairshare
