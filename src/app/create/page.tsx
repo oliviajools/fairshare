@@ -237,9 +237,9 @@ export default function CreateSession() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-6 py-10">
         <div className="max-w-2xl mx-auto">
-          <div className="mb-8">
+          <div className="mb-10">
             <Link href="/" className="inline-flex items-center text-gray-600 hover:text-gray-900">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Zurück
@@ -247,17 +247,17 @@ export default function CreateSession() {
             <h1 className="text-3xl font-bold text-gray-900 mt-4">
               Neue Session erstellen
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-gray-600 mt-3">
               Erstelle eine neue Bewertungssession für dein Team.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
             <Card>
               <CardHeader>
                 <CardTitle>Session Details</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div>
                   <Label htmlFor="title">Titel *</Label>
                   <Input
@@ -269,7 +269,7 @@ export default function CreateSession() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="date">Datum (optional)</Label>
                     <Input
