@@ -70,9 +70,13 @@ export async function POST(request: NextRequest) {
       inviteLinks,
       organizerLink: `${process.env.APP_URL || 'http://localhost:3000'}/organizer/${organizerToken}`
     })
-  } catch (error) {
-    console.error('Error creating session:', error)
-    return NextResponse.json({ error: 'Failed to create session' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Error creating session:', error?.message || error)
+    console.error('Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+    return NextResponse.json({ 
+      error: 'Failed to create session', 
+      details: error?.message || 'Unknown error'
+    }, { status: 500 })
   }
 }
 
