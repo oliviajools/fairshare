@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Users, Calendar, BarChart3, Trash2, Crown, Mail } from 'lucide-react'
+import { Plus, Users, Calendar, BarChart3, Trash2, Crown, Mail, Settings } from 'lucide-react'
 
 interface Session {
   id: string
@@ -27,9 +27,16 @@ interface InvitedSession {
   addedAt: string
 }
 
+interface CreatedSession {
+  organizerLink: string
+  title: string
+  createdAt: string
+}
+
 export default function Home() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [invitedSessions, setInvitedSessions] = useState<InvitedSession[]>([])
+  const [createdSessions, setCreatedSessions] = useState<{[id: string]: CreatedSession}>({})
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'admin' | 'invited'>('admin')
@@ -37,6 +44,7 @@ export default function Home() {
   useEffect(() => {
     fetchSessions()
     loadInvitedSessions()
+    loadCreatedSessions()
   }, [])
 
   const fetchSessions = async () => {
@@ -62,6 +70,21 @@ export default function Home() {
     } catch (error) {
       console.error('Error loading invited sessions:', error)
     }
+  }
+
+  const loadCreatedSessions = () => {
+    try {
+      const stored = localStorage.getItem('createdSessions')
+      if (stored) {
+        setCreatedSessions(JSON.parse(stored))
+      }
+    } catch (error) {
+      console.error('Error loading created sessions:', error)
+    }
+  }
+
+  const getOrganizerLink = (sessionId: string): string | null => {
+    return createdSessions[sessionId]?.organizerLink || null
   }
 
   const removeInvitedSession = (token: string) => {
@@ -214,17 +237,27 @@ export default function Home() {
                           </div>
                         </div>
                         
-                        {session.status === 'CLOSED' ? (
-                          <Link href={`/results/${session.id}`}>
-                            <Button variant="outline" className="w-full">
-                              Ergebnisse anzeigen
-                            </Button>
-                          </Link>
-                        ) : (
-                          <div className="text-xs text-gray-500">
-                            Session läuft noch...
-                          </div>
-                        )}
+                        <div className="space-y-2">
+                          {session.status === 'CLOSED' ? (
+                            <Link href={`/results/${session.id}`}>
+                              <Button variant="outline" className="w-full">
+                                Ergebnisse anzeigen
+                              </Button>
+                            </Link>
+                          ) : (
+                            <div className="text-xs text-gray-500 mb-2">
+                              Session läuft noch...
+                            </div>
+                          )}
+                          {getOrganizerLink(session.id) && (
+                            <Link href={getOrganizerLink(session.id)!}>
+                              <Button variant="outline" className="w-full">
+                                <Settings className="mr-2 h-4 w-4" />
+                                Verwalten
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
                   ))}

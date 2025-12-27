@@ -99,6 +99,20 @@ export default function CreateSession() {
         setInviteLinks(result.inviteLinks)
         setOrganizerLink(result.organizerLink)
         setShowResults(true)
+        
+        // Save organizer link to localStorage for quick access from homepage
+        try {
+          const stored = localStorage.getItem('createdSessions') || '{}'
+          const createdSessions = JSON.parse(stored)
+          createdSessions[result.session.id] = {
+            organizerLink: result.organizerLink,
+            title: result.session.title,
+            createdAt: new Date().toISOString()
+          }
+          localStorage.setItem('createdSessions', JSON.stringify(createdSessions))
+        } catch (e) {
+          console.error('Error saving organizer link:', e)
+        }
       } else {
         throw new Error('Failed to create session')
       }
