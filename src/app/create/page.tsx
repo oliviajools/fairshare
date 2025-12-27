@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { ArrowLeft, Plus, Trash2, Copy, Mail, Check } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { ArrowLeft, Plus, Trash2, Copy, Mail, Check, Eye, EyeOff } from 'lucide-react'
 
 interface Participant {
   name: string
@@ -35,6 +36,7 @@ export default function CreateSession() {
     date: '',
     time: '',
     evaluationInfo: '',
+    isAnonymous: true,
   })
 
   const [participants, setParticipants] = useState<Participant[]>([
@@ -290,6 +292,41 @@ export default function CreateSession() {
                   </div>
                 </div>
 
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Einstellungen</CardTitle>
+                <CardDescription>
+                  Konfiguriere die Privatsphäre-Einstellungen für diese Session.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      {formData.isAnonymous ? (
+                        <EyeOff className="h-4 w-4 text-gray-600" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-600" />
+                      )}
+                      <Label htmlFor="isAnonymous" className="font-medium">
+                        Anonyme Abstimmung
+                      </Label>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {formData.isAnonymous 
+                        ? "Der Ersteller kann nicht sehen, wer wie abgestimmt hat." 
+                        : "Der Ersteller kann sehen, wer wie abgestimmt hat."}
+                    </p>
+                  </div>
+                  <Switch
+                    id="isAnonymous"
+                    checked={formData.isAnonymous}
+                    onCheckedChange={(checked) => setFormData({ ...formData, isAnonymous: checked })}
+                  />
+                </div>
               </CardContent>
             </Card>
 

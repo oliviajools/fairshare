@@ -20,6 +20,7 @@ model Session {
   time         String?
   status       Status       @default(OPEN)
   evaluationInfo String?
+  isAnonymous  Boolean      @default(true)
   participants Participant[]
   ballots      Ballot[]
   createdAt    DateTime     @default(now())
