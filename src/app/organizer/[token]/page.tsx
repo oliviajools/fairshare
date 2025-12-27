@@ -189,17 +189,18 @@ export default function OrganizerPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-6 py-8 pt-12">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <button 
+            <Button 
+              variant="ghost"
               onClick={() => router.push('/')}
-              className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6"
+              className="mb-6 -ml-2 px-3 py-2 h-auto"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <ArrowLeft className="mr-2 h-5 w-5" />
               Zurück zur Übersicht
-            </button>
+            </Button>
             
             <Card className="p-6">
               <div className="flex flex-col gap-4">
