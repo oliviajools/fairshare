@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       inviteLinks.push({
         name: participant.name,
         email: participant.email,
-        link: `${process.env.APP_URL || 'http://localhost:3000'}/vote/${inviteToken}`,
+        link: `/vote/${inviteToken}`,
         token: inviteToken
       })
     }
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       session,
       participants: participantData,
       inviteLinks,
-      organizerLink: `${process.env.APP_URL || 'http://localhost:3000'}/organizer/${organizerToken}`
+      organizerLink: `/organizer/${organizerToken}`
     })
   } catch (error: any) {
     console.error('Error creating session:', error?.message || error)
