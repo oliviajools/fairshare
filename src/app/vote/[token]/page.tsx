@@ -26,6 +26,14 @@ interface Session {
   participants: Participant[]
 }
 
+interface InvitedSession {
+  token: string
+  sessionTitle: string
+  participantName: string
+  hasSubmitted: boolean
+  addedAt: string
+}
+
 interface Vote {
   personId: string
   percent: number
@@ -72,6 +80,34 @@ export default function VotePage() {
     }
   }, [session?.status, session?.id, router])
 
+  const saveToInvitedSessions = (sessionData: Session, participantName: string, hasSubmitted: boolean) => {
+    try {
+      const stored = localStorage.getItem('invitedSessions')
+      const sessions: InvitedSession[] = stored ? JSON.parse(stored) : []
+      
+      // Check if already exists
+      const existingIndex = sessions.findIndex(s => s.token === token)
+      
+      const invitedSession: InvitedSession = {
+        token,
+        sessionTitle: sessionData.title,
+        participantName,
+        hasSubmitted,
+        addedAt: new Date().toISOString()
+      }
+      
+      if (existingIndex >= 0) {
+        sessions[existingIndex] = invitedSession
+      } else {
+        sessions.push(invitedSession)
+      }
+      
+      localStorage.setItem('invitedSessions', JSON.stringify(sessions))
+    } catch (error) {
+      console.error('Error saving to invited sessions:', error)
+    }
+  }
+
   const fetchVoteData = async () => {
     try {
       const response = await fetch(`/api/vote/${token}`)
@@ -80,6 +116,11 @@ export default function VotePage() {
         setSession(data.session)
         setBallot(data.ballot)
         setIsSubmitted(data.ballot?.status === 'SUBMITTED')
+        
+        // Save to invited sessions in localStorage
+        if (data.session && data.participant) {
+          saveToInvitedSessions(data.session, data.participant.displayName, data.ballot?.status === 'SUBMITTED')
+        }
         
         if (data.ballot?.votes) {
           const voteMap: {[personId: string]: number} = {}
