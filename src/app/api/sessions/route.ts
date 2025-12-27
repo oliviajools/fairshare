@@ -5,13 +5,12 @@ import { generateToken, generateInviteToken } from '@/lib/jwt'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { title, date, time, evaluationInfo, participants, isAnonymous } = body
+    const { title, date, time, evaluationInfo, participants } = body
 
     // Create session
     const sessionData: any = {
       title,
       evaluationInfo: evaluationInfo || null,
-      isAnonymous: isAnonymous !== false, // Default to true if not specified
     }
     
     // Handle date - if provided and not empty, parse it, otherwise set to current date
