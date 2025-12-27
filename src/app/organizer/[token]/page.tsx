@@ -161,63 +161,70 @@ export default function OrganizerPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <Link href="/" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4">
+            <Link href="/" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Zurück zur Übersicht
             </Link>
             
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  {session.title}
-                </h1>
-                <div className="flex items-center gap-4 text-gray-600">
-                  <div className="flex items-center">
-                    <Calendar className="mr-1 h-4 w-4" />
-                    {new Date(session.date).toLocaleDateString('de-DE')}
+            <Card className="p-6">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-3">
+                      {session.title}
+                    </h1>
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                      <div className="flex items-center bg-gray-100 px-3 py-1.5 rounded-full">
+                        <Calendar className="mr-1.5 h-4 w-4" />
+                        {new Date(session.date).toLocaleDateString('de-DE')}
+                      </div>
+                      <div className="flex items-center bg-gray-100 px-3 py-1.5 rounded-full">
+                        <Users className="mr-1.5 h-4 w-4" />
+                        {session.participants.length} Teilnehmer
+                      </div>
+                      <Badge 
+                        variant={session.status === 'OPEN' ? 'default' : 'secondary'}
+                        className="px-3 py-1.5"
+                      >
+                        {session.status === 'OPEN' ? (
+                          <>
+                            <Clock className="mr-1 h-3 w-3" />
+                            Offen
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="mr-1 h-3 w-3" />
+                            Geschlossen
+                          </>
+                        )}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center">
-                    <Users className="mr-1 h-4 w-4" />
-                    {session.participants.length} Teilnehmer
-                  </div>
-                  <Badge variant={session.status === 'OPEN' ? 'default' : 'secondary'}>
-                    {session.status === 'OPEN' ? (
-                      <>
-                        <Clock className="mr-1 h-3 w-3" />
-                        Offen
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="mr-1 h-3 w-3" />
-                        Geschlossen
-                      </>
-                    )}
-                  </Badge>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+                  {session.status === 'CLOSED' && (
+                    <Link href={`/results/${session.id}`}>
+                      <Button className="bg-sky-500 hover:bg-sky-600">
+                        <Eye className="mr-2 h-4 w-4" />
+                        Ergebnisse anzeigen
+                      </Button>
+                    </Link>
+                  )}
+                  
+                  {session.status === 'OPEN' && (
+                    <Button
+                      onClick={closeSession}
+                      disabled={closing}
+                      variant="destructive"
+                    >
+                      <Lock className="mr-2 h-4 w-4" />
+                      {closing ? 'Schließe...' : 'Session schließen'}
+                    </Button>
+                  )}
                 </div>
               </div>
-              
-              <div className="flex gap-2">
-                {session.status === 'CLOSED' && (
-                  <Link href={`/results/${session.id}`}>
-                    <Button variant="outline">
-                      <Eye className="mr-2 h-4 w-4" />
-                      Ergebnisse anzeigen
-                    </Button>
-                  </Link>
-                )}
-                
-                {session.status === 'OPEN' && (
-                  <Button
-                    onClick={closeSession}
-                    disabled={closing}
-                    variant="destructive"
-                  >
-                    <Lock className="mr-2 h-4 w-4" />
-                    {closing ? 'Schließe...' : 'Session schließen'}
-                  </Button>
-                )}
-              </div>
-            </div>
+            </Card>
           </div>
 
           <div className="space-y-6">
