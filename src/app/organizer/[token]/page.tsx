@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Users, Calendar, CheckCircle, Clock, Lock, Eye } from 'lucide-react'
+import { ArrowLeft, Users, Calendar, CheckCircle, Clock, Lock, Eye, Mail, Copy, Check } from 'lucide-react'
 
 interface Participant {
   id: string
   displayName: string
   invitedEmail?: string
+  inviteToken?: string
   hasSubmitted: boolean
 }
 
@@ -36,6 +37,7 @@ export default function OrganizerPage() {
   const [session, setSession] = useState<Session | null>(null)
   const [error, setError] = useState('')
   const [closing, setClosing] = useState(false)
+  const [copiedToken, setCopiedToken] = useState<string | null>(null)
 
   useEffect(() => {
     fetchSession()
@@ -120,6 +122,36 @@ export default function OrganizerPage() {
     return { submitted, total, percentage }
   }
 
+  const getVoteLink = (inviteToken: string) => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+    return `${baseUrl}/vote/${inviteToken}`
+  }
+
+  const copyLink = async (inviteToken: string) => {
+    try {
+      await navigator.clipboard.writeText(getVoteLink(inviteToken))
+      setCopiedToken(inviteToken)
+      setTimeout(() => setCopiedToken(null), 2000)
+    } catch (error) {
+      console.error('Failed to copy:', error)
+    }
+  }
+
+  const sendEmail = (participant: Participant) => {
+    if (!participant.inviteToken || !session) return
+    
+    const voteLink = getVoteLink(participant.inviteToken)
+    const subject = encodeURIComponent(`Einladung: ${session.title}`)
+    const body = encodeURIComponent(
+      `Hallo ${participant.displayName},\n\n` +
+      `Du wurdest zur Session "${session.title}" eingeladen.\n\n` +
+      `Klicke auf folgenden Link, um deine Bewertung abzugeben:\n${voteLink}\n\n` +
+      `Viele Grüße`
+    )
+    
+    window.location.href = `mailto:${participant.invitedEmail || ''}?subject=${subject}&body=${body}`
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50 flex items-center justify-center">
@@ -161,10 +193,13 @@ export default function OrganizerPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <Link href="/" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6">
+            <button 
+              onClick={() => router.push('/')}
+              className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6"
+            >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Zurück zur Übersicht
-            </Link>
+            </button>
             
             <Card className="p-6">
               <div className="flex flex-col gap-4">
@@ -296,27 +331,55 @@ export default function OrganizerPage() {
               <CardContent>
                 <div className="space-y-3">
                   {session.participants.map((participant) => (
-                    <div key={participant.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <h4 className="font-medium">{participant.displayName}</h4>
+                    <div key={participant.id} className="flex items-center justify-between p-3 border rounded-lg gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium truncate">{participant.displayName}</h4>
                         {participant.invitedEmail && (
-                          <p className="text-sm text-gray-600">{participant.invitedEmail}</p>
+                          <p className="text-sm text-gray-600 truncate">{participant.invitedEmail}</p>
                         )}
                       </div>
                       
-                      <Badge variant={participant.hasSubmitted ? 'default' : 'secondary'}>
-                        {participant.hasSubmitted ? (
+                      <div className="flex items-center gap-2">
+                        {participant.inviteToken && session.status === 'OPEN' && (
                           <>
-                            <CheckCircle className="mr-1 h-3 w-3" />
-                            Abgestimmt
-                          </>
-                        ) : (
-                          <>
-                            <Clock className="mr-1 h-3 w-3" />
-                            Ausstehend
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyLink(participant.inviteToken!)}
+                              className="text-gray-600 hover:text-gray-900"
+                              title="Link kopieren"
+                            >
+                              {copiedToken === participant.inviteToken ? (
+                                <Check className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => sendEmail(participant)}
+                              className="text-gray-600 hover:text-gray-900"
+                              title="Per E-Mail einladen"
+                            >
+                              <Mail className="h-4 w-4" />
+                            </Button>
                           </>
                         )}
-                      </Badge>
+                        <Badge variant={participant.hasSubmitted ? 'default' : 'secondary'}>
+                          {participant.hasSubmitted ? (
+                            <>
+                              <CheckCircle className="mr-1 h-3 w-3" />
+                              Abgestimmt
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="mr-1 h-3 w-3" />
+                              Ausstehend
+                            </>
+                          )}
+                        </Badge>
+                      </div>
                     </div>
                   ))}
                 </div>
