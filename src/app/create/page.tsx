@@ -345,8 +345,8 @@ export default function CreateSession() {
                     value={formData.evaluationInfo}
                     onChange={(e) => setFormData({ ...formData, evaluationInfo: e.target.value })}
                     placeholder="z.B. Session wurde mit Hans' Eltern-Kind-Konzept und -Präsentation gehalten, externe Beiträge die berücksichtigt werden sollten..."
-                    rows={3}
-                    className="mt-1"
+                    rows={4}
+                    className="mt-1 text-sm placeholder:text-sm"
                   />
                   <p className="text-sm text-gray-600 mt-1">
                     Diese Hinweise helfen allen Teilnehmern bei einer fairen und informierten Bewertung.
