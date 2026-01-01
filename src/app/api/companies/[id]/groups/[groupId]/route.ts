@@ -97,7 +97,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Benutzer nicht gefunden' }, { status: 404 })
     }
 
-    // Check if user is admin or owner
+    // Check if user is member of company (any member can edit groups)
     const membership = await prisma.companyMember.findUnique({
       where: {
         companyId_userId: {
@@ -107,8 +107,8 @@ export async function PUT(
       }
     })
 
-    if (!membership || membership.role === 'MEMBER') {
-      return NextResponse.json({ error: 'Keine Berechtigung zum Bearbeiten von Gruppen' }, { status: 403 })
+    if (!membership) {
+      return NextResponse.json({ error: 'Kein Zugriff auf dieses Unternehmen' }, { status: 403 })
     }
 
     const group = await prisma.companyGroup.findFirst({

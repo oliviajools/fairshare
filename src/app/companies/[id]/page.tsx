@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { BottomNav } from '@/components/BottomNav'
-import { Building2, Users, Calendar, ArrowLeft, Plus, Crown, Shield, User, BarChart3, Camera, Globe, Pencil, Check, X, UsersRound, Trash2 } from 'lucide-react'
+import { Building2, Users, Calendar, ArrowLeft, Plus, Crown, Shield, User, BarChart3, Camera, Globe, Pencil, Check, X, UsersRound, Trash2, LogOut } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 
 interface Member {
@@ -78,6 +78,7 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
   const [editingGroup, setEditingGroup] = useState<CompanyGroup | null>(null)
   const [groupFormData, setGroupFormData] = useState({ name: '', description: '', memberIds: [] as string[] })
   const [savingGroup, setSavingGroup] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -94,6 +95,11 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
       if (response.ok) {
         const data = await response.json()
         setCompany(data)
+        // Find current user's ID from members
+        const currentMember = data.members.find((m: Member) => m.email === session?.user?.email)
+        if (currentMember) {
+          setCurrentUserId(currentMember.id)
+        }
       } else if (response.status === 403) {
         router.push('/companies')
       }
@@ -236,6 +242,23 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
       }
     } catch (error) {
       console.error('Error deleting group:', error)
+    }
+  }
+
+  const handleLeaveGroup = async (groupId: string) => {
+    if (!confirm('Möchtest du diese Gruppe wirklich verlassen?')) return
+    try {
+      const response = await fetch(`/api/companies/${id}/groups/${groupId}/leave`, {
+        method: 'POST'
+      })
+      if (response.ok) {
+        await fetchGroups()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Fehler beim Verlassen der Gruppe')
+      }
+    } catch (error) {
+      console.error('Error leaving group:', error)
     }
   }
 
@@ -573,15 +596,13 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
           {/* Groups Tab */}
           {activeTab === 'groups' && (
             <div className="space-y-4">
-              {canEdit && (
-                <Button 
-                  onClick={() => openGroupForm()} 
-                  className="bg-sky-500 hover:bg-sky-600"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Neue Gruppe erstellen
-                </Button>
-              )}
+              <Button 
+                onClick={() => openGroupForm()} 
+                className="bg-sky-500 hover:bg-sky-600"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Neue Gruppe erstellen
+              </Button>
 
               {/* Group Form Modal */}
               {showGroupForm && (
@@ -689,25 +710,38 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
                               </CardDescription>
                             )}
                           </div>
-                          {canEdit && (
-                            <div className="flex gap-1">
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openGroupForm(group)}
+                              title="Bearbeiten"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            {group.members.some(m => m.id === currentUserId) && (
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => openGroupForm(group)}
+                                onClick={() => handleLeaveGroup(group.id)}
+                                className="text-orange-500 hover:text-orange-600 hover:bg-orange-50"
+                                title="Austreten"
                               >
-                                <Pencil className="h-4 w-4" />
+                                <LogOut className="h-4 w-4" />
                               </Button>
+                            )}
+                            {canEdit && (
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleDeleteGroup(group.id)}
                                 className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                title="Löschen"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </CardHeader>
                       <CardContent>

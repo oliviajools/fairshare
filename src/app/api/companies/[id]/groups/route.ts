@@ -94,7 +94,7 @@ export async function POST(
       return NextResponse.json({ error: 'Benutzer nicht gefunden' }, { status: 404 })
     }
 
-    // Check if user is admin or owner
+    // Check if user is member of company (any member can create groups)
     const membership = await prisma.companyMember.findUnique({
       where: {
         companyId_userId: {
@@ -104,8 +104,8 @@ export async function POST(
       }
     })
 
-    if (!membership || membership.role === 'MEMBER') {
-      return NextResponse.json({ error: 'Keine Berechtigung zum Erstellen von Gruppen' }, { status: 403 })
+    if (!membership) {
+      return NextResponse.json({ error: 'Kein Zugriff auf dieses Unternehmen' }, { status: 403 })
     }
 
     const { name, description, memberIds } = await request.json()
