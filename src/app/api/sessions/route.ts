@@ -86,13 +86,25 @@ export async function GET(request: NextRequest) {
   try {
     const authSession = await getServerSession(authOptions)
     
-    // If user is logged in, only show their sessions
-    const whereClause = authSession?.user 
-      ? { creatorId: (authSession.user as any).id }
-      : {}
+    if (!authSession?.user) {
+      return NextResponse.json([])
+    }
 
+    const userId = (authSession.user as any).id
+
+    // Get hidden session IDs for this user
+    const hiddenSessions = await prisma.hiddenSession.findMany({
+      where: { userId },
+      select: { sessionId: true }
+    })
+    const hiddenSessionIds = hiddenSessions.map(h => h.sessionId)
+
+    // Show user's created sessions, excluding hidden ones
     const sessions = await prisma.votingSession.findMany({
-      where: whereClause,
+      where: {
+        creatorId: userId,
+        id: { notIn: hiddenSessionIds }
+      },
       include: {
         participants: true,
         creator: {

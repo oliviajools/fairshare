@@ -7,7 +7,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Users, Calendar, BarChart3, Trash2, Crown, Settings, LogOut } from 'lucide-react'
+import { Plus, Users, Calendar, BarChart3, Trash2, Crown, Settings, LogOut, EyeOff, X } from 'lucide-react'
 import { BottomNav } from '@/components/BottomNav'
 
 interface Session {
@@ -49,6 +49,7 @@ export default function Home() {
   const [createdSessions, setCreatedSessions] = useState<{[id: string]: CreatedSession}>({})
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [deleteDialog, setDeleteDialog] = useState<{sessionId: string, title: string} | null>(null)
 
   // Redirect to onboarding or login if not authenticated
   useEffect(() => {
@@ -116,26 +117,51 @@ export default function Home() {
     setInvitedSessions(updated)
   }
 
-  const deleteSession = async (sessionId: string, sessionTitle: string) => {
-    if (!confirm(`Möchtest du die Session "${sessionTitle}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) {
-      return
-    }
+  const openDeleteDialog = (sessionId: string, title: string) => {
+    setDeleteDialog({ sessionId, title })
+  }
 
-    setDeleting(sessionId)
+  const deleteSessionForAll = async () => {
+    if (!deleteDialog) return
+    
+    setDeleting(deleteDialog.sessionId)
     try {
-      const response = await fetch(`/api/sessions/${sessionId}`, {
+      const response = await fetch(`/api/sessions/${deleteDialog.sessionId}`, {
         method: 'DELETE',
       })
 
       if (response.ok) {
-        // Remove session from local state
-        setSessions(sessions.filter(s => s.id !== sessionId))
+        setSessions(sessions.filter(s => s.id !== deleteDialog.sessionId))
+        setDeleteDialog(null)
       } else {
         alert('Fehler beim Löschen der Session')
       }
     } catch (error) {
       console.error('Error deleting session:', error)
       alert('Fehler beim Löschen der Session')
+    } finally {
+      setDeleting(null)
+    }
+  }
+
+  const hideSessionForMe = async () => {
+    if (!deleteDialog) return
+    
+    setDeleting(deleteDialog.sessionId)
+    try {
+      const response = await fetch(`/api/sessions/${deleteDialog.sessionId}/hide`, {
+        method: 'POST',
+      })
+
+      if (response.ok) {
+        setSessions(sessions.filter(s => s.id !== deleteDialog.sessionId))
+        setDeleteDialog(null)
+      } else {
+        alert('Fehler beim Ausblenden der Session')
+      }
+    } catch (error) {
+      console.error('Error hiding session:', error)
+      alert('Fehler beim Ausblenden der Session')
     } finally {
       setDeleting(null)
     }
@@ -240,7 +266,7 @@ export default function Home() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => deleteSession(session.id, session.title)}
+                              onClick={() => openDeleteDialog(session.id, session.title)}
                               disabled={deleting === session.id}
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
@@ -303,6 +329,52 @@ export default function Home() {
         </div>
       </div>
       <BottomNav />
+
+      {/* Delete Dialog */}
+      {deleteDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Session entfernen</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setDeleteDialog(null)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <CardDescription>
+                Was möchtest du mit "{deleteDialog.title}" tun?
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={hideSessionForMe}
+                disabled={!!deleting}
+              >
+                <EyeOff className="mr-2 h-4 w-4" />
+                Nur für mich ausblenden
+              </Button>
+              <p className="text-xs text-gray-500 ml-6">
+                Die Session bleibt für andere Teilnehmer sichtbar
+              </p>
+              
+              <Button
+                variant="outline"
+                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={deleteSessionForAll}
+                disabled={!!deleting}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Für alle löschen
+              </Button>
+              <p className="text-xs text-gray-500 ml-6">
+                Die Session wird komplett gelöscht (nicht rückgängig)
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

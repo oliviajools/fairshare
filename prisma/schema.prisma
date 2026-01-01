@@ -25,6 +25,7 @@ model User {
   invitations   Invitation[]
   companies     CompanyMember[]
   groupMemberships CompanyGroupMember[]
+  hiddenSessions HiddenSession[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -123,7 +124,20 @@ model VotingSession {
   participants   Participant[]
   ballots        Ballot[]
   invitations    Invitation[]
+  hiddenBy       HiddenSession[]
   createdAt      DateTime     @default(now())
+}
+
+// Hidden Sessions - allows users to hide sessions from their view without deleting
+model HiddenSession {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId String
+  session   VotingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  hiddenAt  DateTime      @default(now())
+
+  @@unique([userId, sessionId])
 }
 
 model Participant {
