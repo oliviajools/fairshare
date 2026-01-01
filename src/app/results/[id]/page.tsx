@@ -133,10 +133,10 @@ export default function ResultsPage() {
               Zurück
             </Button>
             
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">{session.title}</h1>
-                <div className="flex items-center gap-4 mt-2 text-gray-600">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{session.title}</h1>
+                <div className="flex items-center gap-4 mt-2 text-gray-600 text-sm">
                   {session.date && (
                     <div className="flex items-center">
                       <Calendar className="mr-1 h-4 w-4" />
@@ -151,10 +151,10 @@ export default function ResultsPage() {
                 </div>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {isCreator && session.status === 'CLOSED' && (
                   <Link href={`/results/${sessionId}/payout`}>
-                    <Button className="bg-sky-500 hover:bg-sky-600">
+                    <Button size="sm" className="bg-sky-500 hover:bg-sky-600">
                       <Calculator className="mr-2 h-4 w-4" />
                       Auszahlung
                     </Button>
