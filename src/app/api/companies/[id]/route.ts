@@ -130,7 +130,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Benutzer nicht gefunden' }, { status: 404 })
     }
 
-    // Check if user is owner or admin
+    // Check if user is member of company (any member can update logo)
     const membership = await prisma.companyMember.findUnique({
       where: {
         companyId_userId: {
@@ -140,11 +140,17 @@ export async function PUT(
       }
     })
 
-    if (!membership || (membership.role !== 'OWNER' && membership.role !== 'ADMIN')) {
-      return NextResponse.json({ error: 'Keine Berechtigung zum Bearbeiten' }, { status: 403 })
+    if (!membership) {
+      return NextResponse.json({ error: 'Kein Zugriff auf dieses Unternehmen' }, { status: 403 })
     }
 
     const { name, description, logo, domain } = await request.json()
+
+    // Only admins/owners can change name, description, domain - but anyone can change logo
+    if ((name !== undefined || description !== undefined || domain !== undefined) && 
+        membership.role !== 'OWNER' && membership.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Keine Berechtigung zum Bearbeiten von Name/Beschreibung/Domain' }, { status: 403 })
+    }
 
     const company = await prisma.company.update({
       where: { id },

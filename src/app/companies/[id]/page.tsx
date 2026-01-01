@@ -349,19 +349,18 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
                     <Building2 className="h-10 w-10 text-sky-500" />
                   </div>
                 )}
-                {canEdit && (
-                  <button
-                    onClick={() => logoInputRef.current?.click()}
-                    disabled={uploadingLogo}
-                    className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-sky-500 text-white flex items-center justify-center hover:bg-sky-600 transition-colors shadow-md"
-                  >
-                    {uploadingLogo ? (
-                      <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
-                    ) : (
-                      <Camera className="h-3.5 w-3.5" />
-                    )}
-                  </button>
-                )}
+                <button
+                  onClick={() => logoInputRef.current?.click()}
+                  disabled={uploadingLogo}
+                  className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-sky-500 text-white flex items-center justify-center hover:bg-sky-600 transition-colors shadow-md"
+                  title="Logo ändern"
+                >
+                  {uploadingLogo ? (
+                    <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
+                  ) : (
+                    <Camera className="h-3.5 w-3.5" />
+                  )}
+                </button>
               </div>
               {/* Name & Info */}
               <div className="flex-1 min-w-0">
