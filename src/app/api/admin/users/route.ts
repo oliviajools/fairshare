@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
 // Simple admin emails - add your admin email(s) here
-const ADMIN_EMAILS = ['olivia@deepvelop.com', 'admin@teampayer.de']
+const ADMIN_EMAILS = ['oliviajools@icloud.com', 'olivia@deepvelop.com', 'admin@teampayer.de']
 
 async function isAdmin(email: string | null | undefined): Promise<boolean> {
   if (!email) return false
