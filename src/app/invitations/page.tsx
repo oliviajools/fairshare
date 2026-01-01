@@ -168,7 +168,7 @@ export default function InvitationsPage() {
           </div>
 
           {/* Invitations List */}
-          {openInvitations.length === 0 ? (
+          {openInvitations.length === 0 && hiddenSessions.length === 0 ? (
             <Card className="border-2 border-dashed border-gray-200">
               <CardContent className="text-center py-16">
                 <span className="text-6xl mb-6 block">📬</span>
