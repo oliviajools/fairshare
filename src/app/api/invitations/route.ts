@@ -11,12 +11,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
     }
 
+    // Get user ID for hidden sessions check
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    })
+
+    // Get hidden session IDs for this user
+    const hiddenSessions = user ? await prisma.hiddenSession.findMany({
+      where: { userId: user.id },
+      select: { sessionId: true }
+    }) : []
+    const hiddenSessionIds = hiddenSessions.map(h => h.sessionId)
+
     // Find all participants where the invited email matches the logged-in user's email
+    // Exclude hidden sessions
     const participants = await prisma.participant.findMany({
       where: {
         invitedEmail: {
           equals: session.user.email,
           mode: 'insensitive'
+        },
+        sessionId: {
+          notIn: hiddenSessionIds
         }
       },
       include: {

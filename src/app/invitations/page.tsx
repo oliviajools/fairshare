@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BottomNav } from '@/components/BottomNav'
-import { Mail, Calendar, ArrowLeft } from 'lucide-react'
+import { Mail, Calendar, ArrowLeft, EyeOff } from 'lucide-react'
 
 interface InvitedSession {
   id: string
@@ -28,6 +28,7 @@ export default function InvitationsPage() {
   const { data: authSession, status: authStatus } = useSession()
   const [invitations, setInvitations] = useState<InvitedSession[]>([])
   const [loading, setLoading] = useState(true)
+  const [hiding, setHiding] = useState<string | null>(null)
 
   useEffect(() => {
     if (authStatus === 'unauthenticated') {
@@ -48,6 +49,22 @@ export default function InvitationsPage() {
       console.error('Error fetching invitations:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const hideInvitation = async (sessionId: string) => {
+    setHiding(sessionId)
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/hide`, {
+        method: 'POST',
+      })
+      if (response.ok) {
+        setInvitations(invitations.filter(i => i.sessionId !== sessionId))
+      }
+    } catch (error) {
+      console.error('Error hiding invitation:', error)
+    } finally {
+      setHiding(null)
     }
   }
 
@@ -122,9 +139,25 @@ export default function InvitationsPage() {
                         <CardHeader>
                           <div className="flex items-center justify-between">
                             <CardTitle className="text-lg">{invite.sessionTitle}</CardTitle>
-                            <Badge variant={invite.hasSubmitted ? 'secondary' : 'default'}>
-                              {invite.hasSubmitted ? 'Abgestimmt' : 'Offen'}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={invite.hasSubmitted ? 'secondary' : 'default'}>
+                                {invite.hasSubmitted ? 'Abgestimmt' : 'Offen'}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => hideInvitation(invite.sessionId)}
+                                disabled={hiding === invite.sessionId}
+                                className="text-gray-400 hover:text-gray-600"
+                                title="Einladung ausblenden"
+                              >
+                                {hiding === invite.sessionId ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                                ) : (
+                                  <EyeOff className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
                           </div>
                           <CardDescription>
                             Von <strong>{invite.creatorName}</strong> • Du als: {invite.participantName}
