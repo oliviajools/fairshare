@@ -267,16 +267,18 @@ export default function VotePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-16">
         <div className="max-w-4xl mx-auto">
           {/* Back Button */}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => router.push('/invitations')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+            className="mb-4"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 mr-2" />
             Zurück zu Einladungen
-          </button>
+          </Button>
 
           {/* Header */}
           <div className="text-center mb-8">
