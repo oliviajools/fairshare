@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -52,6 +52,7 @@ interface ResultData {
 
 export default function ResultsPage() {
   const params = useParams()
+  const router = useRouter()
   const sessionId = params.id as string
   const { data: authSession } = useSession()
   
@@ -122,10 +123,13 @@ export default function ResultsPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <Link href="/" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4">
+            <button 
+              onClick={() => router.back()}
+              className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4"
+            >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Zurück zur Übersicht
-            </Link>
+              Zurück
+            </button>
             
             <div className="flex items-center justify-between">
               <div>
