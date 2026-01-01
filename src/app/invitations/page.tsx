@@ -74,7 +74,6 @@ export default function InvitationsPage() {
   if (!authSession?.user) return null
 
   const openInvitations = invitations.filter(i => i.sessionStatus === 'OPEN')
-  const closedInvitations = invitations.filter(i => i.sessionStatus === 'CLOSED')
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50 pb-24">
@@ -96,7 +95,7 @@ export default function InvitationsPage() {
           </div>
 
           {/* Invitations List */}
-          {invitations.length === 0 ? (
+          {openInvitations.length === 0 ? (
             <Card className="border-2 border-dashed border-gray-200">
               <CardContent className="text-center py-16">
                 <span className="text-6xl mb-6 block">📬</span>
@@ -153,30 +152,6 @@ export default function InvitationsPage() {
                 </div>
               )}
 
-              {/* Closed Invitations */}
-              {closedInvitations.length > 0 && (
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-500 mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
-                    Beendet ({closedInvitations.length})
-                  </h2>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {closedInvitations.map((invite) => (
-                      <Card key={invite.id} className="opacity-75">
-                        <CardHeader>
-                          <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg text-gray-600">{invite.sessionTitle}</CardTitle>
-                            <Badge variant="secondary">Beendet</Badge>
-                          </div>
-                          <CardDescription>
-                            Von {invite.creatorName}
-                          </CardDescription>
-                        </CardHeader>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
