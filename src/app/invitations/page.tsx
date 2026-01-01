@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BottomNav } from '@/components/BottomNav'
-import { Mail, Calendar } from 'lucide-react'
+import { Mail, Calendar, ArrowLeft } from 'lucide-react'
 
 interface InvitedSession {
   id: string
@@ -81,12 +81,18 @@ export default function InvitationsPage() {
       <div className="container mx-auto px-4 py-8 pt-20">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <Mail className="h-8 w-8 text-sky-500" />
-              <h1 className="text-3xl font-bold text-gray-900">Einladungen</h1>
+          <div className="flex items-center gap-4 mb-8">
+            <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Zurück
+            </Button>
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <Mail className="h-8 w-8 text-sky-500" />
+                <h1 className="text-3xl font-bold text-gray-900">Einladungen</h1>
+              </div>
+              <p className="text-gray-600">Sessions zu denen du eingeladen wurdest</p>
             </div>
-            <p className="text-gray-600">Sessions zu denen du eingeladen wurdest</p>
           </div>
 
           {/* Invitations List */}

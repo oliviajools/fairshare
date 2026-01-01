@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { BottomNav } from '@/components/BottomNav'
-import { Building2, Users, BarChart3, Plus, Crown, Shield, User } from 'lucide-react'
+import { Building2, Users, BarChart3, Plus, Crown, Shield, User, ArrowLeft } from 'lucide-react'
 
 interface Company {
   id: string
@@ -116,12 +116,18 @@ export default function CompaniesPage() {
       <div className="container mx-auto px-4 py-8 pt-20">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <Building2 className="h-8 w-8 text-sky-500" />
-              <h1 className="text-3xl font-bold text-gray-900">Unternehmen</h1>
+          <div className="flex items-center gap-4 mb-8">
+            <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Zurück
+            </Button>
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <Building2 className="h-8 w-8 text-sky-500" />
+                <h1 className="text-3xl font-bold text-gray-900">Unternehmen</h1>
+              </div>
+              <p className="text-gray-600">Verwalte deine Teams und Unternehmen</p>
             </div>
-            <p className="text-gray-600">Verwalte deine Teams und Unternehmen</p>
           </div>
 
           {/* Create Button */}

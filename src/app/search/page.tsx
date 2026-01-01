@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { BottomNav } from '@/components/BottomNav'
-import { Search, User, Building2, Users, BarChart3, UserPlus, Check } from 'lucide-react'
+import { Search, User, Building2, Users, BarChart3, UserPlus, Check, ArrowLeft } from 'lucide-react'
 
 interface SearchUser {
   id: string
@@ -110,12 +110,18 @@ export default function SearchPage() {
       <div className="container mx-auto px-4 py-8 pt-20">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-center gap-3 mb-2">
-              <Search className="h-8 w-8 text-sky-500" />
-              <h1 className="text-3xl font-bold text-gray-900">Suche</h1>
+          <div className="flex items-center gap-4 mb-6">
+            <Button variant="ghost" size="sm" onClick={() => router.push('/account')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Zurück
+            </Button>
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <Search className="h-8 w-8 text-sky-500" />
+                <h1 className="text-3xl font-bold text-gray-900">Suche</h1>
+              </div>
+              <p className="text-gray-600">Finde andere User und Unternehmen</p>
             </div>
-            <p className="text-gray-600">Finde andere User und Unternehmen</p>
           </div>
 
           {/* Search Input */}

@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Save, Send, Calendar, Users, CheckCircle } from 'lucide-react'
+import { Save, Send, Calendar, Users, CheckCircle, ArrowLeft } from 'lucide-react'
 import { PieChart } from '@/components/PieChart'
 
 interface Participant {
@@ -269,6 +269,15 @@ export default function VotePage() {
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
+          {/* Back Button */}
+          <button
+            onClick={() => router.push('/invitations')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Zurück zu Einladungen
+          </button>
+
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
