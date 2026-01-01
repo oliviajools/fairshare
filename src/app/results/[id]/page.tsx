@@ -119,17 +119,19 @@ export default function ResultsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50">
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-8 pt-16">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <button 
+            <Button 
+              variant="ghost"
+              size="sm"
               onClick={() => router.back()}
-              className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4"
+              className="mb-4"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Zurück
-            </button>
+            </Button>
             
             <div className="flex items-center justify-between">
               <div>
