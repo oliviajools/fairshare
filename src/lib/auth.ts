@@ -39,13 +39,22 @@ export const authOptions: NextAuthOptions = {
             return null
           }
 
+          // Check if email is verified
+          if (!user.emailVerified) {
+            throw new Error('Bitte bestätige zuerst deine E-Mail-Adresse. Überprüfe deinen Posteingang.')
+          }
+
           return {
             id: user.id,
             email: user.email,
             name: user.name,
             image: user.image,
           }
-        } catch (error) {
+        } catch (error: any) {
+          // Re-throw custom errors so they show up in the frontend
+          if (error?.message?.includes('E-Mail')) {
+            throw error
+          }
           console.error('Auth error:', error)
           return null
         }

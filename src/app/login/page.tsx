@@ -40,7 +40,12 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        setError('Ungültige Email oder Passwort')
+        // Check for specific error messages
+        if (result.error.includes('E-Mail')) {
+          setError(result.error)
+        } else {
+          setError('Ungültige Email oder Passwort')
+        }
       } else {
         router.push('/')
         router.refresh()
