@@ -203,7 +203,7 @@ export default function Home() {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500 mx-auto"></div>
                   <p className="mt-2 text-gray-600">Lade Sessions...</p>
                 </div>
-              ) : sessions.length === 0 ? (
+              ) : openSessions.length === 0 ? (
                 <Card className="border-2 border-dashed border-sky-200 bg-gradient-to-br from-sky-50/50 to-amber-50/50">
                   <CardContent className="text-center py-16 px-8">
                     <div className="mb-6">
@@ -228,7 +228,7 @@ export default function Home() {
                 </Card>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
-                  {sessions.map((session) => (
+                  {openSessions.map((session) => (
                     <Card key={session.id} className="hover:shadow-lg transition-shadow">
                       <CardHeader>
                         <div className="flex items-center justify-between">
