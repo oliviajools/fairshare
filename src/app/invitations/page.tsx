@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BottomNav } from '@/components/BottomNav'
-import { Mail, Calendar, ArrowLeft, EyeOff } from 'lucide-react'
+import { Mail, Calendar, ArrowLeft, EyeOff, Eye, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface InvitedSession {
   id: string
@@ -23,18 +23,32 @@ interface InvitedSession {
   hasSubmitted: boolean
 }
 
+interface HiddenSession {
+  id: string
+  title: string
+  date?: string
+  time?: string
+  status: 'OPEN' | 'CLOSED'
+  creatorName: string
+  hiddenAt: string
+}
+
 export default function InvitationsPage() {
   const router = useRouter()
   const { data: authSession, status: authStatus } = useSession()
   const [invitations, setInvitations] = useState<InvitedSession[]>([])
+  const [hiddenSessions, setHiddenSessions] = useState<HiddenSession[]>([])
+  const [showHidden, setShowHidden] = useState(false)
   const [loading, setLoading] = useState(true)
   const [hiding, setHiding] = useState<string | null>(null)
+  const [unhiding, setUnhiding] = useState<string | null>(null)
 
   useEffect(() => {
     if (authStatus === 'unauthenticated') {
       router.push('/login')
     } else if (authStatus === 'authenticated') {
       fetchInvitations()
+      fetchHiddenSessions()
     }
   }, [authStatus, router])
 
@@ -52,6 +66,18 @@ export default function InvitationsPage() {
     }
   }
 
+  const fetchHiddenSessions = async () => {
+    try {
+      const response = await fetch('/api/sessions/hidden')
+      if (response.ok) {
+        const data = await response.json()
+        setHiddenSessions(data)
+      }
+    } catch (error) {
+      console.error('Error fetching hidden sessions:', error)
+    }
+  }
+
   const hideInvitation = async (sessionId: string) => {
     setHiding(sessionId)
     try {
@@ -59,12 +85,42 @@ export default function InvitationsPage() {
         method: 'POST',
       })
       if (response.ok) {
+        const hiddenInvite = invitations.find(i => i.sessionId === sessionId)
         setInvitations(invitations.filter(i => i.sessionId !== sessionId))
+        if (hiddenInvite) {
+          setHiddenSessions([...hiddenSessions, {
+            id: hiddenInvite.sessionId,
+            title: hiddenInvite.sessionTitle,
+            date: hiddenInvite.sessionDate,
+            time: hiddenInvite.sessionTime,
+            status: hiddenInvite.sessionStatus,
+            creatorName: hiddenInvite.creatorName,
+            hiddenAt: new Date().toISOString()
+          }])
+        }
       }
     } catch (error) {
       console.error('Error hiding invitation:', error)
     } finally {
       setHiding(null)
+    }
+  }
+
+  const unhideSession = async (sessionId: string) => {
+    setUnhiding(sessionId)
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/hide`, {
+        method: 'DELETE',
+      })
+      if (response.ok) {
+        setHiddenSessions(hiddenSessions.filter(s => s.id !== sessionId))
+        // Refresh invitations to show the unhidden one
+        fetchInvitations()
+      }
+    } catch (error) {
+      console.error('Error unhiding session:', error)
+    } finally {
+      setUnhiding(null)
     }
   }
 
@@ -182,6 +238,57 @@ export default function InvitationsPage() {
                       </Card>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Hidden Sessions */}
+              {hiddenSessions.length > 0 && (
+                <div className="mt-8">
+                  <button
+                    onClick={() => setShowHidden(!showHidden)}
+                    className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-4"
+                  >
+                    {showHidden ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    <EyeOff className="h-4 w-4" />
+                    Ausgeblendet ({hiddenSessions.length})
+                  </button>
+                  
+                  {showHidden && (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {hiddenSessions.map((session) => (
+                        <Card key={session.id} className="opacity-60 hover:opacity-100 transition-opacity">
+                          <CardHeader>
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="text-lg text-gray-600">{session.title}</CardTitle>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => unhideSession(session.id)}
+                                disabled={unhiding === session.id}
+                                className="text-sky-500 hover:text-sky-600"
+                                title="Wieder einblenden"
+                              >
+                                {unhiding === session.id ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-sky-500"></div>
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                            <CardDescription>
+                              Von {session.creatorName}
+                            </CardDescription>
+                            {session.date && (
+                              <CardDescription className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {formatDate(session.date)}
+                              </CardDescription>
+                            )}
+                          </CardHeader>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
