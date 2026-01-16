@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
 
-const APP_URL = process.env.NEXTAUTH_URL || 'https://teampayer.vercel.app'
+const APP_URL = process.env.NEXTAUTH_URL || 'https://teampayer.de'
 
 export async function sendPasswordResetEmail(email: string, token: string) {
   try {
@@ -15,7 +15,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     const resetLink = `${APP_URL}/reset-password?token=${token}`
     
     const result = await resend.emails.send({
-      from: 'TeamPayer <noreply@provoid.de>',
+      from: 'TeamPayer <noreply@teampayer.de>',
       to: email,
       subject: '🔐 Passwort zurücksetzen – TeamPayer',
       html: `
@@ -79,7 +79,7 @@ export async function sendVerificationEmail(email: string, token: string) {
     const verifyLink = `${APP_URL}/verify-email?token=${token}`
     
     const result = await resend.emails.send({
-      from: 'TeamPayer <noreply@provoid.de>',
+      from: 'TeamPayer <noreply@teampayer.de>',
       to: email,
       subject: '✉️ Bestätige deine E-Mail – TeamPayer',
       html: `
@@ -136,7 +136,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
     const resend = new Resend(apiKey)
     
     const result = await resend.emails.send({
-      from: 'TeamPayer <noreply@provoid.de>',
+      from: 'TeamPayer <noreply@teampayer.de>',
       to: email,
       subject: '🎉 Willkommen bei TeamPayer, du Held der fairen Verteilung!',
       html: `
@@ -174,7 +174,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
           </div>
           
           <div style="text-align: center; margin-top: 40px;">
-            <a href="https://teampayer.vercel.app" 
+            <a href="https://teampayer.de" 
                style="display: inline-block; background: #0ea5e9; color: white; padding: 16px 32px; 
                       border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
               Los geht's! 🚀
