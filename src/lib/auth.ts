@@ -19,14 +19,17 @@ export const authOptions: NextAuthOptions = {
             return null
           }
 
+          // Normalize email for consistent lookup
+          const normalizedEmail = credentials.email.toLowerCase().trim()
+
           // Rate limiting by email (since we don't have IP easily here)
-          const rateLimit = checkRateLimit(credentials.email, 'login', rateLimitConfigs.login)
+          const rateLimit = checkRateLimit(normalizedEmail, 'login', rateLimitConfigs.login)
           if (!rateLimit.success) {
             throw new Error(`Zu viele Login-Versuche. Bitte warte ${rateLimit.resetIn} Sekunden.`)
           }
 
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email }
+            where: { email: normalizedEmail }
           })
 
           if (!user || !user.password) {

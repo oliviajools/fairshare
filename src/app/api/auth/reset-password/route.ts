@@ -60,10 +60,13 @@ export async function POST(request: NextRequest) {
     // Hash new password
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Update password
+    // Update password and verify email (user proved access to email via reset link)
     await prisma.user.update({
       where: { id: user.id },
-      data: { password: hashedPassword }
+      data: { 
+        password: hashedPassword,
+        emailVerified: new Date()
+      }
     })
 
     // Delete used token
