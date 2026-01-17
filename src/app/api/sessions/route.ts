@@ -4,6 +4,8 @@ import { prisma } from '@/lib/db'
 import { generateToken, generateInviteToken } from '@/lib/jwt'
 import { authOptions } from '@/lib/auth'
 
+const APP_URL = process.env.NEXTAUTH_URL || 'https://teampayer.de'
+
 export async function POST(request: NextRequest) {
   try {
     const authSession = await getServerSession(authOptions)
@@ -61,7 +63,7 @@ export async function POST(request: NextRequest) {
       inviteLinks.push({
         name: participant.name,
         email: participant.email,
-        link: `/vote/${inviteToken}`,
+        link: `${APP_URL}/vote/${inviteToken}`,
         token: inviteToken
       })
     }
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
       session,
       participants: participantData,
       inviteLinks,
-      organizerLink: `/organizer/${organizerToken}`
+      organizerLink: `${APP_URL}/organizer/${organizerToken}`
     })
   } catch (error: any) {
     console.error('Error creating session:', error?.message || error)
