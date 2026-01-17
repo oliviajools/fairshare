@@ -11,11 +11,19 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const token = searchParams.get('token')
+  const registered = searchParams.get('registered')
 
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'pending'>('loading')
   const [message, setMessage] = useState('')
 
   useEffect(() => {
+    // Just registered - show pending verification message
+    if (registered === 'true') {
+      setStatus('pending')
+      setMessage('Wir haben dir eine Bestätigungs-E-Mail gesendet. Bitte klicke auf den Link in der E-Mail, um deinen Account zu aktivieren.')
+      return
+    }
+
     if (!token) {
       setStatus('error')
       setMessage('Ungültiger Link')
@@ -23,7 +31,7 @@ function VerifyEmailContent() {
     }
 
     verifyEmail()
-  }, [token])
+  }, [token, registered])
 
   const verifyEmail = async () => {
     try {
@@ -75,6 +83,22 @@ function VerifyEmailContent() {
               <Link href="/login">
                 <Button className="bg-sky-500 hover:bg-sky-600">
                   Jetzt einloggen
+                </Button>
+              </Link>
+            </>
+          )}
+
+          {status === 'pending' && (
+            <>
+              <div className="h-16 w-16 rounded-full bg-sky-100 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-8 w-8 text-sky-600" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Fast geschafft!</h2>
+              <p className="text-gray-600 mb-6">{message}</p>
+              <p className="text-sm text-gray-500 mb-4">Überprüfe auch deinen Spam-Ordner.</p>
+              <Link href="/login">
+                <Button variant="outline">
+                  Zurück zum Login
                 </Button>
               </Link>
             </>

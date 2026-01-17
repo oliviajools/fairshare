@@ -56,19 +56,8 @@ export default function RegisterPage() {
         return
       }
 
-      // Auto-login after registration
-      const result = await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        setError('Account erstellt, aber Anmeldung fehlgeschlagen')
-      } else {
-        router.push('/')
-        router.refresh()
-      }
+      // Redirect to verification page - user must verify email before login
+      router.push('/verify-email?registered=true')
     } catch (error) {
       setError('Ein Fehler ist aufgetreten')
     } finally {
