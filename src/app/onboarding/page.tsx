@@ -134,7 +134,11 @@ export default function OnboardingPage() {
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-4 justify-center">
+          <div 
+            className="flex gap-4 justify-center"
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+          >
             {currentSlide > 0 && (
               <Button
                 variant="outline"
