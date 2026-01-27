@@ -42,16 +42,25 @@ export function PieChart({ data, size = 200, showLabels = true, showLegend = tru
     )
   }
 
-  let currentAngle = -90 // Start from top
+  interface SliceData {
+    path: string
+    color: string
+    name: string
+    value: number
+    percentage: number
+    labelX: number
+    labelY: number
+    endAngle: number
+  }
 
   const slices = data
     .filter(item => item.value > 0)
-    .map((item, index) => {
+    .reduce<SliceData[]>((acc, item, index) => {
+      const currentAngle = acc.length === 0 ? -90 : acc[acc.length - 1].endAngle
       const percentage = (item.value / total) * 100
       const angle = (item.value / total) * 360
       const startAngle = currentAngle
       const endAngle = currentAngle + angle
-      currentAngle = endAngle
 
       const startRad = (startAngle * Math.PI) / 180
       const endRad = (endAngle * Math.PI) / 180
@@ -78,16 +87,18 @@ export function PieChart({ data, size = 200, showLabels = true, showLegend = tru
       const labelX = centerX + labelRadius * Math.cos(midRad)
       const labelY = centerY + labelRadius * Math.sin(midRad)
 
-      return {
+      acc.push({
         path: pathData,
         color: item.color || COLORS[index % COLORS.length],
         name: item.name,
         value: item.value,
         percentage,
         labelX,
-        labelY
-      }
-    })
+        labelY,
+        endAngle
+      })
+      return acc
+    }, [])
 
   return (
     <div className="flex flex-col items-center gap-4">

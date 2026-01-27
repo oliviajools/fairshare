@@ -3,12 +3,13 @@ import { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.teampayer.app',
   appName: 'TeamPayer',
-  webDir: '.next',
+  // Minimales webDir - App lädt von Remote-Server
+  webDir: 'out',
   server: {
     androidScheme: 'https',
-    // Für Entwicklung: Dev-Server URL - später durch Produktions-URL ersetzen
+    // Produktion: App lädt von Vercel
     url: 'https://teampayer.vercel.app',
-    cleartext: true
+    cleartext: false
   },
   plugins: {
     SplashScreen: {

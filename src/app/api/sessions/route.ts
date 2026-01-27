@@ -93,6 +93,7 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = (authSession.user as any).id
+    const userEmail = (authSession.user as any).email
 
     // Get hidden session IDs for this user
     const hiddenSessions = await prisma.hiddenSession.findMany({
@@ -101,10 +102,25 @@ export async function GET(request: NextRequest) {
     })
     const hiddenSessionIds = hiddenSessions.map(h => h.sessionId)
 
-    // Show user's created sessions, excluding hidden ones
+    // Get session IDs where user is a participant (by email or userId)
+    const participantSessions = await prisma.participant.findMany({
+      where: {
+        OR: [
+          { userId: userId },
+          { invitedEmail: userEmail }
+        ]
+      },
+      select: { sessionId: true }
+    })
+    const participantSessionIds = participantSessions.map(p => p.sessionId)
+
+    // Show sessions where user is creator OR participant, excluding hidden ones
     const sessions = await prisma.votingSession.findMany({
       where: {
-        creatorId: userId,
+        OR: [
+          { creatorId: userId },
+          { id: { in: participantSessionIds } }
+        ],
         id: { notIn: hiddenSessionIds }
       },
       include: {

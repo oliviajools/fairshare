@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -16,24 +16,7 @@ function VerifyEmailContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'pending'>('loading')
   const [message, setMessage] = useState('')
 
-  useEffect(() => {
-    // Just registered - show pending verification message
-    if (registered === 'true') {
-      setStatus('pending')
-      setMessage('Wir haben dir eine Bestätigungs-E-Mail gesendet. Bitte klicke auf den Link in der E-Mail, um deinen Account zu aktivieren.')
-      return
-    }
-
-    if (!token) {
-      setStatus('error')
-      setMessage('Ungültiger Link')
-      return
-    }
-
-    verifyEmail()
-  }, [token, registered])
-
-  const verifyEmail = async () => {
+  const verifyEmail = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/verify-email', {
         method: 'POST',
@@ -54,11 +37,28 @@ function VerifyEmailContent() {
         setStatus('error')
         setMessage(data.error || 'Ein Fehler ist aufgetreten')
       }
-    } catch (error) {
+    } catch {
       setStatus('error')
       setMessage('Verbindungsfehler')
     }
-  }
+  }, [token, router])
+
+  useEffect(() => {
+    // Just registered - show pending verification message
+    if (registered === 'true') {
+      setStatus('pending')
+      setMessage('Wir haben dir eine Bestätigungs-E-Mail gesendet. Bitte klicke auf den Link in der E-Mail, um deinen Account zu aktivieren.')
+      return
+    }
+
+    if (!token) {
+      setStatus('error')
+      setMessage('Ungültiger Link')
+      return
+    }
+
+    verifyEmail()
+  }, [token, registered, verifyEmail])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50 flex items-center justify-center p-4">
