@@ -52,7 +52,7 @@ export function ShareResults({ targetRef, sessionTitle, results }: ShareResultsP
         `${i + 1}. ${r.name}: ${r.averagePercent.toFixed(1)}%`
       ),
       '',
-      '📱 Erstellt mit FairShare'
+      '📱 Erstellt mit TeamPayer'
     ]
     return lines.join('\n')
   }
@@ -62,9 +62,9 @@ export function ShareResults({ targetRef, sessionTitle, results }: ShareResultsP
     const blob = await generateImage()
     
     // Try native share with image first (works on mobile)
-    if (blob && navigator.canShare && navigator.canShare({ files: [new File([blob], 'fairshare-results.png', { type: 'image/png' })] })) {
+    if (blob && navigator.canShare && navigator.canShare({ files: [new File([blob], 'teampayer-results.png', { type: 'image/png' })] })) {
       try {
-        const file = new File([blob], 'fairshare-results.png', { type: 'image/png' })
+        const file = new File([blob], 'teampayer-results.png', { type: 'image/png' })
         await navigator.share({
           text: text,
           files: [file]
@@ -92,7 +92,7 @@ export function ShareResults({ targetRef, sessionTitle, results }: ShareResultsP
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `fairshare-${sessionTitle.replace(/\s+/g, '-').toLowerCase()}.png`
+    a.download = `teampayer-${sessionTitle.replace(/\s+/g, '-').toLowerCase()}.png`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
