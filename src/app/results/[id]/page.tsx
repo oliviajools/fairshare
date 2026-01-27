@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Users, Calendar, Eye, EyeOff, BarChart3, Calculator } from 'lucide-react'
 import { PieChart } from '@/components/PieChart'
+import { ShareResults } from '@/components/ShareResults'
 
 interface Participant {
   id: string
@@ -60,6 +61,7 @@ export default function ResultsPage() {
   const [results, setResults] = useState<ResultData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const resultsRef = useRef<HTMLDivElement>(null)
 
   const isCreator = session?.creatorId && authSession?.user && session.creatorId === (authSession.user as any).id
 
@@ -176,10 +178,19 @@ export default function ResultsPage() {
                     </>
                   )}
                 </Badge>
+                {isCreator && session.status === 'CLOSED' && sortedResults.length > 0 && (
+                  <ShareResults
+                    targetRef={resultsRef}
+                    sessionTitle={session.title}
+                    results={sortedResults}
+                  />
+                )}
               </div>
             </div>
           </div>
 
+          {/* Shareable Results Area */}
+          <div ref={resultsRef} className="bg-gradient-to-br from-sky-50 to-amber-50 p-4 rounded-lg">
           {/* Pie Chart */}
           {sortedResults.length > 0 && (
             <Card className="mb-6">
@@ -282,6 +293,7 @@ export default function ResultsPage() {
               </CardContent>
             </Card>
           )}
+          </div>{/* End shareable area */}
         </div>
       </div>
     </div>
