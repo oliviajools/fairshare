@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import html2canvas from 'html2canvas'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Share2, MessageCircle, Download, Loader2, Check } from 'lucide-react'
 
@@ -18,26 +17,46 @@ export function ShareResults({ targetRef, sessionTitle, results }: ShareResultsP
   const [isGenerating, setIsGenerating] = useState(false)
   const [showOptions, setShowOptions] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const generateImage = async (): Promise<Blob | null> => {
-    if (!targetRef.current) return null
+    if (!targetRef.current) {
+      console.error('Target ref is null')
+      setError('Element nicht gefunden')
+      return null
+    }
     
     setIsGenerating(true)
+    setError(null)
+    
     try {
+      // Dynamic import to avoid SSR issues
+      const html2canvas = (await import('html2canvas')).default
+      
       const canvas = await html2canvas(targetRef.current, {
         backgroundColor: '#f0f9ff',
         scale: 2,
-        logging: false,
-        useCORS: true
+        logging: true,
+        useCORS: true,
+        allowTaint: true,
+        windowWidth: targetRef.current.scrollWidth,
+        windowHeight: targetRef.current.scrollHeight
       })
       
       return new Promise((resolve) => {
         canvas.toBlob((blob) => {
-          resolve(blob)
-        }, 'image/png', 0.95)
+          if (!blob) {
+            console.error('Failed to create blob')
+            setError('Bild konnte nicht erstellt werden')
+            resolve(null)
+          } else {
+            resolve(blob)
+          }
+        }, 'image/png', 1.0)
       })
-    } catch (error) {
-      console.error('Error generating image:', error)
+    } catch (err) {
+      console.error('Error generating image:', err)
+      setError('Fehler beim Erstellen des Bildes')
       return null
     } finally {
       setIsGenerating(false)
@@ -87,16 +106,30 @@ export function ShareResults({ targetRef, sessionTitle, results }: ShareResultsP
 
   const downloadImage = async () => {
     const blob = await generateImage()
-    if (!blob) return
+    if (!blob) {
+      alert('Bild konnte nicht erstellt werden. Bitte versuche es erneut.')
+      return
+    }
     
+    const filename = `teampayer-${sessionTitle.replace(/\s+/g, '-').toLowerCase()}.png`
+    
+    // Try using the download attribute approach
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `teampayer-${sessionTitle.replace(/\s+/g, '-').toLowerCase()}.png`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.style.display = 'none'
+    document.body.appendChild(link)
+    
+    // Use click() with a small delay for iOS compatibility
+    setTimeout(() => {
+      link.click()
+      setTimeout(() => {
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+      }, 100)
+    }, 0)
+    
     setShowOptions(false)
   }
 
