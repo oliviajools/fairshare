@@ -58,17 +58,18 @@ export default function VotePage() {
   const [votes, setVotes] = useState<{[personId: string]: number}>({})
   const [error, setError] = useState('')
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [hasLoadedInitialVotes, setHasLoadedInitialVotes] = useState(false)
 
   // Calculate total percentage
   const totalPercentage = Object.values(votes).reduce((sum, percent) => sum + percent, 0)
 
   useEffect(() => {
-    fetchVoteData()
+    fetchVoteData(true) // Initial load with votes
     
-    // Poll for session status updates every 10 seconds
+    // Poll for session status updates every 10 seconds (status only, not votes)
     const interval = setInterval(() => {
       if (!isSubmitted) return // Only poll if user has submitted
-      fetchVoteData()
+      fetchVoteData(false) // Don't overwrite votes during polling
     }, 10000)
     
     return () => clearInterval(interval)
@@ -109,7 +110,7 @@ export default function VotePage() {
     }
   }
 
-  const fetchVoteData = async () => {
+  const fetchVoteData = async (loadVotes: boolean = true) => {
     try {
       const response = await fetch(`/api/vote/${token}`)
       if (response.ok) {
@@ -123,12 +124,14 @@ export default function VotePage() {
           saveToInvitedSessions(data.session, data.participant.displayName, data.ballot?.status === 'SUBMITTED')
         }
         
-        if (data.ballot?.votes) {
+        // Only load votes on initial fetch or explicit request, not during polling
+        if (loadVotes && !hasLoadedInitialVotes && data.ballot?.votes) {
           const voteMap: {[personId: string]: number} = {}
           data.ballot.votes.forEach((vote: Vote) => {
             voteMap[vote.personId] = vote.percent
           })
           setVotes(voteMap)
+          setHasLoadedInitialVotes(true)
         }
       } else if (response.status === 404) {
         setError('Ungültiger Einladungslink')
@@ -188,6 +191,7 @@ export default function VotePage() {
       if (response.ok) {
         const result = await response.json()
         setIsSubmitted(true)
+        setBallot(result.ballot)
         
         // Check if session was automatically closed
         if (result.sessionClosed) {
@@ -195,12 +199,8 @@ export default function VotePage() {
           setTimeout(() => {
             window.location.href = `/results/${session?.id}`
           }, 2000)
-        } else {
-          // Keep current votes in state, just refresh ballot status
-          setTimeout(() => {
-            fetchVoteData()
-          }, 500)
         }
+        // Don't call fetchVoteData - keep local votes as they are
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Fehler beim Abgeben der Stimmen')
