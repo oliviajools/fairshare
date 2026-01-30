@@ -93,47 +93,43 @@ export const authOptions: NextAuthOptions = {
     error: '/login',
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       // For SSO providers, auto-create user if they don't exist
       if (account?.provider === 'google' || account?.provider === 'azure-ad') {
         if (user.email) {
-          const existingUser = await prisma.user.findUnique({
-            where: { email: user.email.toLowerCase() }
-          })
-          
-          if (!existingUser) {
-            // Auto-create user for SSO logins
-            await prisma.user.create({
-              data: {
-                email: user.email.toLowerCase(),
-                name: user.name || user.email.split('@')[0],
-                emailVerified: new Date(), // SSO emails are verified
-                image: user.image,
-              }
+          try {
+            const existingUser = await prisma.user.findUnique({
+              where: { email: user.email.toLowerCase() }
             })
+            
+            if (!existingUser) {
+              await prisma.user.create({
+                data: {
+                  email: user.email.toLowerCase(),
+                  name: user.name || user.email.split('@')[0],
+                  emailVerified: new Date(),
+                  image: user.image,
+                }
+              })
+            }
+          } catch (error) {
+            console.error('SSO user creation error:', error)
           }
         }
       }
       return true
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
+      // Only set on initial login, not on every token refresh
       if (user) {
-        // Fetch the user from DB to get the actual ID
-        const dbUser = await prisma.user.findUnique({
-          where: { email: user.email?.toLowerCase() || '' },
-          select: { id: true, role: true }
-        })
-        if (dbUser) {
-          token.id = dbUser.id
-          token.role = dbUser.role
-        }
+        token.id = user.id
+        token.email = user.email
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.id
-        (session.user as any).role = token.role
       }
       return session
     }
