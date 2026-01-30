@@ -7,7 +7,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Users, Calendar, BarChart3, Trash2, Crown, Settings, LogOut, EyeOff, X } from 'lucide-react'
+import { Plus, Users, Calendar, BarChart3, Trash2, Crown, Settings, LogOut, EyeOff, X, GraduationCap } from 'lucide-react'
 import { BottomNav } from '@/components/BottomNav'
 
 interface Session {
@@ -205,12 +205,20 @@ export default function Home() {
               </p>
             </div>
 
-            <Link href="/create">
-              <Button size="lg" className="bg-sky-500 hover:bg-sky-600 w-full sm:w-auto shadow-lg">
-                <Plus className="mr-2 h-5 w-5" />
-                Neue Session erstellen
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/create">
+                <Button size="lg" className="bg-sky-500 hover:bg-sky-600 w-full sm:w-auto shadow-lg">
+                  <Plus className="mr-2 h-5 w-5" />
+                  Neue Session erstellen
+                </Button>
+              </Link>
+              <Link href="/classroom">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto border-indigo-200 text-indigo-600 hover:bg-indigo-50">
+                  <GraduationCap className="mr-2 h-5 w-5" />
+                  Teacher Area
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {/* Section Header */}
