@@ -125,15 +125,21 @@ export default function ResultsPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <Button 
-              variant="ghost"
-              size="sm"
-              onClick={() => router.back()}
-              className="mb-4"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Zurück
-            </Button>
+            <div className="flex gap-2 mb-4">
+              <Button 
+                variant="ghost"
+                size="sm"
+                onClick={() => router.back()}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Zurück
+              </Button>
+              <Link href="/">
+                <Button variant="outline" size="sm">
+                  Zur Startseite
+                </Button>
+              </Link>
+            </div>
             
             <div className="flex flex-col gap-4">
               <div>
