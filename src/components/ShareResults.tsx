@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Share2, MessageCircle, Download, Loader2, Check } from 'lucide-react'
+import { Share2, MessageCircle, Download, Loader2, Check, FileSpreadsheet } from 'lucide-react'
 
 interface ShareResultsProps {
   targetRef: React.RefObject<HTMLDivElement | null>
@@ -236,6 +236,30 @@ export function ShareResults({ targetRef, sessionTitle, results }: ShareResultsP
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const downloadCSV = () => {
+    const headers = ['Rang', 'Name', 'Prozent']
+    const rows = results.map((r, i) => [
+      i + 1,
+      r.name,
+      r.averagePercent.toFixed(1)
+    ])
+    
+    const csvContent = [
+      headers.join(';'),
+      ...rows.map(row => row.join(';'))
+    ].join('\n')
+    
+    const BOM = '\uFEFF'
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${sessionTitle.replace(/\s+/g, '-').toLowerCase()}-ergebnisse.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+    setShowOptions(false)
+  }
+
   return (
     <div className="relative">
       <Button
@@ -287,6 +311,16 @@ export function ShareResults({ targetRef, sessionTitle, results }: ShareResultsP
                 <Share2 className="h-5 w-5 text-gray-600" />
               )}
               <span>{copied ? 'Kopiert!' : 'Text kopieren'}</span>
+            </button>
+
+            <div className="border-t my-2" />
+            
+            <button
+              onClick={downloadCSV}
+              className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 rounded-md transition-colors"
+            >
+              <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+              <span>CSV exportieren</span>
             </button>
           </div>
         </>
