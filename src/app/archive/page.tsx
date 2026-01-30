@@ -5,10 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { BottomNav } from '@/components/BottomNav'
-import { Archive, Calendar, Users, BarChart3, Trash2, ArrowLeft } from 'lucide-react'
+import { Archive, Calendar, Users, BarChart3, Trash2, ArrowLeft, CheckCircle2, Clock } from 'lucide-react'
 
 interface Session {
   id: string
@@ -17,11 +15,21 @@ interface Session {
   time?: string
   status: 'OPEN' | 'CLOSED'
   organizerToken?: string
+  createdAt?: string
   _count: {
     participants: number
     ballots: number
   }
 }
+
+const CARD_COLORS = [
+  'from-sky-500 to-blue-600',
+  'from-emerald-500 to-green-600',
+  'from-violet-500 to-purple-600',
+  'from-amber-500 to-orange-600',
+  'from-pink-500 to-rose-600',
+  'from-cyan-500 to-teal-600',
+]
 
 export default function ArchivePage() {
   const router = useRouter()
@@ -43,7 +51,6 @@ export default function ArchivePage() {
       const response = await fetch('/api/sessions')
       if (response.ok) {
         const data = await response.json()
-        // Filter only closed sessions
         setSessions(data.filter((s: Session) => s.status === 'CLOSED'))
       }
     } catch (error) {
@@ -73,14 +80,27 @@ export default function ArchivePage() {
     if (!dateString) return null
     return new Date(dateString).toLocaleDateString('de-DE', {
       day: '2-digit',
-      month: '2-digit',
+      month: 'short',
       year: 'numeric'
     })
   }
 
+  const getTimeAgo = (dateString?: string) => {
+    if (!dateString) return null
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
+    
+    if (diffDays === 0) return 'Heute'
+    if (diffDays === 1) return 'Gestern'
+    if (diffDays < 7) return `vor ${diffDays} Tagen`
+    if (diffDays < 30) return `vor ${Math.floor(diffDays / 7)} Wochen`
+    return formatDate(dateString)
+  }
+
   if (authStatus === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50 flex items-center justify-center pb-20">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50 flex items-center justify-center pb-20">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">Laden...</p>
@@ -92,81 +112,131 @@ export default function ArchivePage() {
   if (!authSession?.user) return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50 pb-24">
-      <div className="container mx-auto px-4 py-8 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50 pb-24">
+      <div className="container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
+          <div className="mb-8">
+            <button 
+              onClick={() => router.push('/')}
+              className="inline-flex items-center text-gray-500 hover:text-gray-900 transition-colors mb-4"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Zurück
-            </Button>
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <Archive className="h-8 w-8 text-sky-500" />
-                <h1 className="text-3xl font-bold text-gray-900">Archiv</h1>
+            </button>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
+                <Archive className="h-7 w-7 text-white" />
               </div>
-              <p className="text-gray-600">Deine abgeschlossenen Sessions</p>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Archiv</h1>
+                <p className="text-gray-500">{sessions.length} abgeschlossene Sessions</p>
+              </div>
             </div>
           </div>
 
           {/* Sessions List */}
           {sessions.length === 0 ? (
-            <Card className="border-2 border-dashed border-gray-200">
-              <CardContent className="text-center py-16">
-                <span className="text-6xl mb-6 block">📦</span>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Noch nichts im Archiv
-                </h3>
-                <p className="text-gray-600">
-                  Beendete Sessions landen automatisch hier.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="text-center py-20">
+              <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
+                <Archive className="h-10 w-10 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Noch nichts im Archiv
+              </h3>
+              <p className="text-gray-500 max-w-sm mx-auto">
+                Beendete Sessions landen automatisch hier, sobald du sie abschließt.
+              </p>
+            </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {sessions.map((session) => (
-                <Card key={session.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{session.title}</CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">Beendet</Badge>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteSession(session.id, session.title)}
-                          disabled={deleting === session.id}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+            <div className="space-y-4">
+              {sessions.map((session, index) => {
+                const colorClass = CARD_COLORS[index % CARD_COLORS.length]
+                const completionRate = session._count.participants > 0 
+                  ? Math.round((session._count.ballots / session._count.participants) * 100) 
+                  : 0
+                
+                return (
+                  <div 
+                    key={session.id} 
+                    className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
+                  >
+                    {/* Color accent bar */}
+                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${colorClass}`} />
+                    
+                    <div className="p-5 pl-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-gray-900 text-lg truncate">
+                              {session.title}
+                            </h3>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Beendet
+                            </span>
+                          </div>
+                          
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mt-2">
+                            {session.date && (
+                              <span className="flex items-center gap-1.5">
+                                <Calendar className="h-4 w-4" />
+                                {formatDate(session.date)}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1.5">
+                              <Users className="h-4 w-4" />
+                              {session._count.participants} Teilnehmer
+                            </span>
+                            {session.createdAt && (
+                              <span className="flex items-center gap-1.5">
+                                <Clock className="h-4 w-4" />
+                                {getTimeAgo(session.createdAt)}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Completion bar */}
+                          <div className="mt-3">
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="text-gray-500">Beteiligung</span>
+                              <span className="font-medium text-gray-700">{completionRate}%</span>
+                            </div>
+                            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full bg-gradient-to-r ${colorClass} rounded-full transition-all duration-500`}
+                                style={{ width: `${completionRate}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2">
+                          <Link href={`/results/${session.id}`}>
+                            <Button 
+                              size="sm"
+                              className={`bg-gradient-to-r ${colorClass} hover:opacity-90 text-white shadow-md`}
+                            >
+                              <BarChart3 className="mr-2 h-4 w-4" />
+                              Ergebnisse
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteSession(session.id, session.title)}
+                            disabled={deleting === session.id}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                    {session.date && (
-                      <CardDescription className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        {formatDate(session.date)}
-                      </CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                      <span className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        {session._count.participants} Teilnehmer
-                      </span>
-                      <span>{session._count.ballots}/{session._count.participants} abgestimmt</span>
-                    </div>
-                    <Link href={`/results/${session.id}`}>
-                      <Button variant="outline" className="w-full">
-                        <BarChart3 className="mr-2 h-4 w-4" />
-                        Ergebnisse ansehen
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
