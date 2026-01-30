@@ -18,7 +18,12 @@ import {
   X,
   Check,
   ArrowLeft,
-  Shield
+  Shield,
+  TrendingUp,
+  TrendingDown,
+  BarChart3,
+  Activity,
+  RefreshCw
 } from 'lucide-react'
 import Link from 'next/link'
 

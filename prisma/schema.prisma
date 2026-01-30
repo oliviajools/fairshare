@@ -18,9 +18,11 @@ model User {
   emailVerified DateTime?
   password      String?
   image         String?
+  role          UserRole  @default(USER)
   accounts      Account[]
   sessions      AuthSession[]
   createdSessions VotingSession[] @relation("CreatedSessions")
+  recurringSessions RecurringSession[]
   participants  Participant[]
   invitations   Invitation[]
   companies     CompanyMember[]
@@ -28,6 +30,12 @@ model User {
   hiddenSessions HiddenSession[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
 }
 
 model Account {
@@ -81,7 +89,12 @@ model Company {
   slug        String    @unique
   description String?
   logo        String?
-  domain      String?
+  domain      String?   // For SSO domain verification
+  ssoEnabled  Boolean   @default(false)
+  ssoProvider String?   // 'microsoft' | 'google' | 'saml'
+  ssoConfig   Json?     // SSO configuration (clientId, tenantId, etc.)
+  slackWebhook String?  // Slack integration webhook URL
+  slackChannel String?  // Default Slack channel
   members     CompanyMember[]
   sessions    VotingSession[]
   groups      CompanyGroup[]
@@ -125,7 +138,39 @@ model VotingSession {
   ballots        Ballot[]
   invitations    Invitation[]
   hiddenBy       HiddenSession[]
+  // Recurring session fields
+  recurringId    String?
+  recurring      RecurringSession? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
   createdAt      DateTime     @default(now())
+}
+
+// Recurring Sessions - templates for automatic session creation
+model RecurringSession {
+  id              String       @id @default(cuid())
+  title           String
+  frequency       RecurringFrequency
+  dayOfWeek       Int?         // 0-6 for weekly
+  dayOfMonth      Int?         // 1-31 for monthly
+  time            String?
+  evaluationInfo  String?
+  isAnonymous     Boolean      @default(true)
+  creatorId       String
+  creator         User         @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  companyId       String?
+  groupId         String?
+  isActive        Boolean      @default(true)
+  nextRunAt       DateTime?
+  lastRunAt       DateTime?
+  sessions        VotingSession[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+enum RecurringFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
 }
 
 // Hidden Sessions - allows users to hide sessions from their view without deleting

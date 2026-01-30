@@ -1,5 +1,7 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import GoogleProvider from 'next-auth/providers/google'
+import AzureADProvider from 'next-auth/providers/azure-ad'
 import bcrypt from 'bcryptjs'
 import { prisma } from './db'
 import { checkRateLimit, rateLimitConfigs } from './rate-limit'
@@ -7,6 +9,24 @@ import { checkRateLimit, rateLimitConfigs } from './rate-limit'
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
+    // Google SSO (if configured)
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [
+      GoogleProvider({
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        allowDangerousEmailAccountLinking: true,
+      })
+    ] : []),
+    // Microsoft/Azure AD SSO (if configured)
+    ...(process.env.AZURE_AD_CLIENT_ID && process.env.AZURE_AD_CLIENT_SECRET && process.env.AZURE_AD_TENANT_ID ? [
+      AzureADProvider({
+        clientId: process.env.AZURE_AD_CLIENT_ID,
+        clientSecret: process.env.AZURE_AD_CLIENT_SECRET,
+        tenantId: process.env.AZURE_AD_TENANT_ID,
+        allowDangerousEmailAccountLinking: true,
+      })
+    ] : []),
+    // Credentials (email/password)
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -73,15 +93,47 @@ export const authOptions: NextAuthOptions = {
     error: '/login',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async signIn({ user, account, profile }) {
+      // For SSO providers, auto-create user if they don't exist
+      if (account?.provider === 'google' || account?.provider === 'azure-ad') {
+        if (user.email) {
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email.toLowerCase() }
+          })
+          
+          if (!existingUser) {
+            // Auto-create user for SSO logins
+            await prisma.user.create({
+              data: {
+                email: user.email.toLowerCase(),
+                name: user.name || user.email.split('@')[0],
+                emailVerified: new Date(), // SSO emails are verified
+                image: user.image,
+              }
+            })
+          }
+        }
+      }
+      return true
+    },
+    async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id
+        // Fetch the user from DB to get the actual ID
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email?.toLowerCase() || '' },
+          select: { id: true, role: true }
+        })
+        if (dbUser) {
+          token.id = dbUser.id
+          token.role = dbUser.role
+        }
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.id
+        (session.user as any).role = token.role
       }
       return session
     }

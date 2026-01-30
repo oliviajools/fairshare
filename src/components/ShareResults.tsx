@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Share2, MessageCircle, Download, Loader2, Check, FileSpreadsheet } from 'lucide-react'
+import { Share2, MessageCircle, Download, Loader2, Check, FileSpreadsheet, FileText } from 'lucide-react'
+import { generateResultsPDF, downloadPDF } from '@/lib/pdf'
 
 interface ShareResultsProps {
   targetRef: React.RefObject<HTMLDivElement | null>
@@ -260,6 +261,19 @@ export function ShareResults({ targetRef, sessionTitle, results }: ShareResultsP
     setShowOptions(false)
   }
 
+  const downloadPDFReport = () => {
+    const pdfBlob = generateResultsPDF(
+      {
+        title: sessionTitle,
+        participantCount: results.length,
+        voteCount: results.length
+      },
+      results
+    )
+    downloadPDF(pdfBlob, `${sessionTitle.replace(/\s+/g, '-').toLowerCase()}-report.pdf`)
+    setShowOptions(false)
+  }
+
   return (
     <div className="relative">
       <Button
@@ -321,6 +335,14 @@ export function ShareResults({ targetRef, sessionTitle, results }: ShareResultsP
             >
               <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
               <span>CSV exportieren</span>
+            </button>
+
+            <button
+              onClick={downloadPDFReport}
+              className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 rounded-md transition-colors"
+            >
+              <FileText className="h-5 w-5 text-red-600" />
+              <span>PDF Report</span>
             </button>
           </div>
         </>
