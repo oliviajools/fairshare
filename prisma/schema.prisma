@@ -28,6 +28,8 @@ model User {
   companies     CompanyMember[]
   groupMemberships CompanyGroupMember[]
   hiddenSessions HiddenSession[]
+  teacherClassrooms Classroom[] @relation("TeacherClassrooms")
+  studentClassrooms ClassroomStudent[] @relation("StudentClassrooms")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -141,6 +143,7 @@ model VotingSession {
   // Recurring session fields
   recurringId    String?
   recurring      RecurringSession? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
+  classroomProject ClassroomProject?
   createdAt      DateTime     @default(now())
 }
 
@@ -270,4 +273,46 @@ model CompanyGroupMember {
   addedAt   DateTime     @default(now())
 
   @@unique([groupId, userId])
+}
+
+// Classroom for teachers - group work management
+model Classroom {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  joinCode      String   @unique  // 6-character code for students to join
+  teacherId     String
+  teacher       User     @relation("TeacherClassrooms", fields: [teacherId], references: [id], onDelete: Cascade)
+  students      ClassroomStudent[]
+  projects      ClassroomProject[]
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ClassroomStudent {
+  id          String    @id @default(cuid())
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?     @relation("StudentClassrooms", fields: [userId], references: [id], onDelete: SetNull)
+  studentName String    // Display name for the student
+  studentEmail String?
+  joinedAt    DateTime  @default(now())
+
+  @@unique([classroomId, studentEmail])
+}
+
+model ClassroomProject {
+  id            String    @id @default(cuid())
+  classroomId   String
+  classroom     Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  dueDate       DateTime?
+  sessionId     String?   @unique
+  session       VotingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  resultsSentAt DateTime? // When results were sent to teacher
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
