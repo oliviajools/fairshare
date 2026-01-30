@@ -164,14 +164,14 @@ export default function ArchivePage() {
                     {/* Color accent bar */}
                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${colorClass}`} />
                     
-                    <div className="p-5 pl-6">
-                      <div className="flex items-start justify-between gap-4">
+                    <div className="p-4 sm:p-5 pl-5 sm:pl-6">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-gray-900 text-lg truncate">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                            <h3 className="font-semibold text-gray-900 text-base sm:text-lg">
                               {session.title}
                             </h3>
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 w-fit">
                               <CheckCircle2 className="h-3 w-3" />
                               Beendet
                             </span>
@@ -211,12 +211,12 @@ export default function ArchivePage() {
                           </div>
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center gap-2">
-                          <Link href={`/results/${session.id}`}>
+                        {/* Actions - Desktop: right side, Mobile: below content */}
+                        <div className="flex items-center gap-2 mt-3 sm:mt-0">
+                          <Link href={`/results/${session.id}`} className="flex-1 sm:flex-none">
                             <Button 
                               size="sm"
-                              className={`bg-gradient-to-r ${colorClass} hover:opacity-90 text-white shadow-md`}
+                              className={`w-full sm:w-auto bg-gradient-to-r ${colorClass} hover:opacity-90 text-white shadow-md`}
                             >
                               <BarChart3 className="mr-2 h-4 w-4" />
                               Ergebnisse
@@ -227,7 +227,7 @@ export default function ArchivePage() {
                             size="icon"
                             onClick={() => deleteSession(session.id, session.title)}
                             disabled={deleting === session.id}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 hover:bg-red-50"
+                            className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 hover:bg-red-50"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
