@@ -68,12 +68,11 @@ export default function VotePage() {
     
     // Poll for session status updates every 10 seconds (status only, not votes)
     const interval = setInterval(() => {
-      if (!isSubmitted) return // Only poll if user has submitted
       fetchVoteData(false) // Don't overwrite votes during polling
     }, 10000)
     
     return () => clearInterval(interval)
-  }, [token, isSubmitted])
+  }, [token]) // Remove isSubmitted dependency to prevent re-fetching on submit
 
   // Handle redirect when session is closed
   useEffect(() => {
@@ -193,6 +192,15 @@ export default function VotePage() {
         setIsSubmitted(true)
         setBallot(result.ballot)
         
+        // Update local votes from server response to ensure consistency
+        if (result.ballot?.votes) {
+          const newVoteMap: {[personId: string]: number} = {}
+          result.ballot.votes.forEach((vote: Vote) => {
+            newVoteMap[vote.personId] = vote.percent
+          })
+          setVotes(newVoteMap)
+        }
+        
         // Check if session was automatically closed
         if (result.sessionClosed) {
           alert('Alle haben abgestimmt! Die Session wurde automatisch geschlossen.')
@@ -200,7 +208,6 @@ export default function VotePage() {
             window.location.href = `/results/${session?.id}`
           }, 2000)
         }
-        // Don't call fetchVoteData - keep local votes as they are
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Fehler beim Abgeben der Stimmen')
