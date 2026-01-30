@@ -16,6 +16,12 @@ interface Session {
   status: 'OPEN' | 'CLOSED'
   organizerToken?: string
   createdAt?: string
+  creatorId?: string
+  creator?: {
+    id: string
+    name: string | null
+    email: string
+  }
   _count: {
     participants: number
     ballots: number
@@ -175,6 +181,11 @@ export default function ArchivePage() {
                               <CheckCircle2 className="h-3 w-3" />
                               Beendet
                             </span>
+                            {session.creatorId !== (authSession.user as any)?.id && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-700 w-fit">
+                                Teilnehmer
+                              </span>
+                            )}
                           </div>
                           
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mt-2">
@@ -222,15 +233,17 @@ export default function ArchivePage() {
                               Ergebnisse
                             </Button>
                           </Link>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteSession(session.id, session.title)}
-                            disabled={deleting === session.id}
-                            className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {session.creatorId === (authSession.user as any)?.id && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => deleteSession(session.id, session.title)}
+                              disabled={deleting === session.id}
+                              className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>

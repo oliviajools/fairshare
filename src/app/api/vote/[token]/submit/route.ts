@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { hashToken } from '@/lib/jwt'
 
@@ -77,10 +79,20 @@ export async function POST(
         }
       })
 
-      // Update participant status
+      // Update participant status and link to logged-in user if available
+      const authSession = await getServerSession(authOptions)
+      const updateData: any = { hasSubmitted: true }
+      
+      if (authSession?.user) {
+        const userId = (authSession.user as any).id
+        if (userId) {
+          updateData.userId = userId
+        }
+      }
+      
       await tx.participant.update({
         where: { id: participant.id },
-        data: { hasSubmitted: true }
+        data: updateData
       })
 
       return ballot
