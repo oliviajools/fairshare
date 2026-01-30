@@ -369,14 +369,22 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
                               </Button>
                             </Link>
                           )}
+                          {isClosed && (
+                            <Link href={`/classroom/${id}/project/${project.id}`}>
+                              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
+                                Noten vergeben
+                              </Button>
+                            </Link>
+                          )}
                           {isClosed && !project.resultsSentAt && (
                             <Button 
                               size="sm"
+                              variant="outline"
                               onClick={() => sendResults(project.id)}
                               disabled={sending === project.id}
                             >
                               <Send className="mr-2 h-4 w-4" />
-                              {sending === project.id ? 'Senden...' : 'Per E-Mail senden'}
+                              {sending === project.id ? 'Senden...' : 'E-Mail'}
                             </Button>
                           )}
                           {project.resultsSentAt && (
