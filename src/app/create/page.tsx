@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import { ArrowLeft, Plus, Trash2, Copy, Mail, Check, Eye, EyeOff, Building2, UsersRound, Sparkles, Users, Calendar, PartyPopper, Briefcase, Home, Trophy, ChevronRight, Info } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Copy, Mail, Check, Eye, EyeOff, Building2, UsersRound, Sparkles, Users, Calendar, PartyPopper, Briefcase, Home, Trophy, ChevronRight, Info, GraduationCap } from 'lucide-react'
 
 interface Company {
   id: string
@@ -92,6 +92,16 @@ const SESSION_TEMPLATES: SessionTemplate[] = [
     description: 'Vereinskasse, Mannschaftskosten',
     defaultTitle: 'Vereinsabrechnung',
     defaultEvaluationInfo: 'Teilnahme an Veranstaltungen und Engagement berücksichtigen',
+    isAnonymous: true,
+  },
+  {
+    id: 'school',
+    name: 'Schulprojekt',
+    icon: <GraduationCap className="h-6 w-6" />,
+    color: 'from-indigo-500 to-blue-500',
+    description: 'Gruppenarbeiten, Projektbewertung',
+    defaultTitle: 'Projektarbeit Bewertung',
+    defaultEvaluationInfo: 'Bewertet fair den Beitrag jedes Teammitglieds: Wer hat welche Aufgaben übernommen? Wie war die Qualität? Wie war das Engagement und die Zuverlässigkeit?',
     isAnonymous: true,
   },
   {
