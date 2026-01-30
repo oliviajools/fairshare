@@ -27,17 +27,7 @@ export async function GET() {
       where: { teacherId: userId },
       include: {
         students: true,
-        projects: {
-          include: {
-            session: {
-              include: {
-                _count: {
-                  select: { participants: true, ballots: true }
-                }
-              }
-            }
-          }
-        },
+        projects: true,
         _count: {
           select: { students: true, projects: true }
         }
@@ -46,9 +36,9 @@ export async function GET() {
     })
 
     return NextResponse.json(classrooms)
-  } catch (error) {
-    console.error('Error fetching classrooms:', error)
-    return NextResponse.json({ error: 'Failed to fetch classrooms' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Error fetching classrooms:', error?.message, error)
+    return NextResponse.json({ error: 'Failed to fetch classrooms', details: error?.message }, { status: 500 })
   }
 }
 
@@ -94,8 +84,8 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(classroom)
-  } catch (error) {
-    console.error('Error creating classroom:', error)
-    return NextResponse.json({ error: 'Failed to create classroom' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Error creating classroom:', error?.message, error)
+    return NextResponse.json({ error: 'Failed to create classroom', details: error?.message }, { status: 500 })
   }
 }
