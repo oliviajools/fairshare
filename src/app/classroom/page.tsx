@@ -113,30 +113,26 @@ export default function ClassroomPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => router.push('/')}
-                  className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </button>
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                  <GraduationCap className="h-7 w-7 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Meine Klassen</h1>
-                  <p className="text-gray-500">Gruppenarbeiten verwalten</p>
-                </div>
-              </div>
-              <Button
-                onClick={() => setShowCreate(true)}
-                className="bg-gradient-to-r from-indigo-500 to-blue-600 hover:opacity-90"
+            <div className="flex items-center gap-4 mb-4">
+              <button 
+                onClick={() => router.push('/')}
+                className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0"
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Neue Klasse
-              </Button>
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <GraduationCap className="h-8 w-8 text-sky-500 flex-shrink-0" />
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Klassen</h1>
+                <p className="text-gray-500">Gruppenarbeiten verwalten</p>
+              </div>
             </div>
+            <Button
+              onClick={() => setShowCreate(true)}
+              className="bg-gradient-to-r from-sky-500 to-blue-600 hover:opacity-90"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Neue Klasse
+            </Button>
           </div>
 
           {/* Create Form */}

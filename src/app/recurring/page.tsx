@@ -189,9 +189,7 @@ export default function RecurringSessionsPage() {
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                  <Repeat className="h-7 w-7 text-white" />
-                </div>
+                <Repeat className="h-8 w-8 text-sky-500 flex-shrink-0" />
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Wiederkehrende Sessions</h1>
                   <p className="text-gray-500">Automatisch erstellte Sessions</p>

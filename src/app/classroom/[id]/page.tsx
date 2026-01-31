@@ -191,9 +191,7 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                  <GraduationCap className="h-7 w-7 text-white" />
-                </div>
+                <GraduationCap className="h-8 w-8 text-sky-500 flex-shrink-0" />
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{classroom.name}</h1>
                   <div className="flex items-center gap-2 mt-1">
