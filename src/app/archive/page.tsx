@@ -119,7 +119,7 @@ export default function ArchivePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50 pb-24">
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 pt-14 pb-6">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
