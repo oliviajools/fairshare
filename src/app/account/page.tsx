@@ -155,14 +155,12 @@ export default function AccountPage() {
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={() => router.push('/')}
+              className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Zurück
-            </Button>
+              <ArrowLeft className="h-5 w-5" />
+            </button>
             <h1 className="text-2xl font-bold text-gray-900">Mein Account</h1>
           </div>
 

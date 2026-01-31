@@ -111,10 +111,12 @@ export default function SearchPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="flex items-center gap-4 mb-6">
-            <Button variant="ghost" size="sm" onClick={() => router.push('/account')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Zurück
-            </Button>
+            <button
+              onClick={() => router.push('/account')}
+              className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <Search className="h-8 w-8 text-sky-500" />

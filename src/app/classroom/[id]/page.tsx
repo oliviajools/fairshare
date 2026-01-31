@@ -185,10 +185,9 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
           <div className="mb-8">
             <button 
               onClick={() => router.push('/classroom')}
-              className="inline-flex items-center text-gray-500 hover:text-gray-900 transition-colors mb-4"
+              className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors mb-4 shadow-md"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Alle Klassen
+              <ArrowLeft className="h-5 w-5" />
             </button>
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-4">

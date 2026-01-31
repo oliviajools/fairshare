@@ -759,10 +759,9 @@ function CreateSessionContent() {
           <div className="mb-8">
             <button 
               onClick={() => currentStep === 0 ? router.push('/') : setCurrentStep(currentStep - 1)}
-              className="inline-flex items-center text-gray-500 hover:text-gray-900 transition-colors mb-4"
+              className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md mb-4"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {currentStep === 0 ? 'Zur Übersicht' : 'Zurück'}
+              <ArrowLeft className="h-5 w-5" />
             </button>
             <h1 className="text-3xl font-bold text-gray-900">
               Neue Session

@@ -193,14 +193,12 @@ export default function OrganizerPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <Button 
-              variant="ghost"
+            <button
               onClick={() => router.push('/')}
-              className="mb-6 -ml-2 px-3 py-2 h-auto"
+              className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md mb-6"
             >
-              <ArrowLeft className="mr-2 h-5 w-5" />
-              Zurück zur Übersicht
-            </Button>
+              <ArrowLeft className="h-5 w-5" />
+            </button>
             
             <Card className="p-6">
               <div className="flex flex-col gap-4">

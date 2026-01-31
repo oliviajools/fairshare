@@ -185,10 +185,9 @@ export default function AdminPage() {
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
             <Link href="/">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Zurück
-              </Button>
+              <button className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md">
+                <ArrowLeft className="h-5 w-5" />
+              </button>
             </Link>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">

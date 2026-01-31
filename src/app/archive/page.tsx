@@ -125,10 +125,9 @@ export default function ArchivePage() {
           <div className="mb-8">
             <button 
               onClick={() => router.push('/')}
-              className="inline-flex items-center text-gray-500 hover:text-gray-900 transition-colors mb-4"
+              className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors mb-4 shadow-md"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Zurück
+              <ArrowLeft className="h-5 w-5" />
             </button>
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">

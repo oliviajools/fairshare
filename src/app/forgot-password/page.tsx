@@ -54,11 +54,10 @@ export default function ForgotPasswordPage() {
             <p className="text-sm text-gray-500 mb-6">
               Überprüfe auch deinen Spam-Ordner.
             </p>
-            <Link href="/login">
-              <Button variant="outline" className="w-full">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Zurück zum Login
-              </Button>
+            <Link href="/login" className="flex justify-center">
+              <button className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md">
+                <ArrowLeft className="h-5 w-5" />
+              </button>
             </Link>
           </CardContent>
         </Card>
@@ -108,10 +107,11 @@ export default function ForgotPasswordPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <Link href="/login" className="text-sm text-sky-600 hover:underline">
-              <ArrowLeft className="inline h-3 w-3 mr-1" />
-              Zurück zum Login
+          <div className="mt-6 flex justify-center">
+            <Link href="/login">
+              <button className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md">
+                <ArrowLeft className="h-5 w-5" />
+              </button>
             </Link>
           </div>
         </CardContent>

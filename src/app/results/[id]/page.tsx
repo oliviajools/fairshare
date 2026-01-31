@@ -126,14 +126,12 @@ export default function ResultsPage() {
           {/* Header */}
           <div className="mb-8">
             <div className="flex gap-2 mb-4">
-              <Button 
-                variant="ghost"
-                size="sm"
+              <button 
                 onClick={() => router.back()}
+                className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md"
               >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Zurück
-              </Button>
+                <ArrowLeft className="h-5 w-5" />
+              </button>
               <Link href="/">
                 <Button variant="outline" size="sm">
                   Zur Startseite
