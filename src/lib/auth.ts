@@ -119,10 +119,21 @@ export const authOptions: NextAuthOptions = {
       }
       return true
     },
-    async jwt({ token, user }) {
-      // Only set on initial login, not on every token refresh
-      if (user) {
-        token.id = user.id
+    async jwt({ token, user, account }) {
+      // On initial login, fetch the database user ID
+      if (user && token.email) {
+        // For SSO providers, we need to get the ID from our database, not the provider
+        if (account?.provider === 'google' || account?.provider === 'azure-ad') {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email.toLowerCase() }
+          })
+          if (dbUser) {
+            token.id = dbUser.id
+          }
+        } else {
+          // For credentials, user.id is already from our database
+          token.id = user.id
+        }
         token.email = user.email
       }
       return token
