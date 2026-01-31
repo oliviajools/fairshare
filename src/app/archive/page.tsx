@@ -130,7 +130,7 @@ export default function ArchivePage() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg flex-shrink-0">
                 <Archive className="h-7 w-7 text-white" />
               </div>
               <div>
