@@ -239,15 +239,18 @@ export default function PayoutPage({ params }: { params: Promise<{ id: string }>
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <button
-              onClick={() => router.back()}
-              className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md mb-4"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            
-            <h1 className="text-3xl font-bold text-gray-900">Auszahlung berechnen</h1>
-            <p className="text-gray-600 mt-1">{sessionTitle}</p>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.back()}
+                className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Auszahlung berechnen</h1>
+                <p className="text-gray-600">{sessionTitle}</p>
+              </div>
+            </div>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">

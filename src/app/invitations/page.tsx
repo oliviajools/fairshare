@@ -156,15 +156,13 @@ export default function InvitationsPage() {
           <div className="flex items-center gap-4 mb-8">
             <button
               onClick={() => router.push('/')}
-              className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md"
+              className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
+            <Mail className="h-8 w-8 text-sky-500 flex-shrink-0" />
             <div>
-              <div className="flex items-center gap-3 mb-1">
-                <Mail className="h-8 w-8 text-sky-500" />
-                <h1 className="text-3xl font-bold text-gray-900">Einladungen</h1>
-              </div>
+              <h1 className="text-3xl font-bold text-gray-900">Einladungen</h1>
               <p className="text-gray-600">Sessions zu denen du eingeladen wurdest</p>
             </div>
           </div>

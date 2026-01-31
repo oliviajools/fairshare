@@ -757,15 +757,17 @@ function CreateSessionContent() {
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <button 
-              onClick={() => currentStep === 0 ? router.push('/') : setCurrentStep(currentStep - 1)}
-              className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md mb-4"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Neue Session
-            </h1>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => currentStep === 0 ? router.push('/') : setCurrentStep(currentStep - 1)}
+                className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Neue Session
+              </h1>
+            </div>
           </div>
 
           {/* Step Content */}

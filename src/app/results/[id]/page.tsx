@@ -125,24 +125,17 @@ export default function ResultsPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex gap-2 mb-4">
-              <button 
-                onClick={() => router.back()}
-                className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <Link href="/">
-                <Button variant="outline" size="sm">
-                  Zur Startseite
-                </Button>
-              </Link>
-            </div>
-            
             <div className="flex flex-col gap-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{session.title}</h1>
-                <div className="flex items-center gap-4 mt-2 text-gray-600 text-sm">
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => router.back()}
+                  className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+                <div className="flex-1">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{session.title}</h1>
+                  <div className="flex items-center gap-4 mt-2 text-gray-600 text-sm">
                   {session.date && (
                     <div className="flex items-center">
                       <Calendar className="mr-1 h-4 w-4" />
@@ -154,6 +147,7 @@ export default function ResultsPage() {
                     <Users className="mr-1 h-4 w-4" />
                     {session.participants.length} Teilnehmer
                   </div>
+                </div>
                 </div>
               </div>
               

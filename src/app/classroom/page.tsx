@@ -113,15 +113,15 @@ export default function ClassroomPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <button 
-              onClick={() => router.push('/')}
-              className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors mb-4 shadow-md"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg">
+                <button 
+                  onClick={() => router.push('/')}
+                  className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg flex-shrink-0">
                   <GraduationCap className="h-7 w-7 text-white" />
                 </div>
                 <div>
