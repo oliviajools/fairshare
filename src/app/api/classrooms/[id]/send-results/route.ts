@@ -30,7 +30,9 @@ export async function POST(
         },
         session: {
           include: {
-            participants: true,
+            participants: {
+              include: { user: true }
+            },
             ballots: {
               include: { votes: true }
             }
@@ -68,34 +70,73 @@ export async function POST(
       averagePercent: data.count > 0 ? Math.round(data.total / data.count * 10) / 10 : 0
     })).sort((a, b) => b.averagePercent - a.averagePercent)
 
-    // Send email to teacher
-    if (resend && project.classroom.teacher.email) {
-      const resultsHtml = results.map(r => 
-        `<tr><td style="padding: 8px; border: 1px solid #ddd;">${r.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${r.averagePercent}%</td></tr>`
-      ).join('')
-
-      await resend.emails.send({
-        from: 'TeamPayer <noreply@teampayer.de>',
-        to: project.classroom.teacher.email,
-        subject: `Ergebnisse: ${project.name}`,
-        html: `
-          <h2>Projektergebnisse: ${project.name}</h2>
-          <p>Klasse: ${project.classroom.name}</p>
-          <p>Die Schüler haben ihre gegenseitige Bewertung abgeschlossen.</p>
-          <table style="border-collapse: collapse; width: 100%; max-width: 400px;">
-            <thead>
-              <tr style="background: #f5f5f5;">
-                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Schüler</th>
-                <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Beitrag</th>
-              </tr>
-            </thead>
-            <tbody>${resultsHtml}</tbody>
-          </table>
-          <p style="margin-top: 20px; color: #666;">
-            <a href="${process.env.NEXTAUTH_URL}/classroom/${project.classroomId}">Vollständige Ergebnisse ansehen</a>
-          </p>
-        `
+    // Send email to each student with only their own result
+    if (resend) {
+      // Build a map of participant results with their email
+      const participantResults = Object.entries(participantVotes).map(([id, data]) => {
+        const participant = project.session!.participants.find(p => p.id === id)
+        const email = participant?.invitedEmail || participant?.user?.email
+        return {
+          id,
+          name: data.name,
+          email,
+          averagePercent: data.count > 0 ? Math.round(data.total / data.count * 10) / 10 : 0
+        }
       })
+
+      // Send individual email to each student
+      for (const student of participantResults) {
+        if (student.email) {
+          await resend.emails.send({
+            from: 'TeamPayer <noreply@teampayer.de>',
+            to: student.email,
+            subject: `Dein Ergebnis: ${project.name}`,
+            html: `
+              <h2>Dein Projektergebnis: ${project.name}</h2>
+              <p>Klasse: ${project.classroom.name}</p>
+              <p>Die Bewertung deiner Mitschüler ist abgeschlossen.</p>
+              <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                <p style="margin: 0; color: #666;">Dein Beitrag zum Projekt:</p>
+                <p style="font-size: 32px; font-weight: bold; color: #0ea5e9; margin: 10px 0;">${student.averagePercent}%</p>
+                <p style="margin: 0; color: #666;">${student.name}</p>
+              </div>
+              <p style="color: #666; font-size: 14px;">
+                Diese Bewertung basiert auf der Einschätzung deiner Gruppenmitglieder.
+              </p>
+            `
+          })
+        }
+      }
+
+      // Also send full results to teacher
+      if (project.classroom.teacher.email) {
+        const resultsHtml = results.map(r => 
+          `<tr><td style="padding: 8px; border: 1px solid #ddd;">${r.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${r.averagePercent}%</td></tr>`
+        ).join('')
+
+        await resend.emails.send({
+          from: 'TeamPayer <noreply@teampayer.de>',
+          to: project.classroom.teacher.email,
+          subject: `Ergebnisse: ${project.name}`,
+          html: `
+            <h2>Projektergebnisse: ${project.name}</h2>
+            <p>Klasse: ${project.classroom.name}</p>
+            <p>Die Schüler haben ihre gegenseitige Bewertung abgeschlossen.</p>
+            <table style="border-collapse: collapse; width: 100%; max-width: 400px;">
+              <thead>
+                <tr style="background: #f5f5f5;">
+                  <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Schüler</th>
+                  <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Beitrag</th>
+                </tr>
+              </thead>
+              <tbody>${resultsHtml}</tbody>
+            </table>
+            <p style="margin-top: 20px; color: #666;">
+              <a href="${process.env.NEXTAUTH_URL}/classroom/${project.classroomId}">Vollständige Ergebnisse ansehen</a>
+            </p>
+          `
+        })
+      }
     }
 
     // Mark results as sent
