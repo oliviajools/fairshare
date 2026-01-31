@@ -357,12 +357,12 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
                             </div>
                           )}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           {project.session && (
                             <Link href={`/results/${project.session.id}`}>
                               <Button variant="outline" size="sm">
-                                <BarChart3 className="mr-2 h-4 w-4" />
-                                Ergebnisse
+                                <BarChart3 className="h-4 w-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Ergebnisse</span>
                               </Button>
                             </Link>
                           )}
@@ -380,14 +380,14 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
                               onClick={() => sendResults(project.id)}
                               disabled={sending === project.id}
                             >
-                              <Send className="mr-2 h-4 w-4" />
-                              {sending === project.id ? 'Senden...' : 'E-Mail'}
+                              <Send className="h-4 w-4 sm:mr-2" />
+                              <span className="hidden sm:inline">{sending === project.id ? 'Senden...' : 'E-Mail'}</span>
                             </Button>
                           )}
                           {project.resultsSentAt && (
-                            <span className="text-xs text-green-600 flex items-center gap-1">
+                            <span className="text-xs text-green-600 flex items-center gap-1 px-2">
                               <Check className="h-4 w-4" />
-                              Gesendet
+                              <span className="hidden sm:inline">Gesendet</span>
                             </span>
                           )}
                         </div>
