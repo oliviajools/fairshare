@@ -151,7 +151,7 @@ export default function ProjectGradePage({ params }: { params: Promise<{ id: str
   const isClosed = project.session?.status === 'CLOSED'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 pb-24 page-transition">
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-3xl mx-auto">
           {/* Header */}

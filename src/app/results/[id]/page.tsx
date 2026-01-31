@@ -120,7 +120,7 @@ export default function ResultsPage() {
   const sortedResults = [...results].sort((a, b) => b.averagePercent - a.averagePercent)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50 page-transition">
       <div className="container mx-auto px-6 py-8 pt-16">
         <div className="max-w-4xl mx-auto">
           {/* Header */}

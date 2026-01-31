@@ -752,7 +752,7 @@ function CreateSessionContent() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-amber-50 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-amber-50 pb-24 page-transition">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
