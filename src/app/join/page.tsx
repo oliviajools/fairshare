@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { GraduationCap, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { FeatureGuard } from '@/components/FeatureGuard'
 
 export default function JoinClassroomPage() {
   const router = useRouter()
@@ -64,6 +65,7 @@ export default function JoinClassroomPage() {
   }
 
   return (
+    <FeatureGuard feature="join-classroom">
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-sky-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
@@ -161,5 +163,6 @@ export default function JoinClassroomPage() {
         </CardContent>
       </Card>
     </div>
+    </FeatureGuard>
   )
 }

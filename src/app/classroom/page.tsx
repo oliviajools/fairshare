@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { BottomNav } from '@/components/BottomNav'
+import { FeatureGuard } from '@/components/FeatureGuard'
 import {
   ArrowLeft,
   Plus,
@@ -108,6 +109,7 @@ export default function ClassroomPage() {
   }
 
   return (
+    <FeatureGuard feature="classroom">
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 pb-24 page-transition">
       <div className="container mx-auto px-4 py-6 pt-12">
         <div className="max-w-4xl mx-auto">
@@ -249,5 +251,6 @@ export default function ClassroomPage() {
       </div>
       <BottomNav />
     </div>
+    </FeatureGuard>
   )
 }

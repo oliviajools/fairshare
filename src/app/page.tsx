@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Plus, Users, Calendar, BarChart3, Trash2, Crown, Settings, LogOut, EyeOff, X, GraduationCap, UserPlus } from 'lucide-react'
 import { BottomNav } from '@/components/BottomNav'
+import { hasFeature, isTeacherApp, getAppName } from '@/lib/app-mode'
 
 interface Session {
   id: string
@@ -201,42 +202,51 @@ export default function Home() {
                 Hallo, {userName}! 👋
               </h1>
               <p className="text-gray-600 mt-1">
-                Hier wird Kohle fair verteilt.
+                {isTeacherApp() ? 'Verwalte deine Klassen und Projekte.' : 'Hier wird Kohle fair verteilt.'}
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/create">
-                <Button size="lg" className="bg-sky-500 hover:bg-sky-600 w-full sm:w-auto shadow-lg">
-                  <Plus className="mr-2 h-5 w-5" />
-                  Neue Session erstellen
-                </Button>
-              </Link>
-              <Link href="/classroom">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto border-indigo-200 text-indigo-600 hover:bg-indigo-50">
-                  <GraduationCap className="mr-2 h-5 w-5" />
-                  Teacher Area
-                </Button>
-              </Link>
-              <Link href="/join">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto border-emerald-200 text-emerald-600 hover:bg-emerald-50">
-                  <UserPlus className="mr-2 h-5 w-5" />
-                  Klasse beitreten
-                </Button>
-              </Link>
+              {hasFeature('voting') && (
+                <Link href="/create">
+                  <Button size="lg" className="bg-sky-500 hover:bg-sky-600 w-full sm:w-auto shadow-lg">
+                    <Plus className="mr-2 h-5 w-5" />
+                    Neue Session erstellen
+                  </Button>
+                </Link>
+              )}
+              {hasFeature('classroom') && (
+                <Link href="/classroom">
+                  <Button size="lg" variant={isTeacherApp() ? "default" : "outline"} className={isTeacherApp() ? "bg-indigo-500 hover:bg-indigo-600 w-full sm:w-auto shadow-lg" : "w-full sm:w-auto border-indigo-200 text-indigo-600 hover:bg-indigo-50"}>
+                    <GraduationCap className="mr-2 h-5 w-5" />
+                    {isTeacherApp() ? 'Meine Klassen' : 'Teacher Area'}
+                  </Button>
+                </Link>
+              )}
+              {hasFeature('join-classroom') && (
+                <Link href="/join">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-emerald-200 text-emerald-600 hover:bg-emerald-50">
+                    <UserPlus className="mr-2 h-5 w-5" />
+                    Klasse beitreten
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
 
-          {/* Section Header */}
-          <div className="flex items-center gap-2 mb-4">
-            <Crown className="h-5 w-5 text-sky-500" />
-            <h2 className="text-lg font-semibold text-gray-900">Aktive Sessions</h2>
-            {openSessions.length > 0 && (
-              <Badge variant="secondary">{openSessions.length}</Badge>
-            )}
-          </div>
+          {/* Section Header - only show for voting apps */}
+          {hasFeature('voting') && (
+            <div className="flex items-center gap-2 mb-4">
+              <Crown className="h-5 w-5 text-sky-500" />
+              <h2 className="text-lg font-semibold text-gray-900">Aktive Sessions</h2>
+              {openSessions.length > 0 && (
+                <Badge variant="secondary">{openSessions.length}</Badge>
+              )}
+            </div>
+          )}
 
-          {/* Sessions List */}
+          {/* Sessions List - only show for voting apps */}
+          {hasFeature('voting') ? (
           <div className="space-y-6">
             {loading ? (
                 <div className="text-center py-8">
@@ -340,6 +350,28 @@ export default function Home() {
                 </div>
               )}
           </div>
+          ) : (
+            /* Teacher App Dashboard */
+            <Card className="border-2 border-dashed border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-purple-50/50">
+              <CardContent className="text-center py-16 px-8">
+                <div className="mb-6">
+                  <GraduationCap className="h-16 w-16 text-indigo-500 mx-auto" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  Willkommen im Teacher Dashboard
+                </h3>
+                <p className="text-gray-600 mb-6 text-lg">
+                  Verwalte deine Klassen und erstelle Projekte für faire Gruppenarbeit-Bewertungen.
+                </p>
+                <Link href="/classroom">
+                  <Button size="lg" className="bg-indigo-500 hover:bg-indigo-600 shadow-lg hover:shadow-xl transition-all">
+                    <GraduationCap className="mr-2 h-5 w-5" />
+                    Meine Klassen öffnen
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
       <BottomNav />

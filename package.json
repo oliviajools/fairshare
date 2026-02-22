@@ -4,8 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:student": "NEXT_PUBLIC_APP_MODE=student next dev",
+    "dev:teacher": "NEXT_PUBLIC_APP_MODE=teacher next dev",
     "build": "prisma generate && prisma db push --skip-generate && next build",
+    "build:student": "NEXT_PUBLIC_APP_MODE=student npm run build",
+    "build:teacher": "NEXT_PUBLIC_APP_MODE=teacher npm run build",
     "build:app": "next build && npx cap sync",
+    "build:app:student": "NEXT_PUBLIC_APP_MODE=student next build && cp capacitor.config.student.ts capacitor.config.ts && npx cap sync ios",
+    "build:app:teacher": "NEXT_PUBLIC_APP_MODE=teacher next build && cp capacitor.config.teacher.ts capacitor.config.ts && npx cap sync ios",
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",
@@ -17,10 +23,13 @@
     "cap:sync": "npx cap sync",
     "cap:open": "npx cap open",
     "ios:dev": "npm run build:app && npx cap open ios",
+    "ios:student": "npm run build:app:student && npx cap open ios",
+    "ios:teacher": "npm run build:app:teacher && npx cap open ios",
     "android:dev": "npm run build:app && npx cap open android"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
+    "@capacitor-community/apple-sign-in": "^7.1.0",
     "@capacitor/android": "^7.4.4",
     "@capacitor/cli": "^7.4.4",
     "@capacitor/core": "^7.4.4",
