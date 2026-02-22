@@ -2,6 +2,7 @@ import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import AzureADProvider from 'next-auth/providers/azure-ad'
+import AppleProvider from 'next-auth/providers/apple'
 import bcrypt from 'bcryptjs'
 import { prisma } from './db'
 import { checkRateLimit, rateLimitConfigs } from './rate-limit'
@@ -23,6 +24,14 @@ export const authOptions: NextAuthOptions = {
         clientId: process.env.AZURE_AD_CLIENT_ID,
         clientSecret: process.env.AZURE_AD_CLIENT_SECRET,
         tenantId: process.env.AZURE_AD_TENANT_ID,
+        allowDangerousEmailAccountLinking: true,
+      })
+    ] : []),
+    // Apple SSO (required for App Store compliance)
+    ...(process.env.APPLE_ID && process.env.APPLE_SECRET ? [
+      AppleProvider({
+        clientId: process.env.APPLE_ID,
+        clientSecret: process.env.APPLE_SECRET,
         allowDangerousEmailAccountLinking: true,
       })
     ] : []),
@@ -95,7 +104,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account }) {
       // For SSO providers, auto-create user if they don't exist
-      if (account?.provider === 'google' || account?.provider === 'azure-ad') {
+      if (account?.provider === 'google' || account?.provider === 'azure-ad' || account?.provider === 'apple') {
         if (user.email) {
           try {
             const existingUser = await prisma.user.findUnique({
@@ -123,7 +132,7 @@ export const authOptions: NextAuthOptions = {
       // On initial login, fetch the database user ID
       if (user && token.email) {
         // For SSO providers, we need to get the ID from our database, not the provider
-        if (account?.provider === 'google' || account?.provider === 'azure-ad') {
+        if (account?.provider === 'google' || account?.provider === 'azure-ad' || account?.provider === 'apple') {
           const dbUser = await prisma.user.findUnique({
             where: { email: token.email.toLowerCase() }
           })
