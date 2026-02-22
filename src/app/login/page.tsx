@@ -61,8 +61,8 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-sky-100 flex items-center justify-center">
-            <span className="text-3xl">💰</span>
+          <div className="mx-auto mb-4">
+            <img src="/icon.svg" alt="TeamPayer Logo" className="h-20 w-20" />
           </div>
           <CardTitle className="text-2xl">TeamPayer</CardTitle>
           <CardDescription className="text-base">
