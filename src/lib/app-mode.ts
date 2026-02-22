@@ -36,8 +36,8 @@ export function hasFeature(feature: 'voting' | 'classroom' | 'join-classroom'): 
       // Classroom management is available in teacher app and all mode
       return mode !== 'student'
     case 'join-classroom':
-      // Join classroom is available in student app and all mode
-      return mode !== 'teacher'
+      // Join classroom is only available in teacher app (for testing) and all mode
+      return mode !== 'student'
     default:
       return true
   }
