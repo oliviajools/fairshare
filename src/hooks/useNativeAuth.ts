@@ -40,7 +40,11 @@ export function useNativeAuth() {
     setError('')
 
     try {
-      if (isNative) {
+      // Always try native first when on iOS
+      const { Capacitor } = await import('@capacitor/core')
+      const platform = Capacitor.getPlatform()
+      
+      if (platform === 'ios') {
         // Use native Apple Sign-In
         const { SignInWithApple } = await import('@capacitor-community/apple-sign-in')
         
@@ -73,9 +77,11 @@ export function useNativeAuth() {
           router.push('/')
           router.refresh()
         }
-      } else {
+      } else if (platform === 'web') {
         // Use web OAuth
         await signIn('apple', { callbackUrl: '/' })
+      } else {
+        throw new Error('Apple Sign-In is only available on iOS and web')
       }
     } catch (err: any) {
       console.error('Apple Sign-In error:', err)
