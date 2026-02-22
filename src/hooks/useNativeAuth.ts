@@ -68,28 +68,10 @@ export function useNativeAuth() {
           throw new Error(data.error || 'Authentication failed')
         }
 
-        // Store session token and redirect
-        if (data.sessionToken) {
-          // Trigger NextAuth session refresh by signing in with a special provider
-          // or just redirect and let the middleware handle it
-          localStorage.setItem('apple-session-token', data.sessionToken)
-          
-          // Sign in with credentials using the token
-          const signInResult = await signIn('credentials', {
-            email: data.user.email,
-            password: `apple:${data.sessionToken}`,
-            redirect: false,
-          })
-
-          if (signInResult?.error) {
-            // If credentials don't work, the user needs to set a password
-            // For now, just redirect - the session is valid
-            router.push('/')
-            router.refresh()
-          } else {
-            router.push('/')
-            router.refresh()
-          }
+        // Session cookie is set by the API, just redirect
+        if (data.success) {
+          router.push('/')
+          router.refresh()
         }
       } else {
         // Use web OAuth

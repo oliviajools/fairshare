@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import jwt from 'jsonwebtoken'
+import { encode } from 'next-auth/jwt'
 
 export async function POST(request: NextRequest) {
   try {
-    const { identityToken, user, email, fullName } = await request.json()
+    const { identityToken, email, fullName } = await request.json()
 
     if (!identityToken) {
       return NextResponse.json({ error: 'Identity token required' }, { status: 400 })
@@ -50,30 +51,51 @@ export async function POST(request: NextRequest) {
           emailVerified: new Date(),
         }
       })
+    } else if (!dbUser.name && userName) {
+      // Update name if not set
+      dbUser = await prisma.user.update({
+        where: { id: dbUser.id },
+        data: { name: userName }
+      })
     }
 
-    // Create a session token for NextAuth compatibility
-    // We'll use a simple JWT that the client can use
-    const sessionToken = jwt.sign(
-      {
+    // Create NextAuth-compatible JWT session token
+    const sessionToken = await encode({
+      token: {
         id: dbUser.id,
         email: dbUser.email,
         name: dbUser.name,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60), // 30 days
+        sub: dbUser.id,
       },
-      process.env.NEXTAUTH_SECRET || 'fallback-secret'
-    )
+      secret: process.env.NEXTAUTH_SECRET!,
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+    })
 
-    return NextResponse.json({
+    // Create response with session cookie
+    const response = NextResponse.json({
       success: true,
       user: {
         id: dbUser.id,
         email: dbUser.email,
         name: dbUser.name,
       },
-      sessionToken,
     })
+
+    // Set the NextAuth session cookie
+    const isProduction = process.env.NODE_ENV === 'production'
+    const cookieName = isProduction 
+      ? '__Secure-next-auth.session-token' 
+      : 'next-auth.session-token'
+    
+    response.cookies.set(cookieName, sessionToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+    })
+
+    return response
   } catch (error) {
     console.error('Apple native auth error:', error)
     return NextResponse.json({ error: 'Authentication failed' }, { status: 500 })
