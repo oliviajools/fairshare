@@ -13,7 +13,8 @@ export async function GET(
       include: {
         session: {
           include: {
-            participants: true
+            participants: true,
+            fixedShares: true
           }
         }
       }

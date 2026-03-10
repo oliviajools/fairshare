@@ -17,6 +17,14 @@ interface Participant {
   displayName: string
 }
 
+interface FixedShare {
+  id: string
+  name: string
+  percent: number
+}
+
+type FixedShareMode = 'TRANSPARENT_REDUCED' | 'TRANSPARENT_FULL' | 'RESULTS_ONLY' | 'PAYOUT_ONLY'
+
 interface Session {
   id: string
   title: string
@@ -25,6 +33,8 @@ interface Session {
   status: 'OPEN' | 'CLOSED'
   evaluationInfo?: string
   participants: Participant[]
+  fixedShares?: FixedShare[]
+  fixedShareMode?: FixedShareMode
 }
 
 interface InvitedSession {
@@ -59,6 +69,15 @@ export default function VotePage() {
   const [error, setError] = useState('')
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [hasLoadedInitialVotes, setHasLoadedInitialVotes] = useState(false)
+
+  // Calculate fixed shares total for transparent modes
+  const fixedShares = session?.fixedShares || []
+  const fixedShareMode = session?.fixedShareMode
+  const totalFixedPercent = fixedShares.reduce((sum, fs) => sum + fs.percent, 0)
+  
+  // For TRANSPARENT_REDUCED mode, participants only distribute the remaining percentage
+  const availablePercent = fixedShareMode === 'TRANSPARENT_REDUCED' ? (100 - totalFixedPercent) : 100
+  const isTransparentMode = fixedShareMode === 'TRANSPARENT_REDUCED' || fixedShareMode === 'TRANSPARENT_FULL'
 
   // Calculate total percentage
   const totalPercentage = Object.values(votes).reduce((sum, percent) => sum + percent, 0)
@@ -163,9 +182,9 @@ export default function VotePage() {
 
 
   const submitVotes = async () => {
-    // Validate 100% total before submitting
-    if (Math.abs(totalPercentage - 100) > 0.01) {
-      setError(`Die Gesamtsumme muss genau 100% betragen. Aktuell: ${totalPercentage.toFixed(1)}%`)
+    // Validate total before submitting (100% or reduced amount for TRANSPARENT_REDUCED)
+    if (Math.abs(totalPercentage - availablePercent) > 0.01) {
+      setError(`Die Gesamtsumme muss genau ${availablePercent.toFixed(0)}% betragen. Aktuell: ${totalPercentage.toFixed(1)}%`)
       return
     }
 
@@ -324,6 +343,32 @@ export default function VotePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {/* Fixed Shares Info for Transparent Modes */}
+                  {isTransparentMode && fixedShares.length > 0 && (
+                    <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-amber-600 font-bold">⚡</span>
+                        <span className="font-medium text-amber-800">Feste Anteile</span>
+                      </div>
+                      <div className="space-y-2">
+                        {fixedShares.map((fs) => (
+                          <div key={fs.id} className="flex justify-between items-center text-sm">
+                            <span className="text-amber-700">{fs.name}</span>
+                            <span className="font-medium text-amber-800">{fs.percent.toFixed(1)}%</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-amber-200">
+                        <p className="text-sm text-amber-700">
+                          {fixedShareMode === 'TRANSPARENT_REDUCED' 
+                            ? `Du verteilst die verbleibenden ${availablePercent.toFixed(0)}% auf die Teilnehmer.`
+                            : `Diese Anteile werden zusätzlich zu deiner Bewertung berücksichtigt.`
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-4">
                     {session.participants.map((participant) => (
                       <div key={participant.id} className="flex items-center gap-4">
@@ -362,16 +407,16 @@ export default function VotePage() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Gesamtsumme:</span>
                       <span className={`text-lg font-bold ${
-                        Math.abs(totalPercentage - 100) < 0.01 
+                        Math.abs(totalPercentage - availablePercent) < 0.01 
                           ? 'text-green-600' 
                           : 'text-red-600'
                       }`}>
-                        {totalPercentage.toFixed(1)}%
+                        {totalPercentage.toFixed(1)}% / {availablePercent.toFixed(0)}%
                       </span>
                     </div>
-                    {Math.abs(totalPercentage - 100) > 0.01 && (
+                    {Math.abs(totalPercentage - availablePercent) > 0.01 && (
                       <p className="text-sm text-red-600 mt-1">
-                        Die Gesamtsumme muss genau 100% betragen
+                        Die Gesamtsumme muss genau {availablePercent.toFixed(0)}% betragen
                       </p>
                     )}
                   </div>
@@ -381,7 +426,7 @@ export default function VotePage() {
                     <div className="mt-6">
                       <Button
                         onClick={submitVotes}
-                        disabled={submitting || Object.keys(votes).length === 0 || Math.abs(totalPercentage - 100) > 0.01}
+                        disabled={submitting || Object.keys(votes).length === 0 || Math.abs(totalPercentage - availablePercent) > 0.01}
                         className="w-full bg-sky-500 hover:bg-sky-600"
                       >
                         <Send className="mr-2 h-4 w-4" />
