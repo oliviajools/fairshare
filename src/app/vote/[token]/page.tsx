@@ -468,10 +468,19 @@ export default function VotePage() {
                     {/* Live Pie Chart */}
                     <div className="flex justify-center">
                       <PieChart
-                        data={session.participants.map(p => ({
-                          name: p.displayName,
-                          value: votes[p.id] || 0
-                        }))}
+                        data={[
+                          // Add fixed shares first if transparent mode
+                          ...(isTransparentMode ? fixedShares.map(fs => ({
+                            name: fs.name,
+                            value: fs.percent,
+                            color: '#f59e0b' // amber color for fixed shares
+                          })) : []),
+                          // Then participant votes
+                          ...session.participants.map(p => ({
+                            name: p.displayName,
+                            value: votes[p.id] || 0
+                          }))
+                        ]}
                         size={180}
                         showLabels={true}
                         showLegend={true}
