@@ -122,6 +122,14 @@ enum CompanyRole {
   MEMBER
 }
 
+// Fixed Share Display Mode - when/how fixed shares are shown
+enum FixedShareMode {
+  TRANSPARENT_REDUCED    // Mode 1a: Shown during voting, reduces available % (e.g., only 80% to distribute)
+  TRANSPARENT_FULL       // Mode 1b: Shown during voting, but 100% still distributed among participants
+  RESULTS_ONLY           // Mode 2: Added only in results view
+  PAYOUT_ONLY            // Mode 3: Added only in payout calculation
+}
+
 // App Models
 model VotingSession {
   id             String       @id @default(uuid())
@@ -140,11 +148,24 @@ model VotingSession {
   ballots        Ballot[]
   invitations    Invitation[]
   hiddenBy       HiddenSession[]
+  fixedShares    FixedShare[]
+  fixedShareMode FixedShareMode?
   // Recurring session fields
   recurringId    String?
   recurring      RecurringSession? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
   classroomProject ClassroomProject?
   createdAt      DateTime     @default(now())
+}
+
+// Fixed Shares - fixed percentage allocations (e.g., company overhead)
+model FixedShare {
+  id          String        @id @default(uuid())
+  sessionId   String
+  session     VotingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  name        String        // e.g., "Unternehmen", "Overhead", "Steuern"
+  percent     Float         // e.g., 20.0 for 20%
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 // Recurring Sessions - templates for automatic session creation

@@ -12,6 +12,7 @@ export async function GET(
       where: { id },
       include: {
         participants: true,
+        fixedShares: true,
         ballots: {
           where: {
             status: 'SUBMITTED'
@@ -66,15 +67,45 @@ export async function GET(
     }
 
     // Calculate averages and format results
-    const results = Array.from(resultsMap.values()).map(result => ({
+    let results = Array.from(resultsMap.values()).map(result => ({
       participantId: result.participantId,
       name: result.name,
       totalPercent: result.totalPercent,
       voteCount: result.voteCount,
       averagePercent: result.voteCount > 0 ? result.totalPercent / result.voteCount : 0,
       // Only include voters if not anonymous
-      voters: session.isAnonymous ? undefined : result.voters
+      voters: session.isAnonymous ? undefined : result.voters,
+      isFixedShare: false
     }))
+
+    // Handle fixed shares based on mode
+    const fixedShares = (session as any).fixedShares || []
+    const fixedShareMode = (session as any).fixedShareMode
+    const totalFixedPercent = fixedShares.reduce((sum: number, fs: any) => sum + fs.percent, 0)
+
+    // For RESULTS_ONLY and PAYOUT_ONLY modes, add fixed shares to results
+    // For TRANSPARENT modes, they're already factored into voting
+    if (fixedShareMode === 'RESULTS_ONLY' || fixedShareMode === 'PAYOUT_ONLY') {
+      // Scale down participant percentages to make room for fixed shares
+      const scaleFactor = (100 - totalFixedPercent) / 100
+      results = results.map(r => ({
+        ...r,
+        averagePercent: r.averagePercent * scaleFactor
+      }))
+    }
+
+    // Add fixed shares to results for display (except PAYOUT_ONLY)
+    const fixedShareResults = fixedShareMode !== 'PAYOUT_ONLY' 
+      ? fixedShares.map((fs: any) => ({
+          participantId: fs.id,
+          name: fs.name,
+          totalPercent: fs.percent,
+          voteCount: 0,
+          averagePercent: fs.percent,
+          voters: undefined,
+          isFixedShare: true
+        }))
+      : []
 
     // Return session without ballots details if anonymous
     const sessionResponse = {
@@ -87,13 +118,20 @@ export async function GET(
       evaluationInfo: session.evaluationInfo,
       creatorId: session.creatorId,
       participants: session.participants,
+      fixedShares: fixedShares,
+      fixedShareMode: fixedShareMode,
       // Don't expose ballot details if anonymous
       ballots: session.isAnonymous ? [] : session.ballots
     }
 
+    // Combine results with fixed shares
+    const allResults = [...results, ...fixedShareResults]
+
     return NextResponse.json({
       session: sessionResponse,
-      results
+      results: allResults,
+      fixedShares: fixedShareResults,
+      totalFixedPercent
     })
   } catch (error) {
     console.error('Error fetching results:', error)

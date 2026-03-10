@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     const authSession = await getServerSession(authOptions)
     const body = await request.json()
-    const { title, date, time, evaluationInfo, participants, companyId } = body
+    const { title, date, time, evaluationInfo, participants, companyId, fixedShares, fixedShareMode } = body
 
     // Generate organizer token
     const organizerToken = generateInviteToken()
@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
       organizerToken,
       creatorId: authSession?.user ? (authSession.user as any).id : null,
       companyId: companyId || null,
+      fixedShareMode: fixedShareMode || null,
     }
     
     // Handle date - if provided and not empty, parse it, otherwise set to current date
@@ -38,6 +39,21 @@ export async function POST(request: NextRequest) {
     const session = await prisma.votingSession.create({
       data: sessionData,
     })
+
+    // Create fixed shares if provided
+    if (fixedShares && Array.isArray(fixedShares) && fixedShares.length > 0) {
+      for (const share of fixedShares) {
+        if (share.name && share.percent > 0) {
+          await prisma.fixedShare.create({
+            data: {
+              sessionId: session.id,
+              name: share.name.trim(),
+              percent: share.percent
+            }
+          })
+        }
+      }
+    }
 
     // Create participants and generate invite tokens
     const participantData = []

@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Plus, Users, Calendar, BarChart3, Trash2, Crown, Settings, LogOut, EyeOff, X, GraduationCap, UserPlus } from 'lucide-react'
 import { BottomNav } from '@/components/BottomNav'
-import { hasFeature, isTeacherApp, getAppName } from '@/lib/app-mode'
+import { hasFeature, isSchoolApp, getAppName } from '@/lib/app-mode'
 
 interface Session {
   id: string
@@ -199,10 +199,10 @@ export default function Home() {
             {/* Greeting */}
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-gray-900">
-                Hallo, {userName}! 👋
+                Hallo, {userName}!
               </h1>
               <p className="text-gray-600 mt-1">
-                {isTeacherApp() ? 'Verwalte deine Klassen und Projekte.' : 'Hier wird Kohle fair verteilt.'}
+                {isSchoolApp() ? 'Verwalte deine Klassen und Projekte.' : 'Ermittle hier, wer wie viel vom Kuchen kriegt 🍰'}
               </p>
             </div>
 
@@ -217,9 +217,9 @@ export default function Home() {
               )}
               {hasFeature('classroom') && (
                 <Link href="/classroom">
-                  <Button size="lg" variant={isTeacherApp() ? "default" : "outline"} className={isTeacherApp() ? "bg-indigo-500 hover:bg-indigo-600 w-full sm:w-auto shadow-lg" : "w-full sm:w-auto border-indigo-200 text-indigo-600 hover:bg-indigo-50"}>
+                  <Button size="lg" variant={isSchoolApp() ? "default" : "outline"} className={isSchoolApp() ? "bg-indigo-500 hover:bg-indigo-600 w-full sm:w-auto shadow-lg" : "w-full sm:w-auto border-indigo-200 text-indigo-600 hover:bg-indigo-50"}>
                     <GraduationCap className="mr-2 h-5 w-5" />
-                    {isTeacherApp() ? 'Meine Klassen' : 'Teacher Area'}
+                    {isSchoolApp() ? 'Meine Klassen' : 'Teacher Area'}
                   </Button>
                 </Link>
               )}
@@ -257,21 +257,18 @@ export default function Home() {
                 <Card className="border-2 border-dashed border-sky-200 bg-gradient-to-br from-sky-50/50 to-amber-50/50">
                   <CardContent className="text-center py-16 px-8">
                     <div className="mb-6">
-                      <span className="text-6xl">🚀</span>
+                      <span className="text-6xl">🎪</span>
                     </div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                      Bereit für faire Verteilung?
+                      Vorhang auf für faire Verteilung?
                     </h3>
-                    <p className="text-gray-600 mb-2 text-lg">
-                      Noch keine Sessions erstellt – aber das ändern wir jetzt!
-                    </p>
-                    <p className="text-gray-500 mb-6 text-sm italic">
-                      Tipp: Je mehr Leute abstimmen, desto fairer wird's. Mathe-Magie! ✨
+                    <p className="text-gray-600 mb-6 text-lg">
+                      Keine aktive Session – aber das ändern wir jetzt!
                     </p>
                     <Link href="/create">
                       <Button size="lg" className="bg-sky-500 hover:bg-sky-600 shadow-lg hover:shadow-xl transition-all">
                         <Plus className="mr-2 h-5 w-5" />
-                        Erste Session starten
+                        Neue Session erstellen
                       </Button>
                     </Link>
                   </CardContent>

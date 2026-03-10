@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import { ArrowLeft, Plus, Trash2, Copy, Mail, Check, Eye, EyeOff, Building2, UsersRound, Sparkles, Users, Calendar, PartyPopper, Briefcase, Home, Trophy, ChevronRight, Info, GraduationCap } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Copy, Mail, Check, Eye, EyeOff, Building2, UsersRound, Sparkles, Users, Calendar, PartyPopper, Briefcase, Home, Trophy, ChevronRight, Info, GraduationCap, Percent } from 'lucide-react'
+import { hasFeature } from '@/lib/app-mode'
 
 interface Company {
   id: string
@@ -35,6 +36,13 @@ interface Participant {
   email: string
 }
 
+interface FixedShare {
+  name: string
+  percent: number
+}
+
+type FixedShareMode = 'TRANSPARENT_REDUCED' | 'TRANSPARENT_FULL' | 'RESULTS_ONLY' | 'PAYOUT_ONLY'
+
 interface InviteLink {
   name: string
   email: string
@@ -51,6 +59,7 @@ interface SessionTemplate {
   defaultTitle: string
   defaultEvaluationInfo: string
   isAnonymous: boolean
+  requiresFeature?: 'voting' | 'classroom' | 'join-classroom'
 }
 
 const SESSION_TEMPLATES: SessionTemplate[] = [
@@ -103,6 +112,7 @@ const SESSION_TEMPLATES: SessionTemplate[] = [
     defaultTitle: 'Projektarbeit Bewertung',
     defaultEvaluationInfo: 'Bewertet fair den Beitrag jedes Teammitglieds: Wer hat welche Aufgaben übernommen? Wie war die Qualität? Wie war das Engagement und die Zuverlässigkeit?',
     isAnonymous: true,
+    requiresFeature: 'classroom',
   },
   {
     id: 'custom',
@@ -206,6 +216,30 @@ function CreateSessionContent() {
     { name: '', email: '' }
   ])
 
+  const [fixedShares, setFixedShares] = useState<FixedShare[]>([])
+  const [fixedShareMode, setFixedShareMode] = useState<FixedShareMode | null>(null)
+  const [showFixedShareSection, setShowFixedShareSection] = useState(false)
+
+  const addFixedShare = () => {
+    setFixedShares([...fixedShares, { name: '', percent: 0 }])
+  }
+
+  const updateFixedShare = (index: number, field: 'name' | 'percent', value: string | number) => {
+    const updated = [...fixedShares]
+    if (field === 'percent') {
+      updated[index].percent = Math.min(Math.max(0, Number(value)), 100)
+    } else {
+      updated[index].name = value as string
+    }
+    setFixedShares(updated)
+  }
+
+  const removeFixedShare = (index: number) => {
+    setFixedShares(fixedShares.filter((_, i) => i !== index))
+  }
+
+  const totalFixedPercent = fixedShares.reduce((sum, fs) => sum + (fs.percent || 0), 0)
+
   const selectTemplate = (template: SessionTemplate) => {
     setSelectedTemplate(template)
     setFormData({
@@ -266,6 +300,8 @@ function CreateSessionContent() {
           ...formData,
           companyId: selectedCompany || null,
           participants: validParticipants,
+          fixedShares: fixedShares.filter(fs => fs.name.trim() && fs.percent > 0),
+          fixedShareMode: fixedShareMode,
         }),
       })
 
@@ -436,7 +472,7 @@ function CreateSessionContent() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {SESSION_TEMPLATES.map((template) => (
+        {SESSION_TEMPLATES.filter(t => !t.requiresFeature || hasFeature(t.requiresFeature)).map((template) => (
           <button
             key={template.id}
             onClick={() => selectTemplate(template)}
@@ -587,6 +623,147 @@ function CreateSessionContent() {
                 onCheckedChange={(checked) => setFormData({ ...formData, isAnonymous: checked })}
               />
             </div>
+          </div>
+
+          {/* Fixed Shares Section */}
+          <div className="rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 p-4">
+            <button
+              type="button"
+              onClick={() => setShowFixedShareSection(!showFixedShareSection)}
+              className="w-full flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-100 text-amber-600">
+                  <Percent className="h-5 w-5" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-gray-900">Feste Anteile</p>
+                  <p className="text-sm text-gray-500">
+                    {fixedShares.length > 0 
+                      ? `${fixedShares.length} feste Anteile (${totalFixedPercent.toFixed(1)}%)`
+                      : 'z.B. Unternehmen, Overhead, Steuern'}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className={`h-5 w-5 text-gray-400 transition-transform ${showFixedShareSection ? 'rotate-90' : ''}`} />
+            </button>
+
+            {showFixedShareSection && (
+              <div className="mt-4 space-y-4">
+                {/* Mode Selection */}
+                {fixedShares.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Wann wird der feste Anteil angezeigt?</Label>
+                    <div className="grid grid-cols-1 gap-2">
+                      <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${fixedShareMode === 'TRANSPARENT_REDUCED' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                        <input
+                          type="radio"
+                          name="fixedShareMode"
+                          checked={fixedShareMode === 'TRANSPARENT_REDUCED'}
+                          onChange={() => setFixedShareMode('TRANSPARENT_REDUCED')}
+                          className="mt-1"
+                        />
+                        <div>
+                          <p className="font-medium text-sm">Transparent (reduziert)</p>
+                          <p className="text-xs text-gray-500">Teilnehmer verteilen nur {(100 - totalFixedPercent).toFixed(0)}%</p>
+                        </div>
+                      </label>
+                      <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${fixedShareMode === 'TRANSPARENT_FULL' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                        <input
+                          type="radio"
+                          name="fixedShareMode"
+                          checked={fixedShareMode === 'TRANSPARENT_FULL'}
+                          onChange={() => setFixedShareMode('TRANSPARENT_FULL')}
+                          className="mt-1"
+                        />
+                        <div>
+                          <p className="font-medium text-sm">Transparent (voll)</p>
+                          <p className="text-xs text-gray-500">100% verteilen, fester Anteil wird angezeigt</p>
+                        </div>
+                      </label>
+                      <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${fixedShareMode === 'RESULTS_ONLY' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                        <input
+                          type="radio"
+                          name="fixedShareMode"
+                          checked={fixedShareMode === 'RESULTS_ONLY'}
+                          onChange={() => setFixedShareMode('RESULTS_ONLY')}
+                          className="mt-1"
+                        />
+                        <div>
+                          <p className="font-medium text-sm">Nur in Ergebnissen</p>
+                          <p className="text-xs text-gray-500">Wird erst bei den Ergebnissen aufgelistet</p>
+                        </div>
+                      </label>
+                      <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${fixedShareMode === 'PAYOUT_ONLY' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                        <input
+                          type="radio"
+                          name="fixedShareMode"
+                          checked={fixedShareMode === 'PAYOUT_ONLY'}
+                          onChange={() => setFixedShareMode('PAYOUT_ONLY')}
+                          className="mt-1"
+                        />
+                        <div>
+                          <p className="font-medium text-sm">Nur bei Auszahlung</p>
+                          <p className="text-xs text-gray-500">Wird erst bei der Auszahlungsberechnung eingerechnet</p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Fixed Shares List */}
+                <div className="space-y-2">
+                  {fixedShares.map((share, index) => (
+                    <div key={index} className="flex gap-2 items-center">
+                      <Input
+                        placeholder="Name (z.B. Unternehmen)"
+                        value={share.name}
+                        onChange={(e) => updateFixedShare(index, 'name', e.target.value)}
+                        className="flex-1 bg-white"
+                      />
+                      <div className="relative w-24">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={share.percent || ''}
+                          onChange={(e) => updateFixedShare(index, 'percent', e.target.value)}
+                          className="bg-white pr-8"
+                          placeholder="0"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFixedShare(index)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addFixedShare}
+                  disabled={totalFixedPercent >= 99}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Festen Anteil hinzufügen
+                </Button>
+
+                {totalFixedPercent > 0 && (
+                  <p className="text-sm text-amber-600 font-medium">
+                    Gesamt: {totalFixedPercent.toFixed(1)}% fest → {(100 - totalFixedPercent).toFixed(1)}% für Teilnehmer
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Evaluation info */}

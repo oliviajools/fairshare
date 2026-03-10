@@ -14,27 +14,27 @@ interface OnboardingSlide {
 
 const slides: OnboardingSlide[] = [
   {
-    emoji: '💸',
-    title: 'Schluss mit Zettelwirtschaft!',
-    description: 'Wer schuldet wem was? Mit TeamPayer wird das Aufteilen von Kosten so einfach wie Pizza bestellen. Nur fairer.',
+    emoji: '🍰',
+    title: 'Kohle verteilen für Teamplayer',
+    description: 'Wer sollte wie viel vom Kuchen abbekommen? Na, legt euch doch einfach fest! Per Gruppen-Abstimmung findet ihr mit TeamPayer die beste Lösung für was auch immer. Anonym, wertschätzend und absolut endstufen-FAIR!',
     bgColor: 'from-sky-400 to-sky-600'
   },
   {
-    emoji: '👥',
-    title: 'Alle stimmen ab',
-    description: 'Jeder Teilnehmer bewertet anonym, wer wie viel beitragen soll. Demokratie in ihrer schönsten Form – ohne Diskussion am Esstisch.',
+    emoji: '🧠',
+    title: 'Ihr wisst es am besten',
+    description: 'Ein Grundsatz aus dem Agilen Arbeiten: Beteiligte sind Experten der Prozesse, an denen sie teilhaben. Und können sie einschätzen. Benennt von Fall zu Fall neu, was man wissen muss. Und dann stimmt ab! Jede(r) für sich!',
     bgColor: 'from-violet-400 to-violet-600'
   },
   {
-    emoji: '🎯',
+    emoji: '⚖️',
     title: 'Faire Ergebnisse',
-    description: 'Der Algorithmus berechnet den fairsten Verteilungsschlüssel. Mathe macht\'s möglich – du musst nur noch zahlen (oder kassieren).',
+    description: 'Sich abstimmen durch Abstimmen – dann stimmt\'s auch! Wenn alle es am besten wissen, ist der Mittelwert davon die allerbeste Lösung für alle. Und das Wichtigste: Es funktioniert! Ihr werdet sehen!',
     bgColor: 'from-amber-400 to-amber-600'
   },
   {
     emoji: '🚀',
     title: 'Los geht\'s!',
-    description: 'Erstelle eine Session, lade deine Leute ein und lass die Kohle fair verteilen. Bereit für weniger Stress und mehr Fairness?',
+    description: 'Erstell Sessions und lade Leute per App, Chat oder Mail zur Abstimmung ein. Wenn alle ihre Sicht der Dinge beigetragen haben, kannst du das Ergebnis direkt in Geld umrechnen. Und in die Buchhaltung überführen.',
     bgColor: 'from-emerald-400 to-emerald-600'
   }
 ]

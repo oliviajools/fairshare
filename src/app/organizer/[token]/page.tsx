@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Users, Calendar, CheckCircle, Clock, Lock, Eye, Mail, Copy, Check } from 'lucide-react'
+import { ArrowLeft, Users, Calendar, CheckCircle, Clock, Lock, Eye, Mail, Copy, Check, Trash2, UserPlus } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 
 interface Participant {
   id: string
@@ -38,6 +39,11 @@ export default function OrganizerPage() {
   const [error, setError] = useState('')
   const [closing, setClosing] = useState(false)
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
+  const [removing, setRemoving] = useState<string | null>(null)
+  const [adding, setAdding] = useState(false)
+  const [newParticipantName, setNewParticipantName] = useState('')
+  const [newParticipantEmail, setNewParticipantEmail] = useState('')
+  const [showAddForm, setShowAddForm] = useState(false)
 
   useEffect(() => {
     fetchSession()
@@ -150,6 +156,78 @@ export default function OrganizerPage() {
     )
     
     window.location.href = `mailto:${participant.invitedEmail || ''}?subject=${subject}&body=${body}`
+  }
+
+  const removeParticipant = async (participantId: string, participantName: string) => {
+    if (!session) return
+    
+    const confirmed = window.confirm(
+      `Möchtest du "${participantName}" wirklich entfernen?\n\n` +
+      `Alle Stimmen von und für diese Person werden gelöscht. ` +
+      `Die Prozente der anderen werden entsprechend angepasst.\n\n` +
+      `Diese Aktion kann nicht rückgängig gemacht werden.`
+    )
+    
+    if (!confirmed) return
+
+    setRemoving(participantId)
+    try {
+      const response = await fetch(`/api/sessions/${session.id}/participants/${participantId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        // Update local state
+        setSession({
+          ...session,
+          participants: session.participants.filter(p => p.id !== participantId)
+        })
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Fehler beim Entfernen des Teilnehmers')
+      }
+    } catch (error) {
+      console.error('Error removing participant:', error)
+      alert('Fehler beim Entfernen des Teilnehmers')
+    } finally {
+      setRemoving(null)
+    }
+  }
+
+  const addParticipant = async () => {
+    if (!session || !newParticipantName.trim()) return
+
+    setAdding(true)
+    try {
+      const response = await fetch(`/api/sessions/${session.id}/participants`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newParticipantName.trim(),
+          email: newParticipantEmail.trim() || null
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Update local state with new participant
+        setSession({
+          ...session,
+          participants: [...session.participants, data.participant]
+        })
+        setNewParticipantName('')
+        setNewParticipantEmail('')
+        setShowAddForm(false)
+      } else {
+        alert(data.error || 'Fehler beim Hinzufügen des Teilnehmers')
+      }
+    } catch (error) {
+      console.error('Error adding participant:', error)
+      alert('Fehler beim Hinzufügen des Teilnehmers')
+    } finally {
+      setAdding(false)
+    }
   }
 
   if (loading) {
@@ -321,13 +399,70 @@ export default function OrganizerPage() {
 
             {/* Participants List */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Teilnehmer</CardTitle>
-                <CardDescription>
-                  Status der einzelnen Teilnehmer
-                </CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl">Teilnehmer</CardTitle>
+                  <CardDescription>
+                    Status der einzelnen Teilnehmer
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddForm(!showAddForm)}
+                  className="text-sky-600 border-sky-200 hover:bg-sky-50"
+                >
+                  <UserPlus className="h-4 w-4 mr-1" />
+                  Hinzufügen
+                </Button>
               </CardHeader>
               <CardContent>
+                {/* Add Participant Form */}
+                {showAddForm && (
+                  <div className="mb-4 p-4 border-2 border-dashed border-sky-200 rounded-lg bg-sky-50/50">
+                    <h4 className="font-medium mb-3">Neuen Teilnehmer hinzufügen</h4>
+                    <div className="space-y-3">
+                      <Input
+                        placeholder="Name *"
+                        value={newParticipantName}
+                        onChange={(e) => setNewParticipantName(e.target.value)}
+                        className="bg-white"
+                      />
+                      <Input
+                        placeholder="E-Mail (optional)"
+                        type="email"
+                        value={newParticipantEmail}
+                        onChange={(e) => setNewParticipantEmail(e.target.value)}
+                        className="bg-white"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={addParticipant}
+                          disabled={adding || !newParticipantName.trim()}
+                          className="bg-sky-500 hover:bg-sky-600"
+                        >
+                          {adding ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          ) : (
+                            <UserPlus className="h-4 w-4 mr-2" />
+                          )}
+                          Hinzufügen
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setShowAddForm(false)
+                            setNewParticipantName('')
+                            setNewParticipantEmail('')
+                          }}
+                        >
+                          Abbrechen
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-3">
                   {session.participants.map((participant) => (
                     <div key={participant.id} className="flex items-center justify-between p-3 border rounded-lg gap-3">
@@ -378,6 +513,20 @@ export default function OrganizerPage() {
                             </>
                           )}
                         </Badge>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeParticipant(participant.id, participant.displayName)}
+                          disabled={removing === participant.id}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          title="Teilnehmer entfernen"
+                        >
+                          {removing === participant.id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
                       </div>
                     </div>
                   ))}

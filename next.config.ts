@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Fix turbopack root directory issue
+  turbopack: {
+    root: '/Users/olivia/Desktop/Kunden/Programmiertes Kunden/FairShare/fairshare-app',
+  },
   // Use standalone output for Capacitor with API routes
   output: 'standalone',
   trailingSlash: false,

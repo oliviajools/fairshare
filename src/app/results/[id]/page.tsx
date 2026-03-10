@@ -7,7 +7,8 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Users, Calendar, Eye, EyeOff, BarChart3, Calculator } from 'lucide-react'
+import { ArrowLeft, Users, Calendar, Eye, EyeOff, BarChart3, Calculator, Trash2, UserPlus } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 import { PieChart } from '@/components/PieChart'
 import { ShareResults } from '@/components/ShareResults'
 
@@ -49,6 +50,7 @@ interface ResultData {
   voteCount: number
   averagePercent: number
   voters?: string[]
+  isFixedShare?: boolean
 }
 
 export default function ResultsPage() {
@@ -61,6 +63,10 @@ export default function ResultsPage() {
   const [results, setResults] = useState<ResultData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [removing, setRemoving] = useState<string | null>(null)
+  const [adding, setAdding] = useState(false)
+  const [newParticipantName, setNewParticipantName] = useState('')
+  const [showAddForm, setShowAddForm] = useState(false)
   const resultsRef = useRef<HTMLDivElement>(null)
 
   const isCreator = session?.creatorId && authSession?.user && session.creatorId === (authSession.user as any).id
@@ -85,6 +91,68 @@ export default function ResultsPage() {
       console.error(err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const removeParticipant = async (participantId: string, participantName: string) => {
+    const confirmed = window.confirm(
+      `Möchtest du "${participantName}" wirklich entfernen?\n\n` +
+      `Alle Stimmen von und für diese Person werden gelöscht. ` +
+      `Die Prozente der anderen werden auf 100% hochgerechnet.\n\n` +
+      `Diese Aktion kann nicht rückgängig gemacht werden.`
+    )
+    
+    if (!confirmed) return
+
+    setRemoving(participantId)
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/participants/${participantId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        // Refresh results to get updated percentages
+        await fetchResults()
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Fehler beim Entfernen des Teilnehmers')
+      }
+    } catch (error) {
+      console.error('Error removing participant:', error)
+      alert('Fehler beim Entfernen des Teilnehmers')
+    } finally {
+      setRemoving(null)
+    }
+  }
+
+  const addParticipant = async () => {
+    if (!newParticipantName.trim()) return
+
+    setAdding(true)
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/participants`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newParticipantName.trim()
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Refresh results to include new participant
+        await fetchResults()
+        setNewParticipantName('')
+        setShowAddForm(false)
+      } else {
+        alert(data.error || 'Fehler beim Hinzufügen des Teilnehmers')
+      }
+    } catch (error) {
+      console.error('Error adding participant:', error)
+      alert('Fehler beim Hinzufügen des Teilnehmers')
+    } finally {
+      setAdding(false)
     }
   }
 
@@ -237,31 +305,62 @@ export default function ResultsPage() {
                   {sortedResults.map((result, index) => (
                     <div 
                       key={result.participantId} 
-                      className="p-4 bg-gray-50 rounded-lg"
+                      className={`p-4 rounded-lg ${result.isFixedShare ? 'bg-amber-50 border-2 border-amber-200' : 'bg-gray-50'}`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl font-bold text-gray-400">
-                            #{index + 1}
-                          </span>
-                          <span className="font-medium text-gray-900">
-                            {result.name}
-                          </span>
+                          {result.isFixedShare ? (
+                            <span className="text-xl font-bold text-amber-500">⚡</span>
+                          ) : (
+                            <span className="text-2xl font-bold text-gray-400">
+                              #{index + 1}
+                            </span>
+                          )}
+                          <div>
+                            <span className="font-medium text-gray-900">
+                              {result.name}
+                            </span>
+                            {result.isFixedShare && (
+                              <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                                Fester Anteil
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <span className="text-2xl font-bold text-sky-600">
-                            {result.averagePercent.toFixed(1)}%
-                          </span>
-                          <span className="text-sm text-gray-500 ml-2">
-                            ({result.voteCount} Stimmen)
-                          </span>
+                        <div className="flex items-center gap-2">
+                          <div className="text-right">
+                            <span className={`text-2xl font-bold ${result.isFixedShare ? 'text-amber-600' : 'text-sky-600'}`}>
+                              {result.averagePercent.toFixed(1)}%
+                            </span>
+                            {!result.isFixedShare && (
+                              <span className="text-sm text-gray-500 ml-2">
+                                ({result.voteCount} Stimmen)
+                              </span>
+                            )}
+                          </div>
+                          {isCreator && !result.isFixedShare && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeParticipant(result.participantId, result.name)}
+                              disabled={removing === result.participantId}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 ml-2"
+                              title="Teilnehmer entfernen"
+                            >
+                              {removing === result.participantId ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
                         </div>
                       </div>
                       
                       {/* Progress bar */}
                       <div className="w-full bg-gray-200 rounded-full h-3">
                         <div 
-                          className="bg-sky-500 h-3 rounded-full transition-all duration-500"
+                          className={`h-3 rounded-full transition-all duration-500 ${result.isFixedShare ? 'bg-amber-500' : 'bg-sky-500'}`}
                           style={{ width: `${Math.min(result.averagePercent, 100)}%` }}
                         />
                       </div>
@@ -275,6 +374,55 @@ export default function ResultsPage() {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Add Participant Section - only for creator */}
+              {isCreator && (
+                <div className="mt-6 pt-6 border-t">
+                  {showAddForm ? (
+                    <div className="p-4 border-2 border-dashed border-sky-200 rounded-lg bg-sky-50/50">
+                      <h4 className="font-medium mb-3">Neuen Teilnehmer hinzufügen</h4>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Name"
+                          value={newParticipantName}
+                          onChange={(e) => setNewParticipantName(e.target.value)}
+                          className="bg-white flex-1"
+                          onKeyDown={(e) => e.key === 'Enter' && addParticipant()}
+                        />
+                        <Button
+                          onClick={addParticipant}
+                          disabled={adding || !newParticipantName.trim()}
+                          className="bg-sky-500 hover:bg-sky-600"
+                        >
+                          {adding ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          ) : (
+                            <UserPlus className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setShowAddForm(false)
+                            setNewParticipantName('')
+                          }}
+                        >
+                          Abbrechen
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAddForm(true)}
+                      className="w-full text-sky-600 border-sky-200 hover:bg-sky-50"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Teilnehmer hinzufügen
+                    </Button>
+                  )}
                 </div>
               )}
             </CardContent>

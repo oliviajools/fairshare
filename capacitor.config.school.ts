@@ -1,19 +1,18 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.teampayer.app',
-  appName: 'TeamPayer',
-  // Minimales webDir - App lädt von Remote-Server
+  appId: 'com.teampayer.school',
+  appName: 'TeamPayer School',
   webDir: 'out',
   server: {
     androidScheme: 'https',
-    url: 'https://teampayer.vercel.app',
+    url: 'https://teampayer-school.vercel.app',
     cleartext: false
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
-      backgroundColor: "#0ea5e9",
+      backgroundColor: "#6366f1",  // Indigo for school app
       showSpinner: false,
       androidSpinnerStyle: "large",
       iosSpinnerStyle: "small",
@@ -21,7 +20,7 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: 'default',
-      backgroundColor: '#0ea5e9'
+      backgroundColor: '#6366f1'
     },
     Keyboard: {
       resize: 'body',
