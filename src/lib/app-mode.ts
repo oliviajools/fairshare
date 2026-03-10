@@ -15,10 +15,10 @@ export function getAppMode(): AppMode {
   if (envMode === 'school') {
     return 'school'
   }
-  if (envMode === 'standard') {
-    return 'standard'
+  if (envMode === 'all') {
+    return 'all'
   }
-  return 'all' // Default: all features enabled
+  return 'standard' // Default: standard app (no classroom features)
 }
 
 export function isSchoolApp(): boolean {
