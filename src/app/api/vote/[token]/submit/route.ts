@@ -14,14 +14,6 @@ export async function POST(
     const { votes } = body
     const tokenHash = hashToken(token)
 
-    // Validate 100% total before processing
-    const totalPercentage = votes.reduce((sum: number, vote: any) => sum + vote.percent, 0)
-    if (Math.abs(totalPercentage - 100) > 0.01) {
-      return NextResponse.json({ 
-        error: `Die Gesamtsumme muss genau 100% betragen. Aktuell: ${totalPercentage.toFixed(1)}%` 
-      }, { status: 400 })
-    }
-
     console.log('Looking for participant with token:', token)
     
     const participant = await prisma.participant.findUnique({
@@ -29,7 +21,8 @@ export async function POST(
       include: { 
         session: {
           include: {
-            participants: true
+            participants: true,
+            fixedShares: true
           }
         }
       }
@@ -43,6 +36,20 @@ export async function POST(
 
     if (participant.session.status === 'CLOSED') {
       return NextResponse.json({ error: 'Session is closed' }, { status: 403 })
+    }
+
+    // Calculate available percentage based on fixed shares mode
+    const fixedShares = (participant.session as any).fixedShares || []
+    const fixedShareMode = (participant.session as any).fixedShareMode
+    const totalFixedPercent = fixedShares.reduce((sum: number, fs: any) => sum + fs.percent, 0)
+    const availablePercent = fixedShareMode === 'TRANSPARENT_REDUCED' ? (100 - totalFixedPercent) : 100
+
+    // Validate total before processing
+    const totalPercentage = votes.reduce((sum: number, vote: any) => sum + vote.percent, 0)
+    if (Math.abs(totalPercentage - availablePercent) > 0.01) {
+      return NextResponse.json({ 
+        error: `Die Gesamtsumme muss genau ${availablePercent.toFixed(0)}% betragen. Aktuell: ${totalPercentage.toFixed(1)}%` 
+      }, { status: 400 })
     }
 
     // Update votes and submit ballot in a transaction
