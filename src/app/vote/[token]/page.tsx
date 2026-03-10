@@ -468,19 +468,33 @@ export default function VotePage() {
                     {/* Live Pie Chart */}
                     <div className="flex justify-center">
                       <PieChart
-                        data={[
-                          // Add fixed shares first if transparent mode
-                          ...(isTransparentMode ? fixedShares.map(fs => ({
-                            name: fs.name,
-                            value: fs.percent,
-                            color: '#f59e0b' // amber color for fixed shares
-                          })) : []),
-                          // Then participant votes
-                          ...session.participants.map(p => ({
-                            name: p.displayName,
-                            value: votes[p.id] || 0
-                          }))
-                        ]}
+                        data={(() => {
+                          const chartData: { name: string; value: number; color?: string }[] = [
+                            // Add fixed shares first if transparent mode
+                            ...(isTransparentMode ? fixedShares.map(fs => ({
+                              name: fs.name,
+                              value: fs.percent,
+                              color: '#f59e0b' // amber color for fixed shares
+                            })) : []),
+                            // Then participant votes
+                            ...session.participants.map(p => ({
+                              name: p.displayName,
+                              value: votes[p.id] || 0
+                            }))
+                          ]
+                          // Calculate remaining unassigned percentage
+                          const assigned = chartData.reduce((sum, d) => sum + d.value, 0)
+                          const remaining = 100 - assigned
+                          // Add placeholder for unassigned portion (gray, no legend)
+                          if (remaining > 0.1) {
+                            chartData.push({
+                              name: 'Nicht vergeben',
+                              value: remaining,
+                              color: '#e5e7eb' // gray-200
+                            })
+                          }
+                          return chartData
+                        })()}
                         size={180}
                         showLabels={true}
                         showLegend={true}
