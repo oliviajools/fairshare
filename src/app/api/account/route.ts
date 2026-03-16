@@ -51,6 +51,20 @@ export async function PUT(request: NextRequest) {
 
     const { name, image } = await request.json()
 
+    if (image !== undefined) {
+      if (image !== null && typeof image !== 'string') {
+        return NextResponse.json({ error: 'Ungültiges Bildformat' }, { status: 400 })
+      }
+      if (typeof image === 'string') {
+        if (!image.startsWith('data:image/')) {
+          return NextResponse.json({ error: 'Ungültiges Bildformat' }, { status: 400 })
+        }
+        if (image.length > 800_000) {
+          return NextResponse.json({ error: 'Bild ist zu groß' }, { status: 400 })
+        }
+      }
+    }
+
     const user = await prisma.user.update({
       where: { email: session.user.email },
       data: {

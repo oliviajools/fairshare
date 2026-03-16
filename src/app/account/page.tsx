@@ -34,6 +34,28 @@ export default function AccountPage() {
   const [uploadingImage, setUploadingImage] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const compressImage = async (file: File) => {
+    const maxDimension = 512
+    const mimeType = 'image/jpeg'
+    const quality = 0.82
+
+    const bitmap = await createImageBitmap(file)
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height))
+    const width = Math.max(1, Math.round(bitmap.width * scale))
+    const height = Math.max(1, Math.round(bitmap.height * scale))
+
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      throw new Error('Canvas nicht verfügbar')
+    }
+    ctx.drawImage(bitmap, 0, 0, width, height)
+
+    return canvas.toDataURL(mimeType, quality)
+  }
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login')
@@ -60,31 +82,45 @@ export default function AccountPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Bild darf maximal 2MB groß sein')
+    if (!file.type.startsWith('image/')) {
+      alert('Bitte wähle eine Bilddatei aus')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Bild darf maximal 5MB groß sein')
+      if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
 
     setUploadingImage(true)
     try {
-      const reader = new FileReader()
-      reader.onloadend = async () => {
-        const base64 = reader.result as string
-        const response = await fetch('/api/account', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64 })
-        })
-        if (response.ok) {
-          const updated = await response.json()
-          setAccount(prev => prev ? { ...prev, image: updated.image } : null)
+      const base64 = await compressImage(file)
+      const response = await fetch('/api/account', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64 })
+      })
+
+      if (response.ok) {
+        const updated = await response.json()
+        setAccount(prev => prev ? { ...prev, image: updated.image } : null)
+      } else {
+        let message = 'Fehler beim Hochladen'
+        try {
+          const data = await response.json()
+          message = data?.error || message
+        } catch {
         }
-        setUploadingImage(false)
+        alert(message)
       }
-      reader.readAsDataURL(file)
     } catch (error) {
       console.error('Error uploading image:', error)
+      alert('Fehler beim Hochladen')
+    } finally {
       setUploadingImage(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 

@@ -70,6 +70,28 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
   const [newDomain, setNewDomain] = useState('')
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
+
+  const compressImage = async (file: File) => {
+    const maxDimension = 512
+    const mimeType = 'image/jpeg'
+    const quality = 0.82
+
+    const bitmap = await createImageBitmap(file)
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height))
+    const width = Math.max(1, Math.round(bitmap.width * scale))
+    const height = Math.max(1, Math.round(bitmap.height * scale))
+
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      throw new Error('Canvas nicht verfügbar')
+    }
+    ctx.drawImage(bitmap, 0, 0, width, height)
+
+    return canvas.toDataURL(mimeType, quality)
+  }
   
   // Groups state
   const [groups, setGroups] = useState<CompanyGroup[]>([])
@@ -114,31 +136,46 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
     const file = e.target.files?.[0]
     if (!file || !company) return
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Logo darf maximal 2MB groß sein')
+    if (!file.type.startsWith('image/')) {
+      alert('Bitte wähle eine Bilddatei aus')
+      if (logoInputRef.current) logoInputRef.current.value = ''
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Logo darf maximal 5MB groß sein')
+      if (logoInputRef.current) logoInputRef.current.value = ''
       return
     }
 
     setUploadingLogo(true)
     try {
-      const reader = new FileReader()
-      reader.onloadend = async () => {
-        const base64 = reader.result as string
-        const response = await fetch(`/api/companies/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ logo: base64 })
-        })
-        if (response.ok) {
-          const updated = await response.json()
-          setCompany(prev => prev ? { ...prev, logo: updated.logo } : null)
+      const base64 = await compressImage(file)
+      const response = await fetch(`/api/companies/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logo: base64 })
+      })
+
+      if (response.ok) {
+        const updated = await response.json()
+        setCompany(prev => prev ? { ...prev, logo: updated.logo } : null)
+      } else {
+        let message = 'Fehler beim Hochladen'
+        try {
+          const data = await response.json()
+          message = data?.error || message
+        } catch {
         }
-        setUploadingLogo(false)
+        alert(message)
       }
-      reader.readAsDataURL(file)
     } catch (error) {
       console.error('Error uploading logo:', error)
+      alert('Fehler beim Hochladen')
+    }
+    finally {
       setUploadingLogo(false)
+      if (logoInputRef.current) logoInputRef.current.value = ''
     }
   }
 
