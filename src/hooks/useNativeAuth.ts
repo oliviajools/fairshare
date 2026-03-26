@@ -59,7 +59,9 @@ export function useNativeAuth() {
         })
 
         // Send to our backend to create session
-        const response = await fetch(`${apiBaseUrl}/api/auth/apple-native`, {
+        const endpoint = `${apiBaseUrl}/api/auth/apple-native`
+        console.log('Apple native auth -> POST', endpoint)
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -70,11 +72,23 @@ export function useNativeAuth() {
           }),
         })
 
+        console.log('Apple native auth <- status', response.status)
+
         let data: any = null
         try {
           data = await response.json()
         } catch {
           data = null
+        }
+
+        if (!data && !response.ok) {
+          let text = ''
+          try {
+            text = await response.text()
+          } catch {
+            text = ''
+          }
+          console.log('Apple native auth <- non-JSON error body', text)
         }
 
         if (!response.ok) {
