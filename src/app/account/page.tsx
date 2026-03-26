@@ -39,21 +39,32 @@ export default function AccountPage() {
     const mimeType = 'image/jpeg'
     const quality = 0.82
 
-    const bitmap = await createImageBitmap(file)
-    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height))
-    const width = Math.max(1, Math.round(bitmap.width * scale))
-    const height = Math.max(1, Math.round(bitmap.height * scale))
+    const objectUrl = URL.createObjectURL(file)
+    try {
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const image = new Image()
+        image.onload = () => resolve(image)
+        image.onerror = () => reject(new Error('Bild konnte nicht geladen werden'))
+        image.src = objectUrl
+      })
 
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    const ctx = canvas.getContext('2d')
-    if (!ctx) {
-      throw new Error('Canvas nicht verfügbar')
+      const scale = Math.min(1, maxDimension / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height))
+      const width = Math.max(1, Math.round((img.naturalWidth || img.width) * scale))
+      const height = Math.max(1, Math.round((img.naturalHeight || img.height) * scale))
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        throw new Error('Canvas nicht verfügbar')
+      }
+      ctx.drawImage(img, 0, 0, width, height)
+
+      return canvas.toDataURL(mimeType, quality)
+    } finally {
+      URL.revokeObjectURL(objectUrl)
     }
-    ctx.drawImage(bitmap, 0, 0, width, height)
-
-    return canvas.toDataURL(mimeType, quality)
   }
 
   useEffect(() => {
