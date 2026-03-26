@@ -22,6 +22,9 @@ export function useNativeAuth() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const appleClientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || 'com.teampayer.app'
+  const appleRedirectUri = process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI || 'https://teampayer.vercel.app/api/auth/callback/apple'
+
   useEffect(() => {
     // Check if running in Capacitor
     const checkNative = async () => {
@@ -49,8 +52,8 @@ export function useNativeAuth() {
         const { SignInWithApple } = await import('@capacitor-community/apple-sign-in')
         
         const result: AppleSignInResult = await SignInWithApple.authorize({
-          clientId: 'com.teampayer.app',
-          redirectURI: 'https://teampayer.vercel.app/api/auth/callback/apple',
+          clientId: appleClientId,
+          redirectURI: appleRedirectUri,
           scopes: 'email name',
         })
 
