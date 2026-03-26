@@ -24,6 +24,7 @@ export function useNativeAuth() {
 
   const appleClientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || 'com.teampayer.app'
   const appleRedirectUri = process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI || 'https://teampayer.vercel.app/api/auth/callback/apple'
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://teampayer.vercel.app'
 
   useEffect(() => {
     // Check if running in Capacitor
@@ -58,7 +59,7 @@ export function useNativeAuth() {
         })
 
         // Send to our backend to create session
-        const response = await fetch('/api/auth/apple-native', {
+        const response = await fetch(`${apiBaseUrl}/api/auth/apple-native`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -69,10 +70,15 @@ export function useNativeAuth() {
           }),
         })
 
-        const data = await response.json()
+        let data: any = null
+        try {
+          data = await response.json()
+        } catch {
+          data = null
+        }
 
         if (!response.ok) {
-          throw new Error(data.error || 'Authentication failed')
+          throw new Error(data?.error || `Authentication failed (${response.status})`)
         }
 
         // Session cookie is set by the API, just redirect
