@@ -24,35 +24,66 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid identity token' }, { status: 400 })
     }
 
-    // Apple only sends email on first sign-in, so we need to handle both cases
+    const appleUserId = decoded.sub
+
     const userEmail = email || decoded.email
-    const userName = fullName?.givenName && fullName?.familyName 
+    const userName = fullName?.givenName && fullName?.familyName
       ? `${fullName.givenName} ${fullName.familyName}`
       : fullName?.givenName || userEmail?.split('@')[0] || 'Apple User'
 
-    if (!userEmail) {
-      return NextResponse.json({ 
-        error: 'Email required. Please sign out of Apple ID in Settings and try again.' 
-      }, { status: 400 })
-    }
-
-    const normalizedEmail = userEmail.toLowerCase()
-
-    // Find or create user
-    let dbUser = await prisma.user.findUnique({
-      where: { email: normalizedEmail }
+    let dbUser = await prisma.user.findFirst({
+      where: {
+        accounts: {
+          some: {
+            provider: 'apple',
+            providerAccountId: appleUserId,
+          }
+        }
+      }
     })
 
     if (!dbUser) {
-      dbUser = await prisma.user.create({
-        data: {
-          email: normalizedEmail,
-          name: userName,
-          emailVerified: new Date(),
-        }
+      if (!userEmail) {
+        return NextResponse.json(
+          { error: 'Email required on first Apple sign-in. Please retry and allow email sharing once.' },
+          { status: 400 }
+        )
+      }
+
+      const normalizedEmail = userEmail.toLowerCase().trim()
+
+      dbUser = await prisma.user.findUnique({
+        where: { email: normalizedEmail }
       })
-    } else if (!dbUser.name && userName) {
-      // Update name if not set
+
+      if (!dbUser) {
+        dbUser = await prisma.user.create({
+          data: {
+            email: normalizedEmail,
+            name: userName,
+            emailVerified: new Date(),
+            accounts: {
+              create: {
+                type: 'oauth',
+                provider: 'apple',
+                providerAccountId: appleUserId,
+              }
+            }
+          }
+        })
+      } else {
+        await prisma.account.create({
+          data: {
+            userId: dbUser.id,
+            type: 'oauth',
+            provider: 'apple',
+            providerAccountId: appleUserId,
+          }
+        })
+      }
+    }
+
+    if (!dbUser.name && userName) {
       dbUser = await prisma.user.update({
         where: { id: dbUser.id },
         data: { name: userName }
