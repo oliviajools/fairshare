@@ -7,8 +7,10 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     androidScheme: 'https',
+    iosScheme: 'https',
+    hostname: 'teampayer.vercel.app',
     url: 'https://teampayer.vercel.app',
-    allowNavigation: ['teampayer.vercel.app'],
+    allowNavigation: ['teampayer.vercel.app', 'https://teampayer.vercel.app', 'http://teampayer.vercel.app'],
     cleartext: false
   },
   plugins: {
