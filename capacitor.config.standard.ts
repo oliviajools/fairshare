@@ -6,6 +6,8 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     androidScheme: 'https',
+    iosScheme: 'https',
+    hostname: 'teampayer.vercel.app',
     url: 'https://teampayer.vercel.app/',
     cleartext: false
   },
