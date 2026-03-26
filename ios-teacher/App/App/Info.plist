@@ -51,6 +51,10 @@
 	<string>Wir benötigen Zugriff auf deine Fotos, damit du ein Profilbild auswählen kannst.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Wir benötigen Zugriff, um auf Wunsch ein aufgenommenes Profilbild in deiner Mediathek zu speichern.</string>
+	<key>WKAppBoundDomains</key>
+	<array>
+		<string>teampayer.vercel.app</string>
+	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 </dict>
