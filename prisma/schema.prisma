@@ -23,6 +23,7 @@ model User {
   sessions      AuthSession[]
   createdSessions VotingSession[] @relation("CreatedSessions")
   createdPools  Pool[]    @relation("PoolsCreatedBy")
+  createdInvoices PoolInvoice[]
   recurringSessions RecurringSession[]
   participants  Participant[]
   invitations   Invitation[]
@@ -101,6 +102,8 @@ model Company {
   members     CompanyMember[]
   sessions    VotingSession[]
   pools       Pool[]
+  customers   Customer[]
+  invoices    PoolInvoice[]
   groups      CompanyGroup[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -202,6 +205,7 @@ model Pool {
   status      PoolStatus  @default(DRAFT)
   createdById String
   createdBy   User        @relation("PoolsCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  invoice     PoolInvoice?
   sessions    PoolSession[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -245,6 +249,7 @@ model VotingSession {
   company        Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
   organizerToken String?      @unique
   poolSessions   PoolSession[]
+  invoiceLineItems InvoiceLineItem[]
   participants   Participant[]
   ballots        Ballot[]
   invitations    Invitation[]
