@@ -4,11 +4,36 @@ import GoogleProvider from 'next-auth/providers/google'
 import AzureADProvider from 'next-auth/providers/azure-ad'
 import AppleProvider from 'next-auth/providers/apple'
 import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 import { prisma } from './db'
 import { checkRateLimit, rateLimitConfigs } from './rate-limit'
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
+  jwt: {
+    async encode({ token, secret, maxAge }) {
+      if (!token) return ''
+      return jwt.sign(
+        {
+          id: (token as any).id,
+        },
+        secret,
+        {
+          algorithm: 'HS256',
+          expiresIn: maxAge,
+        }
+      )
+    },
+    async decode({ token, secret }) {
+      if (!token) return null
+      try {
+        const payload = jwt.verify(token, secret, { algorithms: ['HS256'] }) as any
+        return payload
+      } catch {
+        return null
+      }
+    },
+  },
   providers: [
     // Google SSO (if configured)
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [
