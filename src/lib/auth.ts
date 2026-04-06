@@ -16,6 +16,7 @@ export const authOptions: NextAuthOptions = {
       return jwt.sign(
         {
           id: (token as any).id,
+          email: (token as any).email,
         },
         secret,
         {
@@ -175,6 +176,9 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.id
+        if (token.email) {
+          session.user.email = token.email as string
+        }
       }
       return session
     }
