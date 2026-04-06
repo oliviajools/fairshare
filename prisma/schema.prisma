@@ -22,6 +22,7 @@ model User {
   accounts      Account[]
   sessions      AuthSession[]
   createdSessions VotingSession[] @relation("CreatedSessions")
+  createdPools  Pool[]    @relation("PoolsCreatedBy")
   recurringSessions RecurringSession[]
   participants  Participant[]
   invitations   Invitation[]
@@ -99,6 +100,7 @@ model Company {
   slackChannel String?  // Default Slack channel
   members     CompanyMember[]
   sessions    VotingSession[]
+  pools       Pool[]
   groups      CompanyGroup[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -119,7 +121,105 @@ model CompanyMember {
 enum CompanyRole {
   OWNER
   ADMIN
+  FINANCE
   MEMBER
+}
+
+enum InvoiceStatus {
+  DRAFT
+  FINAL
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name      String
+  email     String?
+  address   String?
+  vatId     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoices  PoolInvoice[]
+
+  @@index([companyId])
+  @@unique([companyId, name])
+}
+
+model PoolInvoice {
+  id            String        @id @default(cuid())
+  poolId        String        @unique
+  pool          Pool          @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  companyId     String
+  company       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customerId    String?
+  customer      Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  status        InvoiceStatus @default(DRAFT)
+  invoiceNumber String?
+  invoiceDate   DateTime?
+  dueDate       DateTime?
+  currency      String        @default("EUR")
+  notes         String?
+  createdById   String
+  createdBy     User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  finalizedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  items         InvoiceLineItem[]
+
+  @@index([companyId])
+  @@index([customerId])
+}
+
+model InvoiceLineItem {
+  id          String        @id @default(cuid())
+  invoiceId   String
+  invoice     PoolInvoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  sessionId   String?
+  session     VotingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  description String
+  quantity    Float         @default(1)
+  unitPrice   Float
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([invoiceId])
+  @@index([sessionId])
+}
+
+enum PoolStatus {
+  DRAFT
+  LOCKED
+}
+
+model Pool {
+  id          String      @id @default(cuid())
+  companyId   String
+  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name        String
+  status      PoolStatus  @default(DRAFT)
+  createdById String
+  createdBy   User        @relation("PoolsCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  sessions    PoolSession[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([companyId])
+}
+
+model PoolSession {
+  id        String       @id @default(cuid())
+  poolId    String
+  pool      Pool         @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  sessionId String
+  session   VotingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  weight    Float        @default(1)
+  createdAt DateTime     @default(now())
+
+  @@unique([poolId, sessionId])
+  @@index([sessionId])
 }
 
 // Fixed Share Display Mode - when/how fixed shares are shown
@@ -144,6 +244,7 @@ model VotingSession {
   companyId      String?
   company        Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
   organizerToken String?      @unique
+  poolSessions   PoolSession[]
   participants   Participant[]
   ballots        Ballot[]
   invitations    Invitation[]

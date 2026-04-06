@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { BottomNav } from '@/components/BottomNav'
-import { Building2, Users, Calendar, ArrowLeft, Plus, Crown, Shield, User, BarChart3, Camera, Globe, Pencil, Check, X, UsersRound, Trash2, LogOut } from 'lucide-react'
+import { Building2, Users, Calendar, ArrowLeft, Plus, Crown, Shield, User, BarChart3, Camera, Globe, Pencil, Check, X, UsersRound, Trash2, LogOut, Layers } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 
 interface Member {
@@ -477,12 +477,20 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
           </div>
 
           {/* Create Session Button */}
-          <Link href={`/create?company=${company.id}`}>
-            <Button className="mb-6 bg-sky-500 hover:bg-sky-600">
-              <Plus className="mr-2 h-4 w-4" />
-              Neue Session für {company.name}
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-2 mb-6">
+            <Link href={`/create?company=${company.id}`} className="flex-1">
+              <Button className="w-full bg-sky-500 hover:bg-sky-600">
+                <Plus className="mr-2 h-4 w-4" />
+                Neue Session für {company.name}
+              </Button>
+            </Link>
+            <Link href={`/companies/${company.id}/pools`} className="flex-1">
+              <Button variant="outline" className="w-full">
+                <Layers className="mr-2 h-4 w-4" />
+                Pools
+              </Button>
+            </Link>
+          </div>
 
           {/* Tabs */}
           <div className="flex gap-2 mb-6">

@@ -7,6 +7,7 @@
     "dev:school": "NEXT_PUBLIC_APP_MODE=school next dev",
     "dev:standard": "NEXT_PUBLIC_APP_MODE=standard next dev",
     "build": "prisma generate && prisma db push --skip-generate && next build",
+    "build:prod": "prisma generate && prisma migrate deploy && next build",
     "build:school": "NEXT_PUBLIC_APP_MODE=school npm run build",
     "build:standard": "NEXT_PUBLIC_APP_MODE=standard npm run build",
     "build:app": "next build && npx cap sync",
