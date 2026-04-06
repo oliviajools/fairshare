@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import jwt from 'jsonwebtoken'
-import { encode } from 'next-auth/jwt'
 
 export async function POST(request: NextRequest) {
   try {
@@ -90,17 +89,23 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Create NextAuth-compatible JWT session token
-    const sessionToken = await encode({
-      token: {
+    const secret = process.env.NEXTAUTH_SECRET
+    if (!secret) {
+      return NextResponse.json({ error: 'NEXTAUTH_SECRET not configured' }, { status: 500 })
+    }
+
+    const sessionToken = jwt.sign(
+      {
         id: dbUser.id,
         email: dbUser.email,
-        name: dbUser.name,
         sub: dbUser.id,
       },
-      secret: process.env.NEXTAUTH_SECRET!,
-      maxAge: 30 * 24 * 60 * 60, // 30 days
-    })
+      secret,
+      {
+        algorithm: 'HS256',
+        expiresIn: 30 * 24 * 60 * 60,
+      }
+    )
 
     // Create response with session cookie
     const response = NextResponse.json({

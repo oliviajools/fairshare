@@ -17,6 +17,7 @@ export const authOptions: NextAuthOptions = {
         {
           id: (token as any).id,
           email: (token as any).email,
+          sub: (token as any).id,
         },
         secret,
         {
@@ -156,12 +157,15 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user, account }) {
       // On initial login, fetch the database user ID
-      if (user && token.email) {
+      if (user) {
         // For SSO providers, we need to get the ID from our database, not the provider
         if (account?.provider === 'google' || account?.provider === 'azure-ad' || account?.provider === 'apple') {
-          const dbUser = await prisma.user.findUnique({
-            where: { email: token.email.toLowerCase() }
-          })
+          const email = (user.email || token.email || '').toLowerCase()
+          const dbUser = email
+            ? await prisma.user.findUnique({
+                where: { email },
+              })
+            : null
           if (dbUser) {
             token.id = dbUser.id
           }
@@ -170,6 +174,7 @@ export const authOptions: NextAuthOptions = {
           token.id = user.id
         }
         token.email = user.email
+        ;(token as any).sub = token.id
       }
       return token
     },
