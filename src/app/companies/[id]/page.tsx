@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect, use, useRef } from 'react'
@@ -17,7 +18,7 @@ interface Member {
   id: string
   name: string | null
   email: string
-  role: 'OWNER' | 'ADMIN' | 'MEMBER'
+  role: 'OWNER' | 'ADMIN' | 'FINANCE' | 'MEMBER'
   joinedAt: string
 }
 
@@ -54,7 +55,7 @@ interface CompanyData {
   description: string | null
   logo: string | null
   domain: string | null
-  role: 'OWNER' | 'ADMIN' | 'MEMBER'
+  role: 'OWNER' | 'ADMIN' | 'FINANCE' | 'MEMBER'
   members: Member[]
   sessions: CompanySession[]
 }
@@ -199,6 +200,42 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
 
   const canEdit = company?.role === 'OWNER' || company?.role === 'ADMIN'
 
+  const updateMemberRole = async (userId: string, role: Member['role']) => {
+    if (!company) return
+    if (!canEdit) return
+    if (role === 'OWNER') return
+
+    try {
+      const res = await fetch(`/api/companies/${id}/members/role`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, role }),
+      })
+
+      if (!res.ok) {
+        let message = 'Fehler beim Aktualisieren der Rolle'
+        try {
+          const data = await res.json()
+          message = data?.error || message
+        } catch {
+        }
+        alert(message)
+        return
+      }
+
+      setCompany((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          members: prev.members.map((m) => (m.id === userId ? { ...m, role } : m)),
+        }
+      })
+    } catch (error) {
+      console.error('Error updating member role:', error)
+      alert('Fehler beim Aktualisieren der Rolle')
+    }
+  }
+
   const fetchGroups = async () => {
     setLoadingGroups(true)
     try {
@@ -312,6 +349,7 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
     switch (role) {
       case 'OWNER': return <Crown className="h-4 w-4 text-amber-500" />
       case 'ADMIN': return <Shield className="h-4 w-4 text-sky-500" />
+      case 'FINANCE': return <BarChart3 className="h-4 w-4 text-emerald-600" />
       default: return <User className="h-4 w-4 text-gray-500" />
     }
   }
@@ -320,6 +358,7 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
     switch (role) {
       case 'OWNER': return 'Inhaber'
       case 'ADMIN': return 'Admin'
+      case 'FINANCE': return 'Finanzen'
       default: return 'Mitglied'
     }
   }
@@ -624,10 +663,23 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
                         <p className="text-sm text-gray-500">{member.email}</p>
                       </div>
                     </div>
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      {getRoleIcon(member.role)}
-                      {getRoleLabel(member.role)}
-                    </Badge>
+                    <div className="flex items-center gap-3">
+                      {canEdit && member.role !== 'OWNER' ? (
+                        <select
+                          className="border border-gray-200 rounded-md px-2 py-1 text-sm bg-white"
+                          value={member.role}
+                          onChange={(e) => updateMemberRole(member.id, e.target.value as Member['role'])}
+                        >
+                          <option value="MEMBER">Mitglied</option>
+                          <option value="FINANCE">Finanzen</option>
+                          <option value="ADMIN">Admin</option>
+                        </select>
+                      ) : null}
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        {getRoleIcon(member.role)}
+                        {getRoleLabel(member.role)}
+                      </Badge>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
