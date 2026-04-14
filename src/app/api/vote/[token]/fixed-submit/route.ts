@@ -162,7 +162,10 @@ export async function POST(
 
     const updatedSession = await prisma.votingSession.findUnique({
       where: { id: participant.sessionId },
-      include: { fixedShares: true },
+      include: {
+        participants: true,
+        fixedShares: true,
+      },
     })
 
     return NextResponse.json({
