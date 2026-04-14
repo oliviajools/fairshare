@@ -277,6 +277,7 @@ model FixedShare {
   session     VotingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   name        String        // e.g., "Unternehmen", "Overhead", "Steuern"
   percent     Float         // e.g., 20.0 for 20%
+  votes       FixedShareVote[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
