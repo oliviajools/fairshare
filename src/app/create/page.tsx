@@ -43,6 +43,8 @@ interface FixedShare {
 
 type FixedShareMode = 'TRANSPARENT_REDUCED' | 'TRANSPARENT_FULL' | 'RESULTS_ONLY' | 'PAYOUT_ONLY'
 
+type FixedShareSetupMode = 'MANUAL' | 'PRE_VOTE'
+
 interface InviteLink {
   name: string
   email: string
@@ -219,6 +221,7 @@ function CreateSessionContent() {
   const [fixedShares, setFixedShares] = useState<FixedShare[]>([])
   const [fixedShareMode, setFixedShareMode] = useState<FixedShareMode | null>(null)
   const [showFixedShareSection, setShowFixedShareSection] = useState(false)
+  const [fixedShareSetupMode, setFixedShareSetupMode] = useState<FixedShareSetupMode>('PRE_VOTE')
 
   useEffect(() => {
     if (fixedShares.length > 0 && fixedShareMode !== 'TRANSPARENT_FULL') {
@@ -311,6 +314,7 @@ function CreateSessionContent() {
           participants: validParticipants,
           fixedShares: fixedShares.filter(fs => fs.name.trim()),
           fixedShareMode: fixedShareMode,
+          fixedShareVotingStatus: fixedShareSetupMode === 'PRE_VOTE' ? 'OPEN' : 'CLOSED',
         }),
       })
 
@@ -659,6 +663,40 @@ function CreateSessionContent() {
 
             {showFixedShareSection && (
               <div className="mt-4 space-y-4">
+                {fixedShares.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Wie soll der feste Anteil festgelegt werden?</Label>
+                    <div className="grid grid-cols-1 gap-2">
+                      <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${fixedShareSetupMode === 'MANUAL' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                        <input
+                          type="radio"
+                          name="fixedShareSetupMode"
+                          checked={fixedShareSetupMode === 'MANUAL'}
+                          onChange={() => setFixedShareSetupMode('MANUAL')}
+                          className="mt-1"
+                        />
+                        <div>
+                          <p className="font-medium text-sm">Direkt festlegen</p>
+                          <p className="text-xs text-gray-500">Du trägst den Prozentwert ein (keine Vorab-Abstimmung)</p>
+                        </div>
+                      </label>
+                      <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${fixedShareSetupMode === 'PRE_VOTE' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                        <input
+                          type="radio"
+                          name="fixedShareSetupMode"
+                          checked={fixedShareSetupMode === 'PRE_VOTE'}
+                          onChange={() => setFixedShareSetupMode('PRE_VOTE')}
+                          className="mt-1"
+                        />
+                        <div>
+                          <p className="font-medium text-sm">Vorab abstimmen lassen</p>
+                          <p className="text-xs text-gray-500">Teilnehmer stimmen zuerst über den festen Anteil ab</p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                )}
+
                 {fixedShares.length > 0 && (
                   <div className="space-y-1">
                     <Label className="text-sm font-medium">Wann wird der feste Anteil angezeigt?</Label>

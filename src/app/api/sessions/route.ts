@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     const authSession = await getServerSession(authOptions)
     const body = await request.json()
-    const { title, date, time, evaluationInfo, participants, companyId, fixedShares, fixedShareMode } = body
+    const { title, date, time, evaluationInfo, participants, companyId, fixedShares, fixedShareMode, fixedShareVotingStatus } = body
 
     // Generate organizer token
     const organizerToken = generateInviteToken()
@@ -21,6 +21,10 @@ export async function POST(request: NextRequest) {
       Array.isArray(fixedShares) &&
       fixedShares.some((s: any) => typeof s?.name === 'string' && s.name.trim() !== '')
 
+    const clientFixedShareVotingStatus = fixedShareVotingStatus === 'OPEN' || fixedShareVotingStatus === 'CLOSED'
+      ? fixedShareVotingStatus
+      : null
+
     const sessionData: any = {
       title,
       evaluationInfo: evaluationInfo || null,
@@ -29,7 +33,7 @@ export async function POST(request: NextRequest) {
       companyId: companyId || null,
       fixedShareMode: fixedShareMode || null,
       fixedShareVotingStatus:
-        hasAnyFixedShare ? 'OPEN' : 'CLOSED',
+        clientFixedShareVotingStatus || (hasAnyFixedShare ? 'OPEN' : 'CLOSED'),
     }
     
     // Handle date - if provided and not empty, parse it, otherwise set to current date
