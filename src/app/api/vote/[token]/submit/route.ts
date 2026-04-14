@@ -38,8 +38,15 @@ export async function POST(
       return NextResponse.json({ error: 'Session is closed' }, { status: 403 })
     }
 
+    // Prevent main voting while fixed share pre-vote is still open
+    const sessionFixedShares = (participant.session as any).fixedShares || []
+    const fixedShareVotingStatus = (participant.session as any).fixedShareVotingStatus
+    if (sessionFixedShares.length > 0 && fixedShareVotingStatus === 'OPEN') {
+      return NextResponse.json({ error: 'Die Abstimmung über den festen Anteil läuft noch.' }, { status: 400 })
+    }
+
     // Calculate available percentage based on fixed shares mode
-    const fixedShares = (participant.session as any).fixedShares || []
+    const fixedShares = sessionFixedShares
     const fixedShareMode = (participant.session as any).fixedShareMode
     const totalFixedPercent = fixedShares.reduce((sum: number, fs: any) => sum + fs.percent, 0)
     const availablePercent = fixedShareMode === 'TRANSPARENT_REDUCED' ? (100 - totalFixedPercent) : 100

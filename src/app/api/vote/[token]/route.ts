@@ -38,7 +38,8 @@ export async function GET(
     const existingBallot = await prisma.ballot.findUnique({
       where: { tokenHash },
       include: {
-        votes: true
+        votes: true,
+        fixedShareVotes: true
       }
     })
 

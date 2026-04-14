@@ -23,6 +23,8 @@ export async function POST(request: NextRequest) {
       creatorId: authSession?.user ? (authSession.user as any).id : null,
       companyId: companyId || null,
       fixedShareMode: fixedShareMode || null,
+      fixedShareVotingStatus:
+        fixedShares && Array.isArray(fixedShares) && fixedShares.length > 0 ? 'OPEN' : 'CLOSED',
     }
     
     // Handle date - if provided and not empty, parse it, otherwise set to current date

@@ -234,6 +234,12 @@ enum FixedShareMode {
   PAYOUT_ONLY            // Mode 3: Added only in payout calculation
 }
 
+// Fixed Share Voting Status - whether the fixed share percent is still being voted on
+enum FixedShareVotingStatus {
+  OPEN
+  CLOSED
+}
+
 // App Models
 model VotingSession {
   id             String       @id @default(uuid())
@@ -256,6 +262,7 @@ model VotingSession {
   hiddenBy       HiddenSession[]
   fixedShares    FixedShare[]
   fixedShareMode FixedShareMode?
+  fixedShareVotingStatus FixedShareVotingStatus @default(CLOSED)
   // Recurring session fields
   recurringId    String?
   recurring      RecurringSession? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
@@ -325,6 +332,7 @@ model Participant {
   invitedEmail  String?
   inviteToken   String?       @unique
   hasSubmitted  Boolean       @default(false)
+  hasSubmittedFixedShares Boolean @default(false)
   ballots       Ballot[]
 }
 
@@ -348,9 +356,24 @@ model Ballot {
   tokenHash     String       @unique
   status        BallotStatus @default(DRAFT)
   votes         Vote[]
+  fixedShareVotes FixedShareVote[]
   submittedAt   DateTime?
   updatedAt     DateTime     @updatedAt
   createdAt     DateTime     @default(now())
+}
+
+model FixedShareVote {
+  id          String    @id @default(uuid())
+  ballotId    String
+  ballot      Ballot    @relation(fields: [ballotId], references: [id], onDelete: Cascade)
+  fixedShareId String
+  fixedShare  FixedShare @relation(fields: [fixedShareId], references: [id], onDelete: Cascade)
+  percent     Float
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([ballotId, fixedShareId])
+  @@index([fixedShareId])
 }
 
 model Vote {
