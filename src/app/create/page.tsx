@@ -220,6 +220,12 @@ function CreateSessionContent() {
   const [fixedShareMode, setFixedShareMode] = useState<FixedShareMode | null>(null)
   const [showFixedShareSection, setShowFixedShareSection] = useState(false)
 
+  useEffect(() => {
+    if (fixedShares.length > 0 && fixedShareMode !== 'TRANSPARENT_FULL') {
+      setFixedShareMode('TRANSPARENT_FULL')
+    }
+  }, [fixedShares.length, fixedShareMode])
+
   const addFixedShare = () => {
     if (!fixedShareMode) {
       setFixedShareMode('TRANSPARENT_FULL')
@@ -653,63 +659,12 @@ function CreateSessionContent() {
 
             {showFixedShareSection && (
               <div className="mt-4 space-y-4">
-                {/* Mode Selection */}
                 {fixedShares.length > 0 && (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <Label className="text-sm font-medium">Wann wird der feste Anteil angezeigt?</Label>
-                    <div className="grid grid-cols-1 gap-2">
-                      <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${fixedShareMode === 'TRANSPARENT_REDUCED' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'}`}>
-                        <input
-                          type="radio"
-                          name="fixedShareMode"
-                          checked={fixedShareMode === 'TRANSPARENT_REDUCED'}
-                          onChange={() => setFixedShareMode('TRANSPARENT_REDUCED')}
-                          className="mt-1"
-                        />
-                        <div>
-                          <p className="font-medium text-sm">Transparent (reduziert)</p>
-                          <p className="text-xs text-gray-500">Teilnehmer verteilen nur {(100 - totalFixedPercent).toFixed(0)}%</p>
-                        </div>
-                      </label>
-                      <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${fixedShareMode === 'TRANSPARENT_FULL' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'}`}>
-                        <input
-                          type="radio"
-                          name="fixedShareMode"
-                          checked={fixedShareMode === 'TRANSPARENT_FULL'}
-                          onChange={() => setFixedShareMode('TRANSPARENT_FULL')}
-                          className="mt-1"
-                        />
-                        <div>
-                          <p className="font-medium text-sm">Transparent (voll)</p>
-                          <p className="text-xs text-gray-500">100% verteilen, fester Anteil wird angezeigt</p>
-                        </div>
-                      </label>
-                      <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${fixedShareMode === 'RESULTS_ONLY' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'}`}>
-                        <input
-                          type="radio"
-                          name="fixedShareMode"
-                          checked={fixedShareMode === 'RESULTS_ONLY'}
-                          onChange={() => setFixedShareMode('RESULTS_ONLY')}
-                          className="mt-1"
-                        />
-                        <div>
-                          <p className="font-medium text-sm">Nur in Ergebnissen</p>
-                          <p className="text-xs text-gray-500">Wird erst bei den Ergebnissen aufgelistet</p>
-                        </div>
-                      </label>
-                      <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${fixedShareMode === 'PAYOUT_ONLY' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'}`}>
-                        <input
-                          type="radio"
-                          name="fixedShareMode"
-                          checked={fixedShareMode === 'PAYOUT_ONLY'}
-                          onChange={() => setFixedShareMode('PAYOUT_ONLY')}
-                          className="mt-1"
-                        />
-                        <div>
-                          <p className="font-medium text-sm">Nur bei Auszahlung</p>
-                          <p className="text-xs text-gray-500">Wird erst bei der Auszahlungsberechnung eingerechnet</p>
-                        </div>
-                      </label>
+                    <div className="p-3 rounded-lg border border-amber-200 bg-amber-50">
+                      <p className="font-medium text-sm">Transparent (voll)</p>
+                      <p className="text-xs text-gray-600">100% verteilen, fester Anteil wird angezeigt</p>
                     </div>
                   </div>
                 )}
