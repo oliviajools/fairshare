@@ -309,7 +309,7 @@ function CreateSessionContent() {
           ...formData,
           companyId: selectedCompany || null,
           participants: validParticipants,
-          fixedShares: fixedShares.filter(fs => fs.name.trim() && fs.percent > 0),
+          fixedShares: fixedShares.filter(fs => fs.name.trim()),
           fixedShareMode: fixedShareMode,
         }),
       })

@@ -16,6 +16,11 @@ export async function POST(request: NextRequest) {
     const organizerToken = generateInviteToken()
 
     // Create session
+    const hasAnyFixedShare =
+      fixedShares &&
+      Array.isArray(fixedShares) &&
+      fixedShares.some((s: any) => typeof s?.name === 'string' && s.name.trim() !== '')
+
     const sessionData: any = {
       title,
       evaluationInfo: evaluationInfo || null,
@@ -24,7 +29,7 @@ export async function POST(request: NextRequest) {
       companyId: companyId || null,
       fixedShareMode: fixedShareMode || null,
       fixedShareVotingStatus:
-        fixedShares && Array.isArray(fixedShares) && fixedShares.length > 0 ? 'OPEN' : 'CLOSED',
+        hasAnyFixedShare ? 'OPEN' : 'CLOSED',
     }
     
     // Handle date - if provided and not empty, parse it, otherwise set to current date
@@ -45,12 +50,12 @@ export async function POST(request: NextRequest) {
     // Create fixed shares if provided
     if (fixedShares && Array.isArray(fixedShares) && fixedShares.length > 0) {
       for (const share of fixedShares) {
-        if (share.name && share.percent > 0) {
+        if (share.name && share.name.trim() !== '') {
           await prisma.fixedShare.create({
             data: {
               sessionId: session.id,
               name: share.name.trim(),
-              percent: share.percent
+              percent: typeof share.percent === 'number' ? share.percent : Number(share.percent) || 0
             }
           })
         }
