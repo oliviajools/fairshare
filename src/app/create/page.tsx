@@ -221,6 +221,9 @@ function CreateSessionContent() {
   const [showFixedShareSection, setShowFixedShareSection] = useState(false)
 
   const addFixedShare = () => {
+    if (!fixedShareMode) {
+      setFixedShareMode('TRANSPARENT_FULL')
+    }
     setFixedShares([...fixedShares, { name: '', percent: 0 }])
   }
 
