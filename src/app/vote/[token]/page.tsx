@@ -15,6 +15,7 @@ import { PieChart } from '@/components/PieChart'
 interface Participant {
   id: string
   displayName: string
+  hasSubmittedFixedShares?: boolean
 }
 
 interface FixedShare {
@@ -74,6 +75,7 @@ export default function VotePage() {
   const [ballot, setBallot] = useState<Ballot | null>(null)
   const [votes, setVotes] = useState<{[personId: string]: number}>({})
   const [fixedVotes, setFixedVotes] = useState<{[fixedShareId: string]: number}>({})
+  const [hasSubmittedFixedVotes, setHasSubmittedFixedVotes] = useState(false)
   const [error, setError] = useState('')
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [hasLoadedInitialVotes, setHasLoadedInitialVotes] = useState(false)
@@ -94,6 +96,9 @@ export default function VotePage() {
   const isTransparentMode = fixedShareMode === 'TRANSPARENT_REDUCED' || fixedShareMode === 'TRANSPARENT_FULL'
 
   const needsFixedSharePreVote = fixedShares.length > 0 && fixedShareVotingStatus === 'OPEN'
+
+  const fixedShareSubmittedCount = session?.participants?.filter((p) => p.hasSubmittedFixedShares).length || 0
+  const fixedShareTotalParticipants = session?.participants?.length || 0
 
   // Calculate total percentage
   const totalPercentage = Object.values(votes).reduce((sum, percent) => sum + percent, 0)
@@ -152,6 +157,7 @@ export default function VotePage() {
         setSession(data.session)
         setBallot(data.ballot)
         setIsSubmitted(data.ballot?.status === 'SUBMITTED')
+        setHasSubmittedFixedVotes(!!data.participant?.hasSubmittedFixedShares)
         
         // Save to invited sessions in localStorage
         if (data.session && data.participant) {
@@ -250,6 +256,8 @@ export default function VotePage() {
       if (result.session) {
         setSession(result.session)
       }
+
+      setHasSubmittedFixedVotes(true)
 
       // After submitting fixed votes, refresh status (polling will also update)
       setHasLoadedInitialFixedVotes(true)
@@ -426,7 +434,43 @@ export default function VotePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {needsFixedSharePreVote && (
+                  {needsFixedSharePreVote && hasSubmittedFixedVotes && (
+                    <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-amber-600 font-bold">⏳</span>
+                        <span className="font-medium text-amber-800">Warte auf die anderen...</span>
+                      </div>
+                      <p className="text-sm text-amber-700">
+                        Du hast abgestimmt. Sobald alle abgestimmt haben, wird der Durchschnitt automatisch übernommen und danach kannst du über den Rest abstimmen.
+                      </p>
+
+                      <div className="mt-4">
+                        <div className="flex justify-between text-sm mb-1 text-amber-800">
+                          <span>Fortschritt</span>
+                          <span className="font-medium">
+                            {fixedShareSubmittedCount} / {fixedShareTotalParticipants}
+                          </span>
+                        </div>
+                        <Progress
+                          value={fixedShareTotalParticipants > 0 ? (fixedShareSubmittedCount / fixedShareTotalParticipants) * 100 : 0}
+                          className="h-2"
+                        />
+                      </div>
+
+                      <div className="mt-4">
+                        <Button
+                          onClick={() => fetchVoteData(true)}
+                          disabled={submitting}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          Aktualisieren
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {needsFixedSharePreVote && !hasSubmittedFixedVotes && (
                     <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                       <div className="flex items-center gap-2 mb-3">
                         <span className="text-amber-600 font-bold">⚡</span>
