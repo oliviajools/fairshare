@@ -117,7 +117,7 @@ function Footer() {
             <h3 className="font-semibold mb-4">Rechtliches</h3>
             <ul className="space-y-2 text-gray-400">
               <li><Link href="/site/impressum" className="hover:text-white transition-colors">Impressum</Link></li>
-              <li><Link href="/site/impressum#datenschutz" className="hover:text-white transition-colors">Datenschutz</Link></li>
+              <li><Link href="/site/datenschutz" className="hover:text-white transition-colors">Datenschutz</Link></li>
             </ul>
           </div>
         </div>
