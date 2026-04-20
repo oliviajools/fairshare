@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Impressum – TeamPayer',
@@ -58,6 +59,10 @@ export default function ImpressumPage() {
               Anna Schmidt<br />
               Musterstraße 123<br />
               10115 Berlin
+            </p>
+
+            <p>
+              <Link href="/site/datenschutz">Datenschutzerklärung</Link>
             </p>
 
             <hr className="my-12" />

@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, Users, Vote, Calculator, Sparkles } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Calculator, Sparkles, Users, Vote } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'TeamPayer – Faire Kostenverteilung für Teams',
@@ -36,6 +36,59 @@ const features = [
   },
 ]
 
+const benefits = [
+  {
+    title: 'Anonym & fair',
+    description: 'Jede Bewertung zählt – ohne Gruppendruck und ohne Diskussionen.',
+  },
+  {
+    title: 'Transparent',
+    description: 'Das Ergebnis ist nachvollziehbar, weil der Prozess klar strukturiert ist.',
+  },
+  {
+    title: 'Schnell',
+    description: 'In wenigen Minuten von „Was war der Aufwand?“ zur fertigen Verteilung.',
+  },
+]
+
+const sessionFlow = [
+  {
+    title: 'Session erstellen',
+    description: 'Name, Teilnehmer und optional feste Anteile anlegen.',
+  },
+  {
+    title: 'Link teilen',
+    description: 'Alle stimmen im Browser ab – ohne App-Installation.',
+  },
+  {
+    title: 'Bewerten',
+    description: 'Jeder schätzt anonym ein, wer wie viel beigetragen hat.',
+  },
+  {
+    title: 'Ergebnis nutzen',
+    description: 'TeamPayer berechnet die Verteilung und du kannst direkt auszahlen.',
+  },
+]
+
+const faqs = [
+  {
+    q: 'Müssen alle ein Konto anlegen?',
+    a: 'Nein. Teilnehmer können per Link abstimmen. Ein Konto ist nur für das Erstellen und Verwalten von Sessions nötig.',
+  },
+  {
+    q: 'Sind die Bewertungen anonym?',
+    a: 'Ja. Bewertungen werden so verarbeitet, dass einzelne Stimmen nicht öffentlich zugeordnet werden.',
+  },
+  {
+    q: 'Funktioniert das auch für ungleiche Beträge?',
+    a: 'Ja. Du kannst feste Anteile definieren oder gemeinsam vorab festlegen, bevor über den Rest abgestimmt wird.',
+  },
+  {
+    q: 'Kann ich das Ergebnis exportieren?',
+    a: 'Ja. Ergebnisse lassen sich speichern und je nach Ansicht auch als Übersicht teilen.',
+  },
+]
+
 export default function HomePage() {
   return (
     <>
@@ -65,6 +118,116 @@ export default function HomePage() {
               >
                 Mehr erfahren
               </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-6">
+          <div className="max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">So fühlt sich Fairness an</h2>
+                <p className="text-gray-600 mb-8">
+                  TeamPayer ist für Situationen gemacht, in denen Aufwand schwer messbar ist.
+                  Statt endlosen Diskussionen gibt es einen klaren Prozess – und ein Ergebnis, das alle mittragen.
+                </p>
+
+                <div className="space-y-4">
+                  {benefits.map((b) => (
+                    <div key={b.title} className="flex gap-3">
+                      <div className="mt-0.5">
+                        <CheckCircle2 className="h-5 w-5 text-sky-600" />
+                      </div>
+                      <div>
+                        <div className="font-semibold">{b.title}</div>
+                        <div className="text-gray-600 text-sm">{b.description}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="rounded-xl bg-sky-50 p-5">
+                    <div className="text-sky-700 font-semibold">Weniger Reibung</div>
+                    <div className="text-gray-600 text-sm mt-1">Klare Schritte, weniger Diskussion.</div>
+                  </div>
+                  <div className="rounded-xl bg-violet-50 p-5">
+                    <div className="text-violet-700 font-semibold">Mehr Akzeptanz</div>
+                    <div className="text-gray-600 text-sm mt-1">Weil alle beteiligt sind.</div>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 p-5">
+                    <div className="text-gray-900 font-semibold">Sofort einsetzbar</div>
+                    <div className="text-gray-600 text-sm mt-1">Browser-Link statt Setup.</div>
+                  </div>
+                  <div className="rounded-xl bg-sky-50 p-5">
+                    <div className="text-sky-700 font-semibold">Ein Ergebnis</div>
+                    <div className="text-gray-600 text-sm mt-1">Automatisch berechnet.</div>
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <Link
+                    href="/login"
+                    className="w-full bg-sky-500 text-white px-6 py-3 rounded-xl text-base font-semibold hover:bg-sky-600 transition-colors inline-flex items-center justify-center gap-2"
+                  >
+                    Session starten
+                    <ArrowRight className="h-5 w-5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Ablauf einer Session</h2>
+            <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+              Ein klarer Prozess, der für alle verständlich ist – von der Einladung bis zur Auszahlung.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {sessionFlow.map((step, index) => (
+                <div key={step.title} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-sm font-medium text-sky-600">Schritt {index + 1}</div>
+                    <div className="h-9 w-9 rounded-xl bg-gray-50 flex items-center justify-center">
+                      {index === 0 && <Users className="h-5 w-5 text-gray-700" />}
+                      {index === 1 && <Sparkles className="h-5 w-5 text-gray-700" />}
+                      {index === 2 && <Vote className="h-5 w-5 text-gray-700" />}
+                      {index === 3 && <Calculator className="h-5 w-5 text-gray-700" />}
+                    </div>
+                  </div>
+                  <div className="text-lg font-semibold mb-2">{step.title}</div>
+                  <div className="text-gray-600 text-sm">{step.description}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">FAQ</h2>
+            <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+              Häufige Fragen, kurz beantwortet.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {faqs.map((item) => (
+                <div key={item.q} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <div className="font-semibold mb-2">{item.q}</div>
+                  <div className="text-gray-600 text-sm">{item.a}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
