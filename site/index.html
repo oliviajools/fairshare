@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TeamPayer – Faire Kostenverteilung für Teams</title>
+    <meta name="description" content="Mit TeamPayer verteilst du Kosten fair und demokratisch. Jeder stimmt ab – der Algorithmus rechnet." />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --text: #0b1220;
+        --muted: #667085;
+        --border: #eaecf0;
+        --card: rgba(255,255,255,0.9);
+        --shadow: 0 10px 30px rgba(16,24,40,0.08);
+        --shadow-sm: 0 6px 18px rgba(16,24,40,0.08);
+        --sky: #0ea5e9;
+        --violet: #8b5cf6;
+        --radius: 18px;
+        --container: 1100px;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        line-height: 1.6;
+      }
+
+      a { color: inherit; text-decoration: none; }
+
+      .container {
+        max-width: var(--container);
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(255,255,255,0.8);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .nav-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 0;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+      }
+
+      .brand-badge {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, rgba(14,165,233,1), rgba(139,92,246,1));
+        box-shadow: 0 10px 25px rgba(14,165,233,0.25);
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: 14px;
+        color: rgba(17,24,39,0.75);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 18px;
+        border-radius: 14px;
+        font-weight: 700;
+        border: 1px solid transparent;
+      }
+
+      .btn-primary {
+        background: var(--sky);
+        color: #fff;
+        box-shadow: 0 12px 28px rgba(14,165,233,0.25);
+      }
+
+      .btn-primary:hover { filter: brightness(0.95); }
+
+      .btn-ghost {
+        background: transparent;
+        border-color: rgba(255,255,255,0.4);
+        color: #fff;
+      }
+
+      .btn-outline {
+        background: transparent;
+        border-color: rgba(17,24,39,0.16);
+        color: rgba(17,24,39,0.9);
+      }
+
+      .hero {
+        color: #fff;
+        padding: 78px 0 84px;
+        background: radial-gradient(1000px 500px at 20% 10%, rgba(255,255,255,0.16), rgba(255,255,255,0) 60%),
+                    linear-gradient(135deg, rgba(56,189,248,1), rgba(14,165,233,1) 45%, rgba(139,92,246,1));
+      }
+
+      .hero-inner {
+        max-width: 860px;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      .hero h1 {
+        margin: 0 0 14px;
+        font-size: clamp(34px, 5vw, 60px);
+        line-height: 1.1;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+      }
+
+      .hero p {
+        margin: 0 auto 22px;
+        max-width: 760px;
+        font-size: clamp(16px, 2.2vw, 22px);
+        color: rgba(255,255,255,0.88);
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 26px;
+      }
+
+      .section {
+        padding: 72px 0;
+      }
+
+      .section.alt {
+        background: #f8fafc;
+      }
+
+      .section h2 {
+        margin: 0 0 10px;
+        font-size: clamp(24px, 3vw, 38px);
+        line-height: 1.2;
+        letter-spacing: -0.01em;
+      }
+
+      .section p.lead {
+        margin: 0 auto 38px;
+        max-width: 760px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      .grid.cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .grid.cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid.cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        box-shadow: var(--shadow-sm);
+        padding: 18px;
+      }
+
+      .card:hover { transform: translateY(-2px); transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: var(--shadow); }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.25);
+        background: rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.9);
+        font-weight: 700;
+        font-size: 13px;
+      }
+
+      .step {
+        font-size: 13px;
+        color: rgba(14,165,233,0.95);
+        font-weight: 800;
+      }
+
+      .muted { color: var(--muted); }
+
+      .kicker {
+        font-size: 14px;
+        font-weight: 800;
+        color: rgba(14,165,233,1);
+        text-transform: none;
+      }
+
+      .center { text-align: center; }
+
+      .cta {
+        background: #0b1220;
+        color: #fff;
+        padding: 72px 0;
+      }
+
+      .cta p { color: rgba(255,255,255,0.72); }
+
+      .footer {
+        background: #0b1220;
+        color: #fff;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        padding: 36px 0;
+      }
+
+      .footer-grid {
+        display: grid;
+        gap: 22px;
+        grid-template-columns: 2fr 1fr 1fr;
+        align-items: start;
+      }
+
+      .footer h3 {
+        margin: 0 0 10px;
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .footer a { color: rgba(255,255,255,0.7); }
+      .footer a:hover { color: rgba(255,255,255,1); }
+
+      .footer small {
+        display: block;
+        margin-top: 22px;
+        color: rgba(255,255,255,0.5);
+      }
+
+      @media (max-width: 980px) {
+        .grid.cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .grid.cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+
+      @media (max-width: 640px) {
+        .nav-links { display: none; }
+        .grid.cols-4, .grid.cols-3, .grid.cols-2 { grid-template-columns: 1fr; }
+        .section { padding: 54px 0; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="nav">
+      <div class="container">
+        <div class="nav-inner">
+          <a class="brand" href="#top" aria-label="TeamPayer">
+            <span class="brand-badge" aria-hidden="true"></span>
+            <span>TeamPayer</span>
+          </a>
+          <div class="nav-links">
+            <a href="#ablauf">Ablauf</a>
+            <a href="#features">Features</a>
+            <a href="#faq">FAQ</a>
+            <a href="./help.html">Hilfe</a>
+            <a class="btn btn-outline" href="#start">Jetzt starten</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="hero" id="top">
+      <div class="container">
+        <div class="hero-inner">
+          <div class="pill">Faire Kostenverteilung für Teams</div>
+          <h1>
+            Schluss mit der Frage:<br />
+            <span style="color: rgba(224,242,254,1)">„Wer zahlt wie viel?“</span>
+          </h1>
+          <p>
+            TeamPayer macht Kostenverteilung fair, transparent und demokratisch.
+            Alle stimmen ab – der Algorithmus rechnet.
+          </p>
+          <div class="hero-actions" id="start">
+            <a class="btn btn-primary" href="#features">Jetzt starten</a>
+            <a class="btn btn-ghost" href="#ablauf">Mehr erfahren</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt">
+      <div class="container">
+        <div class="grid cols-2" style="align-items: start; gap: 26px;">
+          <div>
+            <div class="kicker">So fühlt sich Fairness an</div>
+            <h2>Ein klarer Prozess statt endloser Diskussion</h2>
+            <p class="muted" style="margin: 10px 0 18px;">
+              TeamPayer ist für Situationen gemacht, in denen Aufwand schwer messbar ist.
+              Statt Gruppendruck und Bauchgefühl gibt es einen strukturierten Ablauf – und ein Ergebnis, das alle mittragen.
+            </p>
+            <div class="grid" style="gap: 12px;">
+              <div class="card" style="display:flex; gap:12px; align-items:flex-start;">
+                <div style="width:10px; height:10px; margin-top:6px; border-radius:999px; background: var(--sky);"></div>
+                <div>
+                  <div style="font-weight:800;">Anonym & fair</div>
+                  <div class="muted" style="font-size:14px;">Jede Bewertung zählt – ohne Gruppendruck und ohne Diskussionen.</div>
+                </div>
+              </div>
+              <div class="card" style="display:flex; gap:12px; align-items:flex-start;">
+                <div style="width:10px; height:10px; margin-top:6px; border-radius:999px; background: var(--violet);"></div>
+                <div>
+                  <div style="font-weight:800;">Transparent</div>
+                  <div class="muted" style="font-size:14px;">Das Ergebnis ist nachvollziehbar, weil der Prozess klar strukturiert ist.</div>
+                </div>
+              </div>
+              <div class="card" style="display:flex; gap:12px; align-items:flex-start;">
+                <div style="width:10px; height:10px; margin-top:6px; border-radius:999px; background: #111827;"></div>
+                <div>
+                  <div style="font-weight:800;">Schnell</div>
+                  <div class="muted" style="font-size:14px;">In wenigen Minuten von „Was war der Aufwand?“ zur fertigen Verteilung.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 22px;">
+            <div class="grid cols-2">
+              <div class="card" style="background:#f0f9ff; border-color:#e0f2fe; box-shadow:none;">
+                <div style="font-weight:800; color:#0369a1;">Weniger Reibung</div>
+                <div class="muted" style="font-size:14px;">Klare Schritte, weniger Diskussion.</div>
+              </div>
+              <div class="card" style="background:#f5f3ff; border-color:#ede9fe; box-shadow:none;">
+                <div style="font-weight:800; color:#6d28d9;">Mehr Akzeptanz</div>
+                <div class="muted" style="font-size:14px;">Weil alle beteiligt sind.</div>
+              </div>
+              <div class="card" style="background:#f9fafb; border-color:#f3f4f6; box-shadow:none;">
+                <div style="font-weight:800;">Sofort einsetzbar</div>
+                <div class="muted" style="font-size:14px;">Browser-Link statt Setup.</div>
+              </div>
+              <div class="card" style="background:#f0f9ff; border-color:#e0f2fe; box-shadow:none;">
+                <div style="font-weight:800; color:#0369a1;">Ein Ergebnis</div>
+                <div class="muted" style="font-size:14px;">Automatisch berechnet.</div>
+              </div>
+            </div>
+            <div style="margin-top: 16px;">
+              <a class="btn btn-primary" style="width:100%;" href="#features">Session starten</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="ablauf">
+      <div class="container">
+        <div class="center">
+          <h2>Ablauf einer Session</h2>
+          <p class="lead">Ein klarer Prozess – von der Einladung bis zur Auszahlung.</p>
+        </div>
+
+        <div class="grid cols-4">
+          <div class="card">
+            <div class="step">Schritt 1</div>
+            <div style="font-weight:900; font-size:18px; margin-top:6px;">Session erstellen</div>
+            <div class="muted" style="font-size:14px; margin-top:6px;">Name, Teilnehmer und optional feste Anteile anlegen.</div>
+          </div>
+          <div class="card">
+            <div class="step">Schritt 2</div>
+            <div style="font-weight:900; font-size:18px; margin-top:6px;">Link teilen</div>
+            <div class="muted" style="font-size:14px; margin-top:6px;">Alle stimmen im Browser ab – ohne Installation.</div>
+          </div>
+          <div class="card">
+            <div class="step">Schritt 3</div>
+            <div style="font-weight:900; font-size:18px; margin-top:6px;">Bewerten</div>
+            <div class="muted" style="font-size:14px; margin-top:6px;">Jeder schätzt anonym ein, wer wie viel beigetragen hat.</div>
+          </div>
+          <div class="card">
+            <div class="step">Schritt 4</div>
+            <div style="font-weight:900; font-size:18px; margin-top:6px;">Ergebnis nutzen</div>
+            <div class="muted" style="font-size:14px; margin-top:6px;">TeamPayer berechnet die Verteilung, du zahlst einfach aus.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt" id="features">
+      <div class="container">
+        <div class="center">
+          <h2>So einfach geht’s</h2>
+          <p class="lead">In vier Schritten zur fairen Kostenverteilung – ohne Streit und ohne Taschenrechner.</p>
+        </div>
+
+        <div class="grid cols-4">
+          <div class="card">
+            <div class="step">Schritt 1</div>
+            <div style="font-weight:900; font-size:18px; margin-top:6px;">Team einladen</div>
+            <div class="muted" style="font-size:14px; margin-top:6px;">Erstelle eine Session und lade alle per Link ein.</div>
+          </div>
+          <div class="card">
+            <div class="step">Schritt 2</div>
+            <div style="font-weight:900; font-size:18px; margin-top:6px;">Demokratisch abstimmen</div>
+            <div class="muted" style="font-size:14px; margin-top:6px;">Jeder bewertet anonym, wer wie viel beitragen sollte.</div>
+          </div>
+          <div class="card">
+            <div class="step">Schritt 3</div>
+            <div style="font-weight:900; font-size:18px; margin-top:6px;">Automatisch berechnen</div>
+            <div class="muted" style="font-size:14px; margin-top:6px;">Der Algorithmus ermittelt die fairste Verteilung.</div>
+          </div>
+          <div class="card">
+            <div class="step">Schritt 4</div>
+            <div style="font-weight:900; font-size:18px; margin-top:6px;">Stressfrei teilen</div>
+            <div class="muted" style="font-size:14px; margin-top:6px;">Keine Diskussionen mehr – nur transparente Ergebnisse.</div>
+          </div>
+        </div>
+
+        <div class="section" style="padding: 54px 0 0;">
+          <div class="center">
+            <h2>Perfekt für jede Situation</h2>
+            <p class="lead">Ob WG, Urlaub oder Firmenevent – TeamPayer funktioniert überall.</p>
+          </div>
+          <div class="grid cols-3" style="max-width: 920px; margin: 0 auto;">
+            <div class="card center">
+              <div style="font-size:42px;">🏠</div>
+              <div style="font-weight:900; font-size:18px; margin-top:6px;">WG-Kosten</div>
+              <div class="muted" style="font-size:14px; margin-top:6px;">Miete, Internet, Putzmittel fair aufteilen.</div>
+            </div>
+            <div class="card center">
+              <div style="font-size:42px;">✈️</div>
+              <div style="font-weight:900; font-size:18px; margin-top:6px;">Gruppenreisen</div>
+              <div class="muted" style="font-size:14px; margin-top:6px;">Hotel, Mietwagen, Aktivitäten transparent teilen.</div>
+            </div>
+            <div class="card center">
+              <div style="font-size:42px;">🎉</div>
+              <div style="font-weight:900; font-size:18px; margin-top:6px;">Events & Feiern</div>
+              <div class="muted" style="font-size:14px; margin-top:6px;">Geburtstage, Teamevents, Hochzeiten organisieren.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <div class="container">
+        <div class="center">
+          <h2>FAQ</h2>
+          <p class="lead">Häufige Fragen, kurz beantwortet.</p>
+        </div>
+
+        <div class="grid cols-2" style="max-width: 980px; margin: 0 auto;">
+          <div class="card">
+            <div style="font-weight:900;">Müssen alle ein Konto anlegen?</div>
+            <div class="muted" style="font-size:14px; margin-top:6px;">
+              Nein. Teilnehmer können per Link abstimmen. Ein Konto ist nur für das Erstellen und Verwalten von Sessions nötig.
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-weight:900;">Sind die Bewertungen anonym?</div>
+            <div class="muted" style="font-size:14px; margin-top:6px;">
+              Ja. Bewertungen werden so verarbeitet, dass einzelne Stimmen nicht öffentlich zugeordnet werden.
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-weight:900;">Funktioniert das auch für ungleiche Beträge?</div>
+            <div class="muted" style="font-size:14px; margin-top:6px;">
+              Ja. Du kannst feste Anteile definieren oder gemeinsam vorab festlegen, bevor über den Rest abgestimmt wird.
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-weight:900;">Kann ich das Ergebnis exportieren?</div>
+            <div class="muted" style="font-size:14px; margin-top:6px;">
+              Ja. Ergebnisse lassen sich speichern und je nach Ansicht auch als Übersicht teilen.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="container">
+        <div class="hero-inner" style="max-width: 820px;">
+          <h2 style="margin: 0 0 10px; font-size: clamp(24px, 3vw, 38px);">Bereit für faire Kostenverteilung?</h2>
+          <p style="margin: 0 0 18px;">Starte jetzt kostenlos und erlebe, wie einfach Fairness sein kann.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#top">Kostenlos starten</a>
+            <a class="btn btn-outline" style="background: transparent; border-color: rgba(255,255,255,0.22); color: #fff;" href="./datenschutz.html">Datenschutz</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div>
+            <div class="brand" style="margin-bottom: 10px;">
+              <span class="brand-badge" aria-hidden="true"></span>
+              <span>TeamPayer</span>
+            </div>
+            <div style="color: rgba(255,255,255,0.7); max-width: 520px;">
+              Faire Kostenverteilung für Teams. Demokratisch, transparent, stressfrei.
+            </div>
+          </div>
+
+          <div>
+            <h3>Navigation</h3>
+            <div style="display:flex; flex-direction: column; gap: 8px;">
+              <a href="#features">Features</a>
+              <a href="#ablauf">Ablauf</a>
+              <a href="#faq">FAQ</a>
+              <a href="./help.html">Hilfe</a>
+            </div>
+          </div>
+
+          <div>
+            <h3>Rechtliches</h3>
+            <div style="display:flex; flex-direction: column; gap: 8px;">
+              <a href="./datenschutz.html">Datenschutz</a>
+              <a href="#">Impressum</a>
+            </div>
+          </div>
+        </div>
+
+        <small>© <span id="y"></span> TeamPayer. Alle Rechte vorbehalten.</small>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById('y').textContent = String(new Date().getFullYear())
+    </script>
+  </body>
+</html>

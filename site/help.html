@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hilfe & Kontakt – TeamPayer</title>
+    <meta name="description" content="Hilfe-Bereich und Kontaktmöglichkeiten für TeamPayer." />
+    <meta name="robots" content="noindex, follow" />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --text: #0b1220;
+        --muted: #667085;
+        --border: #eaecf0;
+        --card: rgba(255,255,255,0.9);
+        --shadow: 0 10px 30px rgba(16,24,40,0.08);
+        --shadow-sm: 0 6px 18px rgba(16,24,40,0.08);
+        --sky: #0ea5e9;
+        --violet: #8b5cf6;
+        --radius: 18px;
+        --container: 1100px;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        line-height: 1.6;
+      }
+
+      a { color: inherit; text-decoration: none; }
+
+      .container {
+        max-width: var(--container);
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(255,255,255,0.8);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .nav-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 0;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+      }
+
+      .brand-badge {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, rgba(14,165,233,1), rgba(139,92,246,1));
+        box-shadow: 0 10px 25px rgba(14,165,233,0.25);
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: 14px;
+        color: rgba(17,24,39,0.75);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 18px;
+        border-radius: 14px;
+        font-weight: 700;
+        border: 1px solid transparent;
+      }
+
+      .btn-primary {
+        background: var(--sky);
+        color: #fff;
+        box-shadow: 0 12px 28px rgba(14,165,233,0.25);
+      }
+
+      .btn-primary:hover { filter: brightness(0.95); }
+
+      .btn-outline {
+        background: transparent;
+        border-color: rgba(17,24,39,0.16);
+        color: rgba(17,24,39,0.9);
+      }
+
+      .hero {
+        color: #fff;
+        padding: 64px 0 60px;
+        background: radial-gradient(1000px 500px at 20% 10%, rgba(255,255,255,0.16), rgba(255,255,255,0) 60%),
+                    linear-gradient(135deg, rgba(56,189,248,1), rgba(14,165,233,1) 45%, rgba(139,92,246,1));
+      }
+
+      .hero-inner {
+        max-width: 860px;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(28px, 4vw, 46px);
+        line-height: 1.1;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+      }
+
+      .hero p {
+        margin: 0 auto;
+        max-width: 760px;
+        font-size: clamp(15px, 2vw, 18px);
+        color: rgba(255,255,255,0.88);
+      }
+
+      .section {
+        padding: 56px 0;
+      }
+
+      .grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      .grid.cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid.cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        box-shadow: var(--shadow-sm);
+        padding: 18px;
+      }
+
+      .card:hover { transform: translateY(-2px); transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: var(--shadow); }
+
+      .kicker {
+        font-size: 14px;
+        font-weight: 800;
+        color: rgba(14,165,233,1);
+      }
+
+      .muted { color: var(--muted); }
+
+      label {
+        display: block;
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 6px;
+      }
+
+      input, textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px 14px;
+        font: inherit;
+        outline: none;
+        background: #fff;
+      }
+
+      textarea { min-height: 120px; resize: vertical; }
+
+      input:focus, textarea:focus {
+        border-color: rgba(14,165,233,0.7);
+        box-shadow: 0 0 0 4px rgba(14,165,233,0.15);
+      }
+
+      .footer {
+        background: #0b1220;
+        color: #fff;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        padding: 32px 0;
+      }
+
+      .footer-grid {
+        display: grid;
+        gap: 22px;
+        grid-template-columns: 2fr 1fr 1fr;
+        align-items: start;
+      }
+
+      .footer h3 {
+        margin: 0 0 10px;
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .footer a { color: rgba(255,255,255,0.7); }
+      .footer a:hover { color: rgba(255,255,255,1); }
+
+      .footer small {
+        display: block;
+        margin-top: 18px;
+        color: rgba(255,255,255,0.5);
+      }
+
+      @media (max-width: 980px) {
+        .grid.cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+
+      @media (max-width: 640px) {
+        .nav-links { display: none; }
+        .grid.cols-3, .grid.cols-2 { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="nav">
+      <div class="container">
+        <div class="nav-inner">
+          <a class="brand" href="./index.html" aria-label="TeamPayer">
+            <span class="brand-badge" aria-hidden="true"></span>
+            <span>TeamPayer</span>
+          </a>
+          <div class="nav-links">
+            <a href="./index.html#features">Features</a>
+            <a href="./index.html#ablauf">Ablauf</a>
+            <a href="./index.html#faq">FAQ</a>
+            <a class="btn btn-outline" href="./help.html">Hilfe</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="hero">
+      <div class="container">
+        <div class="hero-inner">
+          <div class="kicker" style="color: rgba(224,242,254,1);">Support</div>
+          <h1>Hilfe & Kontakt</h1>
+          <p>Wenn etwas hakt oder du Feedback hast: Schreib uns – wir helfen dir schnell weiter.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="grid cols-3" style="align-items: stretch;">
+          <div class="card">
+            <div style="font-weight: 900; font-size: 18px;">E-Mail</div>
+            <div class="muted" style="margin-top: 6px; font-size: 14px;">
+              Für Fragen, Probleme oder Feedback.
+            </div>
+            <div style="margin-top: 14px;">
+              <a class="btn btn-primary" href="mailto:hello@teampayer.de?subject=TeamPayer%20Hilfe">hello@teampayer.de</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-weight: 900; font-size: 18px;">Antwortzeit</div>
+            <div class="muted" style="margin-top: 6px; font-size: 14px;">
+              Normalerweise antworten wir innerhalb von 24–48 Stunden.
+            </div>
+            <div style="margin-top: 14px;">
+              <div class="card" style="background:#f0f9ff; border-color:#e0f2fe; box-shadow:none;">
+                <div style="font-weight: 900; color:#0369a1;">Tipp</div>
+                <div class="muted" style="font-size: 14px;">Bitte beschreibe kurz: Session, Teilnehmer, was passiert ist.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-weight: 900; font-size: 18px;">Datenschutz</div>
+            <div class="muted" style="margin-top: 6px; font-size: 14px;">
+              Infos zur Verarbeitung personenbezogener Daten.
+            </div>
+            <div style="margin-top: 14px;">
+              <a class="btn btn-outline" href="./datenschutz.html">Datenschutzerklärung</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid cols-2" style="margin-top: 18px; align-items: start;">
+          <div class="card">
+            <div class="kicker">Schnellkontakt</div>
+            <div style="font-weight: 900; font-size: 20px; margin-top: 6px;">Schreib uns direkt</div>
+            <div class="muted" style="margin-top: 8px; font-size: 14px;">
+              Dieses Formular öffnet dein E-Mail-Programm (Live Server kann keine echten Formulare versenden).
+            </div>
+
+            <form id="contact" style="margin-top: 14px;" onsubmit="return false;">
+              <div style="margin-bottom: 12px;">
+                <label for="name">Name</label>
+                <input id="name" name="name" placeholder="Dein Name" autocomplete="name" />
+              </div>
+              <div style="margin-bottom: 12px;">
+                <label for="email">E-Mail</label>
+                <input id="email" name="email" placeholder="deine@mailadresse.de" autocomplete="email" />
+              </div>
+              <div style="margin-bottom: 12px;">
+                <label for="message">Nachricht</label>
+                <textarea id="message" name="message" placeholder="Worum geht’s?"></textarea>
+              </div>
+
+              <button class="btn btn-primary" type="button" id="send">E-Mail erstellen</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="kicker">FAQ</div>
+            <div style="font-weight: 900; font-size: 20px; margin-top: 6px;">Häufige Fragen</div>
+            <div class="muted" style="margin-top: 8px; font-size: 14px;">
+              Einige Antworten findest du oft schon hier.
+            </div>
+
+            <div style="margin-top: 14px;" class="grid" aria-label="FAQ">
+              <div class="card" style="box-shadow:none;">
+                <div style="font-weight: 900;">Warum öffnet sich kein Link?</div>
+                <div class="muted" style="font-size: 14px; margin-top: 6px;">Prüfe, ob Popups blockiert werden und ob der Link vollständig kopiert wurde.</div>
+              </div>
+              <div class="card" style="box-shadow:none;">
+                <div style="font-weight: 900;">Ich kann nicht abstimmen</div>
+                <div class="muted" style="font-size: 14px; margin-top: 6px;">Stelle sicher, dass die Session offen ist und du den richtigen Abstimmungslink nutzt.</div>
+              </div>
+              <div class="card" style="box-shadow:none;">
+                <div style="font-weight: 900;">Wie melde ich einen Bug?</div>
+                <div class="muted" style="font-size: 14px; margin-top: 6px;">Schick uns bitte einen Screenshot und kurz die Schritte, wie es passiert.</div>
+              </div>
+            </div>
+
+            <div style="margin-top: 14px;">
+              <a class="btn btn-outline" href="./index.html#faq">Zur Haupt-FAQ</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div>
+            <div class="brand" style="margin-bottom: 10px;">
+              <span class="brand-badge" aria-hidden="true"></span>
+              <span>TeamPayer</span>
+            </div>
+            <div style="color: rgba(255,255,255,0.7); max-width: 520px;">
+              Faire Kostenverteilung für Teams. Demokratisch, transparent, stressfrei.
+            </div>
+          </div>
+
+          <div>
+            <h3>Navigation</h3>
+            <div style="display:flex; flex-direction: column; gap: 8px;">
+              <a href="./index.html#features">Features</a>
+              <a href="./index.html#ablauf">Ablauf</a>
+              <a href="./index.html#faq">FAQ</a>
+              <a href="./help.html">Hilfe</a>
+            </div>
+          </div>
+
+          <div>
+            <h3>Rechtliches</h3>
+            <div style="display:flex; flex-direction: column; gap: 8px;">
+              <a href="./datenschutz.html">Datenschutz</a>
+              <a href="#">Impressum</a>
+            </div>
+          </div>
+        </div>
+
+        <small>© <span id="y"></span> TeamPayer. Alle Rechte vorbehalten.</small>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById('y').textContent = String(new Date().getFullYear())
+
+      function v(id) {
+        var el = document.getElementById(id)
+        if (!el) return ''
+        return String(el.value || '').trim()
+      }
+
+      var send = document.getElementById('send')
+      if (send) {
+        send.addEventListener('click', function () {
+          var name = v('name')
+          var email = v('email')
+          var message = v('message')
+
+          var subject = 'TeamPayer Hilfe'
+          var bodyParts = []
+          if (name) bodyParts.push('Name: ' + name)
+          if (email) bodyParts.push('E-Mail: ' + email)
+          if (message) bodyParts.push('\n' + message)
+
+          var body = bodyParts.join('\n')
+          var href = 'mailto:hello@teampayer.de?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body)
+          window.location.href = href
+        })
+      }
+    </script>
+  </body>
+</html>
