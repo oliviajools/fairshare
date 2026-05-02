@@ -69,6 +69,14 @@
         box-shadow: 0 10px 25px rgba(14,165,233,0.25);
       }
 
+      .brand-logo {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        object-fit: cover;
+        box-shadow: 0 10px 25px rgba(14,165,233,0.18);
+      }
+
       .nav-links {
         display: flex;
         align-items: center;
@@ -142,6 +150,21 @@
         gap: 12px;
         justify-content: center;
         margin-top: 26px;
+      }
+
+      .hero-visual {
+        margin: 34px auto 0;
+        max-width: 520px;
+      }
+
+      .hero-visual img {
+        width: 100%;
+        height: auto;
+        border-radius: 22px;
+        border: 1px solid rgba(255,255,255,0.22);
+        background: rgba(255,255,255,0.08);
+        box-shadow: 0 30px 80px rgba(2,6,23,0.25);
+        display: block;
       }
 
       .section {
@@ -278,7 +301,7 @@
       <div class="container">
         <div class="nav-inner">
           <a class="brand" href="#top" aria-label="TeamPayer">
-            <span class="brand-badge" aria-hidden="true"></span>
+            <img class="brand-logo" src="../public/app-icon-1024.png" alt="" aria-hidden="true" />
             <span>TeamPayer</span>
           </a>
           <div class="nav-links">
@@ -308,6 +331,10 @@
             <a class="btn btn-primary" href="#features">Jetzt starten</a>
             <a class="btn btn-ghost" href="#ablauf">Mehr erfahren</a>
           </div>
+
+          <div class="hero-visual" aria-hidden="true">
+            <img src="../public/logo.png" alt="" />
+          </div>
         </div>
       </div>
     </section>
@@ -321,6 +348,12 @@
             <p class="muted" style="margin: 10px 0 18px;">
               TeamPayer ist für Situationen gemacht, in denen Aufwand schwer messbar ist.
               Statt Gruppendruck und Bauchgefühl gibt es einen strukturierten Ablauf – und ein Ergebnis, das alle mittragen.
+            </p>
+            <p class="muted" style="margin: 0 0 18px;">
+              Psychologisch ist das fair, weil nicht nur das Ergebnis zählt, sondern auch der Weg dorthin: Ein transparenter,
+              gleicher Prozess für alle stärkt die Akzeptanz (prozedurale Gerechtigkeit). Anonyme Bewertungen reduzieren sozialen
+              Druck und „Lautstärke-Effekte“ in Gruppen. Und weil mehrere Einschätzungen zusammengeführt werden, entsteht ein
+              robusteres Gesamtbild als durch Einzelmeinungen oder spontane Verhandlungen.
             </p>
             <div class="grid" style="gap: 12px;">
               <div class="card" style="display:flex; gap:12px; align-items:flex-start;">
@@ -516,7 +549,7 @@
         <div class="footer-grid">
           <div>
             <div class="brand" style="margin-bottom: 10px;">
-              <span class="brand-badge" aria-hidden="true"></span>
+              <img class="brand-logo" src="../public/app-icon-1024.png" alt="" aria-hidden="true" />
               <span>TeamPayer</span>
             </div>
             <div style="color: rgba(255,255,255,0.7); max-width: 520px;">
@@ -538,7 +571,7 @@
             <h3>Rechtliches</h3>
             <div style="display:flex; flex-direction: column; gap: 8px;">
               <a href="./datenschutz.html">Datenschutz</a>
-              <a href="#">Impressum</a>
+              <a href="./impressum.html">Impressum</a>
             </div>
           </div>
         </div>

@@ -99,6 +99,13 @@ export default function AccountPage() {
       return
     }
 
+    const lowerType = (file.type || '').toLowerCase()
+    if (lowerType.includes('heic') || lowerType.includes('heif')) {
+      alert('Dieses Bildformat wird aktuell nicht unterstützt. Bitte wähle ein JPEG/PNG oder nutze „Aus Mediathek wählen“.')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
     if (file.size > 5 * 1024 * 1024) {
       alert('Bild darf maximal 5MB groß sein')
       if (fileInputRef.current) fileInputRef.current.value = ''
