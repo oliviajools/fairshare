@@ -21,44 +21,35 @@ export default function ImpressumPage() {
       <section className="py-12">
         <div className="container mx-auto px-6">
           <div className="max-w-3xl prose prose-gray">
-            
+
             <h2>Angaben gemäß § 5 TMG</h2>
             <p>
-              TeamPayer GmbH<br />
-              Musterstraße 123<br />
-              10115 Berlin<br />
+              <strong>Verantwortliche Unternehmen:</strong><br />
+              Deepvelop<br />
+              Eppendorferlandstraße 15<br />
+              20249 Hamburg<br />
+              Deutschland<br /><br />
+              PROVOID<br />
+              Bernstorffstraße 174<br />
+              22767 Hamburg<br />
               Deutschland
             </p>
-            
-            <h3>Vertreten durch</h3>
-            <p>
-              Anna Schmidt (Geschäftsführerin)
-            </p>
-            
+
             <h3>Kontakt</h3>
             <p>
-              Telefon: +49 (0) 30 123456789<br />
               E-Mail: olivia@provoid.de
             </p>
-            
-            <h3>Registereintrag</h3>
+
+            <h3>EU-Streitschlichtung</h3>
             <p>
-              Eintragung im Handelsregister<br />
-              Registergericht: Amtsgericht Berlin-Charlottenburg<br />
-              Registernummer: HRB 123456
+              Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:
+              <a href="https://ec.europa.eu/consumers/odr/" rel="noopener noreferrer" target="_blank">https://ec.europa.eu/consumers/odr/</a>.
+              Unsere E-Mail-Adresse finden Sie oben im Impressum.
             </p>
-            
-            <h3>Umsatzsteuer-ID</h3>
+
+            <h3>Verbraucherstreitbeilegung / Universalschlichtungsstelle</h3>
             <p>
-              Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz:<br />
-              DE123456789
-            </p>
-            
-            <h3>Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h3>
-            <p>
-              Anna Schmidt<br />
-              Musterstraße 123<br />
-              10115 Berlin
+              Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
             </p>
 
             <p>
