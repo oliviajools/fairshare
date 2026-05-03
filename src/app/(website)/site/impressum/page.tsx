@@ -26,12 +26,12 @@ export default function ImpressumPage() {
             <p>
               <strong>Verantwortliche Unternehmen:</strong><br />
               Deepvelop<br />
-              Eppendorferlandstraße 15<br />
-              20249 Hamburg<br />
-              Deutschland<br /><br />
-              PROVOID<br />
               Bernstorffstraße 174<br />
               22767 Hamburg<br />
+              Deutschland<br /><br />
+              PROVOID<br />
+              Eppendorferlandstraße 15<br />
+              20249 Hamburg<br />
               Deutschland
             </p>
 
