@@ -47,26 +47,27 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Story */}
+      {/* Concept */}
       <section className="py-20">
         <div className="container mx-auto px-6">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold mb-6">Die Geschichte</h2>
+            <h2 className="text-3xl font-bold mb-6">Das Konzept</h2>
             <div className="prose prose-lg text-gray-600 space-y-4">
               <p>
-                Alles begann mit einer WG-Abrechnung, die fast eine Freundschaft gekostet hätte. 
-                Wer hat mehr eingekauft? Wer nutzt mehr Strom? Wer sollte wie viel zahlen?
+                Kostenverteilung ist oft ein Problem: Wer hat mehr eingekauft? Wer nutzt mehr Strom? 
+                Wer sollte wie viel zahlen?
               </p>
               <p>
-                Die Diskussionen waren endlos, die Stimmung angespannt. Dabei ging es nicht um 
+                Die Diskussionen sind endlos, die Stimmung oft angespannt. Dabei geht es meist nicht um 
                 große Summen – sondern um das Gefühl, fair behandelt zu werden.
               </p>
               <p>
-                Wir fragten uns: <strong>Was wäre, wenn jeder anonym seine Einschätzung abgeben könnte?</strong> 
-                Was wäre, wenn ein neutraler Algorithmus die fairste Lösung berechnet?
+                TeamPayer löst dieses Problem durch <strong>demokratische Abstimmung</strong>: 
+                Jeder gibt anonym seine Einschätzung ab, ein Algorithmus berechnet die fairste Lösung.
               </p>
               <p>
-                So entstand TeamPayer – eine App, die Demokratie in die Kostenverteilung bringt.
+                Das Ergebnis ist transparent, nachvollziehbar und wird von allen getragen – 
+                weil alle am Prozess beteiligt waren. Das ist der Schlüssel zu akzeptierten Lösungen.
               </p>
             </div>
           </div>
@@ -92,22 +93,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold mb-4">Neugierig geworden?</h2>
-          <p className="text-gray-600 mb-8">
-            Erfahre mehr über das Team hinter TeamPayer.
-          </p>
-          <Link
-            href="/site/team"
-            className="bg-violet-500 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-violet-600 transition-colors inline-flex items-center gap-2"
-          >
-            Das Team kennenlernen
-            <ArrowRight className="h-5 w-5" />
-          </Link>
-        </div>
-      </section>
-    </>
+          </>
   )
 }

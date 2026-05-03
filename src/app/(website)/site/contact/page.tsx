@@ -53,7 +53,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1">E-Mail</h3>
-                    <p className="text-gray-600">hello@teampayer.de</p>
+                    <p className="text-gray-600">olivia@provoid.de</p>
                     <p className="text-gray-500 text-sm">Wir antworten innerhalb von 24 Stunden</p>
                   </div>
                 </div>

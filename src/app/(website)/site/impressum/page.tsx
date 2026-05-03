@@ -38,7 +38,7 @@ export default function ImpressumPage() {
             <h3>Kontakt</h3>
             <p>
               Telefon: +49 (0) 30 123456789<br />
-              E-Mail: hello@teampayer.de
+              E-Mail: olivia@provoid.de
             </p>
             
             <h3>Registereintrag</h3>
