@@ -8,7 +8,6 @@ import { Menu, X } from 'lucide-react'
 const navItems = [
   { href: '/site', label: 'Start' },
   { href: '/site/about', label: 'Über TeamPayer' },
-  { href: '/site/team', label: 'Wer wir sind' },
   { href: '/site/target', label: 'Für wen' },
   { href: '/site/features', label: 'Was wir bieten' },
   { href: '/site/contact', label: 'Kontakt' },
