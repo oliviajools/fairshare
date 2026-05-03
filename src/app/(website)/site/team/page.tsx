@@ -16,6 +16,7 @@ const companies = [
     name: 'Deepvelop',
     url: 'https://deepvelop.de',
     tagline: 'Institut für Sport und Psychologie Hamburg',
+    location: 'Hamburg',
     description: 'Seit 15 Jahren spezialisiert auf Performance-Steigerung durch Mentaltraining. Arbeitet mit Spitzensportlern und Führungskräften, um Potenziale zu entfalten und maximale Kompetenz zu entwickeln.',
     focus: [
       'Rationalität & Intuition verbinden',
@@ -29,6 +30,7 @@ const companies = [
     name: 'Provoid',
     url: 'https://provoid.de',
     tagline: 'Neurowissenschaft für Performance',
+    location: 'Berlin',
     description: 'Übersetzt neurowissenschaftliche Forschung in anwendbare Strategien. Begleitet Unternehmen empathisch und evidenzbasiert, um unterbewusste Prozesse zu verstehen und Conversion zu steigern.',
     focus: [
       'Neurowissenschaftlich fundiert',
@@ -70,7 +72,8 @@ export default function TeamPage() {
                   <span className="text-2xl font-bold text-white">{company.name[0]}</span>
                 </div>
                 <h3 className="text-2xl font-bold mb-2">{company.name}</h3>
-                <p className="text-sky-600 font-medium mb-4">{company.tagline}</p>
+                <p className="text-sky-600 font-medium mb-1">{company.tagline}</p>
+                <p className="text-gray-500 text-sm mb-4">{company.location}</p>
                 <p className="text-gray-600 mb-6">{company.description}</p>
                 
                 <div className="border-t border-gray-100 pt-6">
