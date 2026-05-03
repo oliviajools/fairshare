@@ -14,11 +14,33 @@ export default function ContactPage() {
     message: '',
   })
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Hier würde normalerweise die API-Anfrage kommen
-    setSubmitted(true)
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formState),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Fehler beim Senden')
+      }
+
+      setSubmitted(true)
+    } catch (err: any) {
+      setError(err.message || 'Ein Fehler ist aufgetreten')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -98,7 +120,7 @@ export default function ContactPage() {
             {/* Contact Form */}
             <div>
               <h2 className="text-2xl font-bold mb-6">Schreib uns</h2>
-              
+
               {submitted ? (
                 <div className="bg-green-50 border border-green-200 rounded-2xl p-8 text-center">
                   <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
@@ -111,6 +133,12 @@ export default function ContactPage() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">
+                      {error}
+                    </div>
+                  )}
+
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                       Name
@@ -125,7 +153,7 @@ export default function ContactPage() {
                       placeholder="Dein Name"
                     />
                   </div>
-                  
+
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                       E-Mail
@@ -140,7 +168,7 @@ export default function ContactPage() {
                       placeholder="deine@email.de"
                     />
                   </div>
-                  
+
                   <div>
                     <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
                       Betreff
@@ -161,7 +189,7 @@ export default function ContactPage() {
                       <option value="other">Sonstiges</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
                       Nachricht
@@ -176,13 +204,14 @@ export default function ContactPage() {
                       placeholder="Was liegt dir auf dem Herzen?"
                     />
                   </div>
-                  
+
                   <button
                     type="submit"
-                    className="w-full bg-sky-500 text-white py-4 rounded-xl font-semibold hover:bg-sky-600 transition-colors flex items-center justify-center gap-2"
+                    disabled={loading}
+                    className="w-full bg-sky-500 text-white py-4 rounded-xl font-semibold hover:bg-sky-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Nachricht senden
-                    <Send className="h-5 w-5" />
+                    {loading ? 'Wird gesendet...' : 'Nachricht senden'}
+                    {!loading && <Send className="h-5 w-5" />}
                   </button>
                 </form>
               )}

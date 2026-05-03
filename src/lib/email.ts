@@ -127,14 +127,14 @@ export async function sendWelcomeEmail(email: string, name: string) {
     const apiKey = process.env.RESEND_API_KEY
     console.log('Sending welcome email to:', email)
     console.log('RESEND_API_KEY exists:', !!apiKey)
-    
+
     if (!apiKey) {
       console.error('RESEND_API_KEY is not set')
       return { success: false, error: 'API key missing' }
     }
-    
+
     const resend = new Resend(apiKey)
-    
+
     const result = await resend.emails.send({
       from: 'TeamPayer <noreply@teampayer.de>',
       to: email,
@@ -146,16 +146,16 @@ export async function sendWelcomeEmail(email: string, name: string) {
             <h1 style="color: #0ea5e9; margin: 20px 0 10px;">Willkommen bei TeamPayer!</h1>
             <p style="color: #6b7280; font-size: 18px;">Hallo ${name || 'du Finanzgenie'}! 👋</p>
           </div>
-          
+
           <div style="background: linear-gradient(135deg, #f0f9ff 0%, #fef3c7 100%); border-radius: 16px; padding: 30px; margin-bottom: 30px;">
             <h2 style="color: #1f2937; margin-top: 0;">Du bist jetzt offiziell ein TeamPayer! 🏆</h2>
             <p style="color: #4b5563; line-height: 1.6;">
-              Herzlichen Glückwunsch! Du hast gerade den ersten Schritt gemacht, um 
-              <strong>nie wieder peinliche Geld-Diskussionen</strong> mit Freunden, Familie 
+              Herzlichen Glückwunsch! Du hast gerade den ersten Schritt gemacht, um
+              <strong>nie wieder peinliche Geld-Diskussionen</strong> mit Freunden, Familie
               oder Kollegen führen zu müssen.
             </p>
           </div>
-          
+
           <div style="margin-bottom: 30px;">
             <h3 style="color: #1f2937;">Was du jetzt tun kannst:</h3>
             <ul style="color: #4b5563; line-height: 2;">
@@ -164,23 +164,23 @@ export async function sendWelcomeEmail(email: string, name: string) {
               <li>📊 <strong>Fair verteilen</strong> – Der Algorithmus macht den Rest</li>
             </ul>
           </div>
-          
+
           <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin-bottom: 30px;">
             <p style="color: #92400e; margin: 0; font-style: italic;">
-              💡 <strong>Fun Fact:</strong> Die durchschnittliche Diskussion über Geldaufteilung 
-              dauert 47 Minuten. Mit TeamPayer: 47 Sekunden. Okay, das haben wir uns ausgedacht. 
+              💡 <strong>Fun Fact:</strong> Die durchschnittliche Diskussion über Geldaufteilung
+              dauert 47 Minuten. Mit TeamPayer: 47 Sekunden. Okay, das haben wir uns ausgedacht.
               Aber es ist definitiv schneller!
             </p>
           </div>
-          
+
           <div style="text-align: center; margin-top: 40px;">
-            <a href="https://teampayer.de" 
-               style="display: inline-block; background: #0ea5e9; color: white; padding: 16px 32px; 
+            <a href="https://teampayer.de"
+               style="display: inline-block; background: #0ea5e9; color: white; padding: 16px 32px;
                       border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
               Los geht's! 🚀
             </a>
           </div>
-          
+
           <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
             <p style="color: #9ca3af; font-size: 14px;">
               Viel Spaß beim fairen Verteilen! 💸<br>
@@ -194,6 +194,75 @@ export async function sendWelcomeEmail(email: string, name: string) {
     return { success: true, result }
   } catch (error) {
     console.error('Error sending welcome email:', error)
+    return { success: false, error }
+  }
+}
+
+export async function sendContactEmail(name: string, email: string, subject: string, message: string) {
+  try {
+    const apiKey = process.env.RESEND_API_KEY
+
+    if (!apiKey) {
+      console.error('RESEND_API_KEY is not set')
+      return { success: false, error: 'API key missing' }
+    }
+
+    const resend = new Resend(apiKey)
+
+    const subjectMap: Record<string, string> = {
+      question: 'Allgemeine Frage',
+      feedback: 'Feedback',
+      bug: 'Bug melden',
+      business: 'Geschäftliche Anfrage',
+      press: 'Presseanfrage',
+      other: 'Sonstiges',
+    }
+
+    const result = await resend.emails.send({
+      from: 'TeamPayer Kontakt <noreply@teampayer.de>',
+      to: 'olivia@provoid.de',
+      subject: `TeamPayer Kontakt: ${subjectMap[subject] || subject}`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+          <div style="text-align: center; margin-bottom: 40px;">
+            <span style="font-size: 64px;">📧</span>
+            <h1 style="color: #0ea5e9; margin: 20px 0 10px;">Neue Kontaktanfrage</h1>
+          </div>
+
+          <div style="background: #f0f9ff; border-radius: 16px; padding: 30px; margin-bottom: 30px;">
+            <div style="margin-bottom: 20px;">
+              <p style="color: #6b7280; font-size: 14px; margin: 0 0 4px;">Name</p>
+              <p style="color: #1f2937; font-weight: 600; margin: 0;">${name}</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <p style="color: #6b7280; font-size: 14px; margin: 0 0 4px;">E-Mail</p>
+              <p style="color: #1f2937; font-weight: 600; margin: 0;"><a href="mailto:${email}" style="color: #0ea5e9;">${email}</a></p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <p style="color: #6b7280; font-size: 14px; margin: 0 0 4px;">Betreff</p>
+              <p style="color: #1f2937; font-weight: 600; margin: 0;">${subjectMap[subject] || subject}</p>
+            </div>
+          </div>
+
+          <div style="background: #f9fafb; border-radius: 16px; padding: 30px; margin-bottom: 30px;">
+            <p style="color: #6b7280; font-size: 14px; margin: 0 0 12px;">Nachricht</p>
+            <p style="color: #1f2937; line-height: 1.6; margin: 0; white-space: pre-wrap;">${message}</p>
+          </div>
+
+          <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="color: #9ca3af; font-size: 14px;">
+              Gesendet über TeamPayer Kontaktformular
+            </p>
+          </div>
+        </div>
+      `
+    })
+
+    return { success: true, result }
+  } catch (error) {
+    console.error('Error sending contact email:', error)
     return { success: false, error }
   }
 }
