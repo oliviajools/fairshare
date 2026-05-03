@@ -77,7 +77,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
-            <img src="/icon.svg" alt="TeamPayer Logo" className="h-20 w-20" />
+            <img src="/icon.png" alt="TeamPayer Logo" className="h-20 w-20" />
           </div>
           <CardTitle className="text-2xl">TeamPayer</CardTitle>
           <CardDescription className="text-base">
