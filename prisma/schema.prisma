@@ -32,6 +32,7 @@ model User {
   hiddenSessions HiddenSession[]
   teacherClassrooms Classroom[] @relation("TeacherClassrooms")
   studentClassrooms ClassroomStudent[] @relation("StudentClassrooms")
+  deviceTokens  DeviceToken[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -467,4 +468,18 @@ model ClassroomProject {
   resultsSentAt DateTime? // When results were sent to teacher
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+// Push notification device tokens
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   // FCM device token
+  platform  String   // 'ios' or 'android'
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, token])
 }
