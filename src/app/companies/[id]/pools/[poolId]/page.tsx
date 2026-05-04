@@ -109,6 +109,7 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
   const [companySessions, setCompanySessions] = useState<CompanySession[]>([])
   const [loadingCompany, setLoadingCompany] = useState(false)
   const [showAllSessions, setShowAllSessions] = useState(false)
+  const [selectedSessionIds, setSelectedSessionIds] = useState<Set<string>>(new Set())
 
   const [results, setResults] = useState<AggregatedResult[]>([])
   const [loadingResults, setLoadingResults] = useState(false)
@@ -259,6 +260,38 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
     try {
       const toRemove = (pool?.sessions || []).map((ps) => ps.sessionId)
       await removeSessions(toRemove)
+    } catch (e: any) {
+      alert(e?.message || 'Fehler')
+    }
+  }
+
+  const toggleSessionSelection = (sessionId: string) => {
+    setSelectedSessionIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(sessionId)) {
+        next.delete(sessionId)
+      } else {
+        next.add(sessionId)
+      }
+      return next
+    })
+  }
+
+  const handleAddSelected = async () => {
+    try {
+      const toAdd = Array.from(selectedSessionIds).filter((id) => !poolSessionIds.has(id))
+      await addSessions(toAdd)
+      setSelectedSessionIds(new Set())
+    } catch (e: any) {
+      alert(e?.message || 'Fehler')
+    }
+  }
+
+  const handleRemoveSelected = async () => {
+    try {
+      const toRemove = Array.from(selectedSessionIds)
+      await removeSessions(toRemove)
+      setSelectedSessionIds(new Set())
     } catch (e: any) {
       alert(e?.message || 'Fehler')
     }
@@ -505,54 +538,94 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
                 </CardHeader>
                 <CardContent>
                   {suggestedSessions.length === 0 ? (
-                    <div className="text-sm text-gray-600">Keine Sessions mit Datum in diesem Quartal gefunden.</div>
+                    <div className="text-sm text-gray-600">{showAllSessions ? 'Keine Sessions gefunden.' : 'Keine Sessions mit Datum in diesem Quartal gefunden.'}</div>
                   ) : (
-                    <div className="space-y-2">
-                      {suggestedSessions.map((s) => {
-                        const isInPool = poolSessionIds.has(s.id)
-                        return (
-                          <div key={s.id} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-white border border-gray-100">
-                            <div className="min-w-0">
-                              <p className="font-medium text-gray-900 truncate">{s.title}</p>
-                              <p className="text-xs text-gray-500">
-                                {formatDate(s.date)}
-                                {s.status ? ` • ${s.status === 'CLOSED' ? 'Beendet' : 'Offen'}` : ''}
-                              </p>
-                            </div>
-                            {canEdit && pool.status !== 'LOCKED' && (
-                              <Button
-                                variant={isInPool ? 'outline' : 'default'}
-                                size="sm"
-                                className={isInPool ? '' : 'bg-sky-500 hover:bg-sky-600'}
-                                onClick={async () => {
-                                  try {
-                                    if (isInPool) {
-                                      await removeSessions([s.id])
-                                    } else {
-                                      await addSessions([s.id])
-                                    }
-                                  } catch (e: any) {
-                                    alert(e?.message || 'Fehler')
-                                  }
-                                }}
-                              >
-                                {isInPool ? (
-                                  <>
-                                    <Minus className="h-4 w-4 mr-2" />
-                                    Entfernen
-                                  </>
-                                ) : (
-                                  <>
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Hinzufügen
-                                  </>
+                    <>
+                      {canEdit && pool.status !== 'LOCKED' && selectedSessionIds.size > 0 && (
+                        <div className="flex gap-2 mb-4">
+                          <Button
+                            size="sm"
+                            onClick={handleAddSelected}
+                            className="bg-sky-500 hover:bg-sky-600"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Ausgewählte hinzufügen ({selectedSessionIds.size})
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleRemoveSelected}
+                          >
+                            <Minus className="h-4 w-4 mr-2" />
+                            Ausgewählte entfernen ({selectedSessionIds.size})
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setSelectedSessionIds(new Set())}
+                          >
+                            Auswahl aufheben
+                          </Button>
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        {suggestedSessions.map((s) => {
+                          const isInPool = poolSessionIds.has(s.id)
+                          const isSelected = selectedSessionIds.has(s.id)
+                          return (
+                            <div key={s.id} className={`flex items-center justify-between gap-3 p-3 rounded-lg ${isSelected ? 'bg-sky-50 border-sky-200' : 'bg-white border-gray-100'} border`}>
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
+                                {canEdit && pool.status !== 'LOCKED' && (
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={() => toggleSessionSelection(s.id)}
+                                    className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500 cursor-pointer"
+                                  />
                                 )}
-                              </Button>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
+                                <div className="min-w-0">
+                                  <p className="font-medium text-gray-900 truncate">{s.title}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {formatDate(s.date) || 'ohne Datum'}
+                                    {s.status ? ` • ${s.status === 'CLOSED' ? 'Beendet' : 'Offen'}` : ''}
+                                  </p>
+                                </div>
+                              </div>
+                              {canEdit && pool.status !== 'LOCKED' && (
+                                <Button
+                                  variant={isInPool ? 'outline' : 'default'}
+                                  size="sm"
+                                  className={isInPool ? '' : 'bg-sky-500 hover:bg-sky-600'}
+                                  onClick={async () => {
+                                    try {
+                                      if (isInPool) {
+                                        await removeSessions([s.id])
+                                      } else {
+                                        await addSessions([s.id])
+                                      }
+                                    } catch (e: any) {
+                                      alert(e?.message || 'Fehler')
+                                    }
+                                  }}
+                                >
+                                  {isInPool ? (
+                                    <>
+                                      <Minus className="h-4 w-4 mr-2" />
+                                      Entfernen
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Plus className="h-4 w-4 mr-2" />
+                                      Hinzufügen
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </>
                   )}
                 </CardContent>
               </Card>
