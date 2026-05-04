@@ -165,7 +165,11 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
         throw new Error(body?.error || 'Fehler beim Laden der Sessions')
       }
       const data: CompanyResponse = await res.json()
+      console.log('Loaded sessions:', data.sessions.length, data.sessions)
       setCompanySessions(data.sessions)
+    } catch (e: any) {
+      console.error('Error fetching company sessions:', e)
+      setError(`Fehler beim Laden der Sessions: ${e?.message}`)
     } finally {
       setLoadingCompany(false)
     }
