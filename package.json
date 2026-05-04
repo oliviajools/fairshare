@@ -21,6 +21,7 @@
     "db:reset": "prisma migrate reset",
     "db:deploy": "prisma migrate deploy",
     "db:create-user": "ts-node scripts/create-user.ts",
+    "db:check-sessions": "ts-node scripts/check-sessions.ts",
     "cap:add": "npx cap add",
     "cap:sync": "npx cap sync",
     "cap:open": "npx cap open",
