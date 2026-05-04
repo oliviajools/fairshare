@@ -108,6 +108,7 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
 
   const [companySessions, setCompanySessions] = useState<CompanySession[]>([])
   const [loadingCompany, setLoadingCompany] = useState(false)
+  const [showAllSessions, setShowAllSessions] = useState(false)
 
   const [results, setResults] = useState<AggregatedResult[]>([])
   const [loadingResults, setLoadingResults] = useState(false)
@@ -131,6 +132,9 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
   const poolSessionIds = useMemo(() => new Set((pool?.sessions || []).map((ps) => ps.sessionId)), [pool?.sessions])
 
   const suggestedSessions = useMemo(() => {
+    if (showAllSessions) {
+      return companySessions
+    }
     const { start, end } = selectedRange
     const inRange = companySessions.filter((s) => {
       if (!s.date) return false
@@ -138,7 +142,7 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
       return d >= start && d <= end
     })
     return inRange
-  }, [companySessions, selectedRange])
+  }, [companySessions, selectedRange, showAllSessions])
 
   const fetchPool = useCallback(async () => {
     const res = await fetch(`/api/pools/${poolId}`)
@@ -482,9 +486,21 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Vorschläge (Sessions im Quartal)</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Vorschläge (Sessions)</span>
+                    <button
+                      onClick={() => setShowAllSessions(!showAllSessions)}
+                      className="text-sm text-sky-600 hover:text-sky-700"
+                    >
+                      {showAllSessions ? 'Nur Quartal' : 'Alle anzeigen'}
+                    </button>
+                  </CardTitle>
                   <CardDescription>
-                    {loadingCompany ? 'Lädt…' : `${suggestedSessions.length} Session${suggestedSessions.length !== 1 ? 's' : ''} im Zeitraum`}
+                    {loadingCompany ? 'Lädt…' : (
+                      showAllSessions
+                        ? `${companySessions.length} Session${companySessions.length !== 1 ? 's' : ''} gesamt`
+                        : `${suggestedSessions.length} Session${suggestedSessions.length !== 1 ? 's' : ''} im Zeitraum`
+                    )}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
