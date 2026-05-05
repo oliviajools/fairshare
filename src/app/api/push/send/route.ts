@@ -7,17 +7,23 @@ import { prisma } from '@/lib/db'
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getMessaging, Message } from 'firebase-admin/messaging'
 
-// Initialize Firebase Admin
-const firebaseConfig = {
-  credential: cert({
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  }),
-}
+// Initialize Firebase Admin lazily (only when needed)
+function getMessagingClient() {
+  if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_PRIVATE_KEY || !process.env.FIREBASE_CLIENT_EMAIL) {
+    throw new Error('Firebase environment variables not configured')
+  }
 
-const adminApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
-const messaging = getMessaging(adminApp)
+  const firebaseConfig = {
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    }),
+  }
+
+  const adminApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
+  return getMessaging(adminApp)
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -78,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     // Send push notifications via FCM
     const tokens = deviceTokens.map((dt) => dt.token)
-    const response = await messaging.sendEachForMulticast({
+    const response = await getMessagingClient().sendEachForMulticast({
       tokens,
       notification: {
         title,
