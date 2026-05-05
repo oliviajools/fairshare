@@ -141,8 +141,7 @@ function CreateSessionContent() {
   const [groups, setGroups] = useState<CompanyGroup[]>([])
   const [selectedGroup, setSelectedGroup] = useState<string>('')
   const [loadingGroups, setLoadingGroups] = useState(false)
-  const [currentStep, setCurrentStep] = useState(0) // 0 = template, 1 = details, 2 = participants
-  const [selectedTemplate, setSelectedTemplate] = useState<SessionTemplate | null>(null)
+  const [showParticipantsStep, setShowParticipantsStep] = useState(false)
 
   const [formData, setFormData] = useState({
     title: '',
@@ -251,17 +250,6 @@ function CreateSessionContent() {
   }
 
   const totalFixedPercent = fixedShares.reduce((sum, fs) => sum + (fs.percent || 0), 0)
-
-  const selectTemplate = (template: SessionTemplate) => {
-    setSelectedTemplate(template)
-    setFormData({
-      ...formData,
-      title: template.defaultTitle,
-      evaluationInfo: template.defaultEvaluationInfo,
-      isAnonymous: template.isAnonymous,
-    })
-    setCurrentStep(1)
-  }
 
   const addParticipant = () => {
     setParticipants([...participants, { name: '', email: '' }])
@@ -473,59 +461,15 @@ function CreateSessionContent() {
     )
   }
 
-  // Step 0: Template Selection
-  const renderTemplateStep = () => (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 text-white mb-4">
-          <Sparkles className="h-8 w-8" />
-        </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Was möchtest du aufteilen?</h2>
-        <p className="text-gray-600 mt-2">Wähle eine Vorlage oder starte von vorne</p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {SESSION_TEMPLATES.filter(t => !t.requiresFeature || hasFeature(t.requiresFeature)).map((template) => (
-          <button
-            key={template.id}
-            onClick={() => selectTemplate(template)}
-            className="group relative overflow-hidden rounded-2xl border-2 border-gray-100 bg-white p-6 text-left transition-all hover:border-transparent hover:shadow-xl hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-sky-500"
-          >
-            <div className={`absolute inset-0 bg-gradient-to-br ${template.color} opacity-0 group-hover:opacity-10 transition-opacity`} />
-            <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${template.color} text-white mb-4`}>
-              {template.icon}
-            </div>
-            <h3 className="font-semibold text-gray-900 text-base sm:text-lg">{template.name}</h3>
-            <p className="text-sm text-gray-500 mt-1">{template.description}</p>
-            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-300 group-hover:text-gray-500 transition-colors" />
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-
-  // Step 1: Session Details
+  // Session Details
   const renderDetailsStep = () => (
     <div className="space-y-6 pb-4">
-      {/* Progress indicator */}
-      <div className="flex items-center justify-center gap-2 mb-8">
-        <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm font-medium">1</div>
-          <div className="w-16 h-1 bg-sky-500 mx-1" />
-        </div>
-        <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-sm font-medium">2</div>
-        </div>
-      </div>
-
       <Card className="border-0 shadow-lg">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
-            {selectedTemplate && (
-              <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br ${selectedTemplate.color} text-white`}>
-                {selectedTemplate.icon}
-              </div>
-            )}
+            <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-blue-500 text-white">
+              <Sparkles className="h-5 w-5" />
+            </div>
             <div>
               <CardTitle>Session Details</CardTitle>
               <CardDescription>Grundlegende Informationen zur Session</CardDescription>
@@ -785,16 +729,14 @@ function CreateSessionContent() {
         </CardContent>
       </Card>
 
-      <div className="flex flex-col sm:flex-row gap-3 pb-8">
-        <Button variant="outline" onClick={() => setCurrentStep(0)} className="w-full sm:flex-1 h-12">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Zurück
-        </Button>
-        <Button 
+      <div className="flex justify-end pb-8">
+        <Button
           type="button"
-          onClick={() => setCurrentStep(2)} 
+          onClick={() => {
+            setShowParticipantsStep(true)
+          }}
           disabled={!formData.title.trim()}
-          className="w-full sm:flex-1 h-12 bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600"
+          className="w-full sm:w-auto h-12 bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600"
         >
           Weiter zu Teilnehmern
           <ChevronRight className="ml-2 h-4 w-4" />
@@ -806,19 +748,6 @@ function CreateSessionContent() {
   // Step 2: Participants
   const renderParticipantsStep = () => (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Progress indicator */}
-      <div className="flex items-center justify-center gap-2 mb-8">
-        <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm font-medium">
-            <Check className="h-4 w-4" />
-          </div>
-          <div className="w-16 h-1 bg-sky-500 mx-1" />
-        </div>
-        <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm font-medium">2</div>
-        </div>
-      </div>
-
       <Card className="border-0 shadow-lg">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
@@ -899,7 +828,7 @@ function CreateSessionContent() {
       </Card>
 
       <div className="flex gap-3">
-        <Button type="button" variant="outline" onClick={() => setCurrentStep(1)} className="flex-1 h-12">
+        <Button type="button" variant="outline" onClick={() => setShowParticipantsStep(false)} className="flex-1 h-12">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Zurück
         </Button>
@@ -931,8 +860,14 @@ function CreateSessionContent() {
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-4">
-              <button 
-                onClick={() => currentStep === 0 ? router.push('/') : setCurrentStep(currentStep - 1)}
+              <button
+                onClick={() => {
+                  if (showParticipantsStep) {
+                    setShowParticipantsStep(false)
+                  } else {
+                    router.push('/')
+                  }
+                }}
                 className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -944,9 +879,8 @@ function CreateSessionContent() {
           </div>
 
           {/* Step Content */}
-          {currentStep === 0 && renderTemplateStep()}
-          {currentStep === 1 && renderDetailsStep()}
-          {currentStep === 2 && renderParticipantsStep()}
+          {!showParticipantsStep && renderDetailsStep()}
+          {showParticipantsStep && renderParticipantsStep()}
         </div>
       </div>
     </div>
