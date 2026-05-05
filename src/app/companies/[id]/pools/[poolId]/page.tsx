@@ -496,27 +496,29 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
                   ) : (
                     <>
                       {canEdit && pool.status !== 'LOCKED' && selectedSessionIds.size > 0 && (
-                        <div className="flex gap-2 mb-4">
+                        <div className="flex flex-wrap gap-2 mb-4">
                           <Button
                             size="sm"
                             onClick={handleAddSelected}
-                            className="bg-sky-500 hover:bg-sky-600"
+                            className="bg-sky-500 hover:bg-sky-600 whitespace-normal break-words"
                           >
-                            <Plus className="h-4 w-4 mr-2" />
+                            <Plus className="h-4 w-4 mr-2 shrink-0" />
                             Ausgewählte hinzufügen ({selectedSessionIds.size})
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={handleRemoveSelected}
+                            className="whitespace-normal break-words"
                           >
-                            <Minus className="h-4 w-4 mr-2" />
+                            <Minus className="h-4 w-4 mr-2 shrink-0" />
                             Ausgewählte entfernen ({selectedSessionIds.size})
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => setSelectedSessionIds(new Set())}
+                            className="whitespace-normal break-words"
                           >
                             Auswahl aufheben
                           </Button>
