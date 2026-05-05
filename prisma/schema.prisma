@@ -264,6 +264,7 @@ model VotingSession {
   fixedShares    FixedShare[]
   fixedShareMode FixedShareMode?
   fixedShareVotingStatus FixedShareVotingStatus @default(CLOSED)
+  participantSelectionComplete Boolean @default(false)
   // Recurring session fields
   recurringId    String?
   recurring      RecurringSession? @relation(fields: [recurringId], references: [id], onDelete: SetNull)

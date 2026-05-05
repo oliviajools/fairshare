@@ -43,6 +43,7 @@ interface Session {
   fixedShares?: FixedShare[]
   fixedShareMode?: FixedShareMode
   fixedShareVotingStatus?: 'OPEN' | 'CLOSED'
+  participantSelectionComplete?: boolean
 }
 
 interface InvitedSession {
@@ -94,6 +95,9 @@ export default function VotePage() {
     }
     return true
   }) || []
+
+  // Check if participant selection is complete when fixed share voting is closed
+  const canVote = fixedShareVotingStatus !== 'CLOSED' || session?.participantSelectionComplete === true
 
   // Participants always distribute 100%, which gets scaled to the remaining percentage
   const availablePercent = 100
@@ -413,7 +417,18 @@ export default function VotePage() {
                 {participants.length} Teilnehmer
               </div>
             </div>
-            
+
+            {!canVote && (
+              <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-amber-800 font-medium">
+                  Der Organisator wählt noch die Teilnehmer für diese Abstimmung aus.
+                </p>
+                <p className="text-amber-700 text-sm mt-1">
+                  Bitte habe etwas Geduld, du wirst benachrichtigt, sobald die Auswahl abgeschlossen ist.
+                </p>
+              </div>
+            )}
+
             {isSubmitted && (
               <div className="mt-4">
                 <Badge className="bg-green-100 text-green-800">
@@ -557,7 +572,7 @@ export default function VotePage() {
                               value={votes[participant.id] || ''}
                               onChange={(e) => updateVote(participant.id, e.target.value)}
                               placeholder="0"
-                              disabled={session?.status === 'CLOSED'}
+                              disabled={session?.status === 'CLOSED' || !canVote}
                               className="text-right"
                             />
                           </div>
@@ -602,7 +617,7 @@ export default function VotePage() {
                     <div className="mt-6">
                       <Button
                         onClick={submitVotes}
-                        disabled={submitting || Object.keys(votes).length === 0 || Math.abs(totalPercentage - availablePercent) > 0.01}
+                        disabled={submitting || Object.keys(votes).length === 0 || Math.abs(totalPercentage - availablePercent) > 0.01 || !canVote}
                         className="w-full bg-sky-500 hover:bg-sky-600"
                       >
                         <Send className="mr-2 h-4 w-4" />

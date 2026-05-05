@@ -31,6 +31,12 @@ export async function PUT(
       })
     }
 
+    // Mark participant selection as complete
+    await prisma.votingSession.update({
+      where: { id },
+      data: { participantSelectionComplete: true }
+    })
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error updating participant selection:', error)
