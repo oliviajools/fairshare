@@ -16,6 +16,7 @@ interface Participant {
   id: string
   displayName: string
   hasSubmittedFixedShares?: boolean
+  includedInMainVoting?: boolean
 }
 
 interface FixedShare {
@@ -85,6 +86,14 @@ export default function VotePage() {
   const fixedShares = session?.fixedShares || []
   const fixedShareVotingStatus = session?.fixedShareVotingStatus
   const totalFixedPercent = fixedShares.reduce((sum, fs) => sum + fs.percent, 0)
+
+  // Filter participants based on includedInMainVoting when fixed share voting is closed
+  const participants = session?.participants?.filter(p => {
+    if (fixedShareVotingStatus === 'CLOSED') {
+      return p.includedInMainVoting !== false
+    }
+    return true
+  }) || []
 
   // Participants always distribute 100%, which gets scaled to the remaining percentage
   const availablePercent = 100
@@ -401,7 +410,7 @@ export default function VotePage() {
               )}
               <div className="flex items-center">
                 <Users className="mr-1 h-4 w-4" />
-                {session.participants.length} Teilnehmer
+                {participants.length} Teilnehmer
               </div>
             </div>
             
@@ -534,7 +543,7 @@ export default function VotePage() {
 
                   {!needsFixedSharePreVote && (
                     <div className="space-y-4">
-                      {session.participants.map((participant) => (
+                      {participants.map((participant) => (
                         <div key={participant.id} className="flex items-center gap-4">
                           <Label className="w-1/3 text-sm font-medium">
                             {participant.displayName}
@@ -642,16 +651,16 @@ export default function VotePage() {
                               name: fs.name,
                               value: fs.percent,
                               color: '#f59e0b' // amber color for fixed shares
-                            })) : []),
+                            ])) : []),
                             // Then participant votes
-                            ...session.participants.map(p => ({
+                            ...participants.map(p => ({
                               name: p.displayName,
                               value: votes[p.id] || 0
                             }))
                           ]
                           // Scale participant votes to match remaining percentage when fixed shares exist
                           if (!needsFixedSharePreVote && totalFixedPercent > 0) {
-                            const participantTotal = session.participants.reduce((sum, p) => sum + (votes[p.id] || 0), 0)
+                            const participantTotal = participants.reduce((sum, p) => sum + (votes[p.id] || 0), 0)
                             if (participantTotal > 0) {
                               const scaleFactor = (100 - totalFixedPercent) / participantTotal
                               chartData.forEach(item => {
