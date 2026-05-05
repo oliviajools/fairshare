@@ -448,7 +448,7 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
                                 style={{ width: `${Math.min(100, Math.max(0, r.totalPercent))}%` }}
                               />
                             </div>
-                            {isExpanded && r.sessionBreakdown.length > 0 && (
+                            {isExpanded && r.sessionBreakdown && r.sessionBreakdown.length > 0 && (
                               <div className="mt-3 pt-3 border-t border-gray-200">
                                 <p className="text-xs font-medium text-gray-700 mb-2">Pro Session:</p>
                                 <div className="space-y-1">
