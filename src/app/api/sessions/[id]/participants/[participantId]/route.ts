@@ -40,6 +40,26 @@ export async function DELETE(
       return NextResponse.json({ error: 'Nur der Organisator kann Teilnehmer entfernen' }, { status: 403 })
     }
 
+    // Allow removal if:
+    // 1. Session is OPEN (normal voting phase)
+    // 2. OR Session has fixed shares and fixed share voting is CLOSED but session is still OPEN
+    const fixedShareVotingStatus = (votingSession as any).fixedShareVotingStatus
+    const hasFixedShares = (votingSession as any).fixedShares && (votingSession as any).fixedShares.length > 0
+
+    const canRemove =
+      votingSession.status === 'OPEN' &&
+      (!hasFixedShares || fixedShareVotingStatus === 'CLOSED')
+
+    if (!canRemove) {
+      if (votingSession.status === 'CLOSED') {
+        return NextResponse.json({ error: 'Teilnehmer können nicht aus geschlossenen Sessions entfernt werden' }, { status: 403 })
+      }
+      if (hasFixedShares && fixedShareVotingStatus === 'OPEN') {
+        return NextResponse.json({ error: 'Teilnehmer können erst nach der Abstimmung über die festen Anteile entfernt werden' }, { status: 403 })
+      }
+      return NextResponse.json({ error: 'Teilnehmer können in diesem Status nicht entfernt werden' }, { status: 403 })
+    }
+
     // Check if participant exists in this session
     const participant = votingSession.participants.find(p => p.id === participantId)
     if (!participant) {
