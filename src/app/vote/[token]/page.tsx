@@ -658,6 +658,19 @@ export default function VotePage() {
                               value: votes[p.id] || 0
                             }))
                           ]
+                          // For TRANSPARENT_REDUCED mode, scale participant votes to match available percent
+                          if (isTransparentMode && !needsFixedSharePreVote && totalFixedPercent > 0) {
+                            const participantTotal = session.participants.reduce((sum, p) => sum + (votes[p.id] || 0), 0)
+                            if (participantTotal > 0) {
+                              const scaleFactor = availablePercent / participantTotal
+                              chartData.forEach(item => {
+                                const isFixedShare = fixedShares.some(fs => fs.name === item.name)
+                                if (!isFixedShare) {
+                                  item.value = item.value * scaleFactor
+                                }
+                              })
+                            }
+                          }
                           // Calculate remaining unassigned percentage
                           const assigned = chartData.reduce((sum, d) => sum + d.value, 0)
                           const remaining = 100 - assigned
