@@ -34,6 +34,12 @@ interface Session {
   participants: Participant[]
   fixedShares?: FixedShare[]
   fixedShareVotingStatus?: 'OPEN' | 'CLOSED'
+  companyId?: string | null
+  company?: {
+    id: string
+    name: string
+    slug: string
+  } | null
   _count: {
     ballots: number
   }
@@ -56,6 +62,10 @@ export default function OrganizerPage() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(new Set())
   const [updatingParticipants, setUpdatingParticipants] = useState(false)
+  const [companies, setCompanies] = useState<{id: string, name: string}[]>([])
+  const [loadingCompanies, setLoadingCompanies] = useState(false)
+  const [showCompanySelect, setShowCompanySelect] = useState(false)
+  const [updatingCompany, setUpdatingCompany] = useState(false)
 
   useEffect(() => {
     fetchSession()
@@ -69,6 +79,45 @@ export default function OrganizerPage() {
 
     return () => clearInterval(interval)
   }, [token])
+
+  const fetchCompanies = async () => {
+    setLoadingCompanies(true)
+    try {
+      const response = await fetch('/api/companies')
+      if (response.ok) {
+        const data = await response.json()
+        setCompanies(data.map((c: any) => ({ id: c.id, name: c.name })))
+      }
+    } catch (error) {
+      console.error('Error fetching companies:', error)
+    } finally {
+      setLoadingCompanies(false)
+    }
+  }
+
+  const updateCompany = async (companyId: string) => {
+    if (!session) return
+    setUpdatingCompany(true)
+    try {
+      const response = await fetch(`/api/sessions/${session.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId }),
+      })
+      if (response.ok) {
+        await fetchSession()
+        setShowCompanySelect(false)
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Fehler beim Aktualisieren des Unternehmens')
+      }
+    } catch (error) {
+      console.error('Error updating company:', error)
+      alert('Fehler beim Aktualisieren des Unternehmens')
+    } finally {
+      setUpdatingCompany(false)
+    }
+  }
 
   const fetchSession = async () => {
     try {
@@ -314,6 +363,40 @@ export default function OrganizerPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50">
+      {/* Company Selection Modal */}
+      {showCompanySelect && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowCompanySelect(false)}>
+          <div className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">Unternehmen zuweisen</h2>
+              <div className="space-y-2">
+                {loadingCompanies ? (
+                  <div className="text-sm text-gray-600">Lade Unternehmen...</div>
+                ) : companies.length === 0 ? (
+                  <div className="text-sm text-gray-600">Keine Unternehmen gefunden. Erstelle zuerst ein Unternehmen.</div>
+                ) : (
+                  companies.map((company) => (
+                    <button
+                      key={company.id}
+                      onClick={() => updateCompany(company.id)}
+                      disabled={updatingCompany}
+                      className="w-full p-3 text-left rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-sky-300 transition-colors disabled:opacity-50"
+                    >
+                      <div className="font-medium">{company.name}</div>
+                    </button>
+                  ))
+                )}
+              </div>
+              <div className="mt-4">
+                <Button variant="outline" className="w-full" onClick={() => setShowCompanySelect(false)}>
+                  Abbrechen
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-6 py-8 pt-12">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -341,6 +424,24 @@ export default function OrganizerPage() {
                         <Users className="mr-1.5 h-4 w-4" />
                         {session.participants.length} Teilnehmer
                       </div>
+                      {session.company ? (
+                        <div className="flex items-center bg-sky-100 px-3 py-1.5 rounded-full text-sky-700">
+                          <span className="mr-1.5 h-4 w-4">🏢</span>
+                          {session.company.name}
+                        </div>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            fetchCompanies()
+                            setShowCompanySelect(true)
+                          }}
+                        >
+                          <span className="mr-1.5 h-4 w-4">🏢</span>
+                          Unternehmen zuweisen
+                        </Button>
+                      )}
                       <Badge 
                         variant={session.status === 'OPEN' ? 'default' : 'secondary'}
                         className="px-3 py-1.5"
