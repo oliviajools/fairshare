@@ -47,17 +47,25 @@ export async function POST(
 
     // Calculate available percentage based on fixed shares mode
     const fixedShares = sessionFixedShares
-    const fixedShareMode = (participant.session as any).fixedShareMode
     const totalFixedPercent = fixedShares.reduce((sum: number, fs: any) => sum + fs.percent, 0)
-    const availablePercent = fixedShareMode === 'TRANSPARENT_REDUCED' ? (100 - totalFixedPercent) : 100
 
-    // Validate total before processing
+    // Participants always distribute 100%, which gets scaled to the remaining percentage
+    const availablePercent = 100
+
+    // Validate total before processing (always 100%)
     const totalPercentage = votes.reduce((sum: number, vote: any) => sum + vote.percent, 0)
     if (Math.abs(totalPercentage - availablePercent) > 0.01) {
-      return NextResponse.json({ 
-        error: `Die Gesamtsumme muss genau ${availablePercent.toFixed(0)}% betragen. Aktuell: ${totalPercentage.toFixed(1)}%` 
+      return NextResponse.json({
+        error: `Die Gesamtsumme muss genau ${availablePercent.toFixed(0)}% betragen. Aktuell: ${totalPercentage.toFixed(1)}%`
       }, { status: 400 })
     }
+
+    // Scale votes to the remaining percentage before saving
+    const scaleFactor = totalFixedPercent > 0 ? (100 - totalFixedPercent) / 100 : 1
+    const scaledVotes = votes.map((vote: any) => ({
+      ...vote,
+      percent: vote.percent * scaleFactor
+    }))
 
     // Update votes and submit ballot in a transaction
     const result = await prisma.$transaction(async (tx) => {
@@ -69,7 +77,7 @@ export async function POST(
           submittedAt: new Date(),
           votes: {
             deleteMany: {},
-            create: votes.map((vote: any) => ({
+            create: scaledVotes.map((vote: any) => ({
               personId: vote.personId,
               percent: vote.percent
             }))
@@ -82,7 +90,7 @@ export async function POST(
           status: 'SUBMITTED',
           submittedAt: new Date(),
           votes: {
-            create: votes.map((vote: any) => ({
+            create: scaledVotes.map((vote: any) => ({
               personId: vote.personId,
               percent: vote.percent
             }))

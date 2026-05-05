@@ -81,19 +81,13 @@ export default function VotePage() {
   const [hasLoadedInitialVotes, setHasLoadedInitialVotes] = useState(false)
   const [hasLoadedInitialFixedVotes, setHasLoadedInitialFixedVotes] = useState(false)
 
-  // Calculate fixed shares total for transparent modes
+  // Calculate fixed shares total
   const fixedShares = session?.fixedShares || []
-  const fixedShareMode = session?.fixedShareMode
   const fixedShareVotingStatus = session?.fixedShareVotingStatus
   const totalFixedPercent = fixedShares.reduce((sum, fs) => sum + fs.percent, 0)
-  
-  // For TRANSPARENT_REDUCED mode, participants only distribute the remaining percentage
-  // Only apply this once fixed share voting is closed (otherwise the percent isn't finalized yet)
-  const availablePercent =
-    fixedShareMode === 'TRANSPARENT_REDUCED' && fixedShareVotingStatus !== 'OPEN'
-      ? (100 - totalFixedPercent)
-      : 100
-  const isTransparentMode = fixedShareMode === 'TRANSPARENT_REDUCED' || fixedShareMode === 'TRANSPARENT_FULL'
+
+  // Participants always distribute 100%, which gets scaled to the remaining percentage
+  const availablePercent = 100
 
   const needsFixedSharePreVote = fixedShares.length > 0 && fixedShareVotingStatus === 'OPEN'
 
@@ -515,8 +509,8 @@ export default function VotePage() {
                     </div>
                   )}
 
-                  {/* Fixed Shares Info for Transparent Modes */}
-                  {!needsFixedSharePreVote && isTransparentMode && fixedShares.length > 0 && (
+                  {/* Fixed Shares Info */}
+                  {!needsFixedSharePreVote && fixedShares.length > 0 && (
                     <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                       <div className="flex items-center gap-2 mb-3">
                         <span className="text-amber-600 font-bold">⚡</span>
@@ -532,10 +526,7 @@ export default function VotePage() {
                       </div>
                       <div className="mt-3 pt-3 border-t border-amber-200">
                         <p className="text-sm text-amber-700">
-                          {fixedShareMode === 'TRANSPARENT_REDUCED' 
-                            ? `Du verteilst die verbleibenden ${availablePercent.toFixed(0)}% auf die Teilnehmer.`
-                            : `Diese Anteile werden zusätzlich zu deiner Bewertung berücksichtigt.`
-                          }
+                          Du verteilst 100% auf die Teilnehmer, die automatisch auf den verbleibenden {(100 - totalFixedPercent).toFixed(0)}% skaliert werden.
                         </p>
                       </div>
                     </div>
@@ -646,8 +637,8 @@ export default function VotePage() {
                       <PieChart
                         data={(() => {
                           const chartData: { name: string; value: number; color?: string }[] = [
-                            // Add fixed shares first if transparent mode
-                            ...(isTransparentMode && !needsFixedSharePreVote ? fixedShares.map(fs => ({
+                            // Add fixed shares first if not pre-vote
+                            ...(!needsFixedSharePreVote ? fixedShares.map(fs => ({
                               name: fs.name,
                               value: fs.percent,
                               color: '#f59e0b' // amber color for fixed shares
@@ -658,11 +649,11 @@ export default function VotePage() {
                               value: votes[p.id] || 0
                             }))
                           ]
-                          // For TRANSPARENT_REDUCED mode, scale participant votes to match available percent
-                          if (isTransparentMode && !needsFixedSharePreVote && totalFixedPercent > 0) {
+                          // Scale participant votes to match remaining percentage when fixed shares exist
+                          if (!needsFixedSharePreVote && totalFixedPercent > 0) {
                             const participantTotal = session.participants.reduce((sum, p) => sum + (votes[p.id] || 0), 0)
                             if (participantTotal > 0) {
-                              const scaleFactor = availablePercent / participantTotal
+                              const scaleFactor = (100 - totalFixedPercent) / participantTotal
                               chartData.forEach(item => {
                                 const isFixedShare = fixedShares.some(fs => fs.name === item.name)
                                 if (!isFixedShare) {
