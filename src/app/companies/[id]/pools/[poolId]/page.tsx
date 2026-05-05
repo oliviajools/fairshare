@@ -444,7 +444,13 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
                   ) : (
                     <div className="space-y-2">
                       {pool.sessions.map((ps) => (
-                        <div key={ps.id} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-white border border-gray-100">
+                        <div key={ps.id} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-white border border-gray-100 cursor-pointer hover:bg-gray-50" onClick={() => ps.session && setSelectedSessionForDetails({
+                          ...ps.session,
+                          creatorName: '',
+                          participantCount: 0,
+                          ballotCount: 0,
+                          hasInvoiceItem: false
+                        })}>
                           <div className="min-w-0">
                             <p className="font-medium text-gray-900 truncate">{ps.session?.title || ps.sessionId}</p>
                             <p className="text-xs text-gray-500">
@@ -456,7 +462,8 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={async () => {
+                              onClick={async (e) => {
+                                e.stopPropagation()
                                 try {
                                   await removeSessions([ps.sessionId])
                                 } catch (e: any) {
