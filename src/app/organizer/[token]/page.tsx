@@ -16,6 +16,14 @@ interface Participant {
   invitedEmail?: string
   inviteToken?: string
   hasSubmitted: boolean
+  hasSubmittedFixedShares?: boolean
+  includedInMainVoting?: boolean
+}
+
+interface FixedShare {
+  id: string
+  name: string
+  percent: number
 }
 
 interface Session {
@@ -24,6 +32,8 @@ interface Session {
   date: string
   status: 'OPEN' | 'CLOSED'
   participants: Participant[]
+  fixedShares?: FixedShare[]
+  fixedShareVotingStatus?: 'OPEN' | 'CLOSED'
   _count: {
     ballots: number
   }
@@ -44,6 +54,8 @@ export default function OrganizerPage() {
   const [newParticipantName, setNewParticipantName] = useState('')
   const [newParticipantEmail, setNewParticipantEmail] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(new Set())
+  const [updatingParticipants, setUpdatingParticipants] = useState(false)
 
   useEffect(() => {
     fetchSession()
@@ -191,6 +203,41 @@ export default function OrganizerPage() {
       alert('Fehler beim Entfernen des Teilnehmers')
     } finally {
       setRemoving(null)
+    }
+  }
+
+  const updateParticipantSelection = async () => {
+    if (!session) return
+
+    setUpdatingParticipants(true)
+    try {
+      const response = await fetch(`/api/sessions/${session.id}/participants-selection`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          participantIds: Array.from(selectedParticipants)
+        })
+      })
+
+      if (response.ok) {
+        // Update local state
+        setSession({
+          ...session,
+          participants: session.participants.map(p => ({
+            ...p,
+            includedInMainVoting: selectedParticipants.has(p.id)
+          }))
+        })
+        alert('Teilnehmer-Auswahl aktualisiert')
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Fehler beim Aktualisieren der Auswahl')
+      }
+    } catch (error) {
+      console.error('Error updating participant selection:', error)
+      alert('Fehler beim Aktualisieren der Auswahl')
+    } finally {
+      setUpdatingParticipants(false)
     }
   }
 
@@ -396,6 +443,68 @@ export default function OrganizerPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Participant Selection after Fixed Share Voting */}
+            {session.fixedShareVotingStatus === 'CLOSED' && (
+              <Card className="border-amber-200 bg-amber-50">
+                <CardHeader>
+                  <CardTitle className="text-xl text-amber-900">Teilnehmer für Hauptabstimmung auswählen</CardTitle>
+                  <CardDescription className="text-amber-700">
+                    Wähle aus, wer an der Abstimmung über die Teilnehmer teilnehmen soll
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 mb-4">
+                    {session.participants.map((participant) => (
+                      <label
+                        key={participant.id}
+                        className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-amber-200 cursor-pointer hover:bg-amber-100 transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedParticipants.has(participant.id)}
+                          onChange={(e) => {
+                            const newSelected = new Set(selectedParticipants)
+                            if (e.target.checked) {
+                              newSelected.add(participant.id)
+                            } else {
+                              newSelected.delete(participant.id)
+                            }
+                            setSelectedParticipants(newSelected)
+                          }}
+                          className="w-5 h-5 text-sky-600 rounded border-gray-300 focus:ring-sky-500"
+                        />
+                        <div className="flex-1">
+                          <span className="font-medium text-gray-900">{participant.displayName}</span>
+                          {participant.hasSubmittedFixedShares && (
+                            <span className="ml-2 text-xs text-green-600">(hat über feste Anteile abgestimmt)</span>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={updateParticipantSelection}
+                      disabled={updatingParticipants || selectedParticipants.size === 0}
+                      className="bg-amber-500 hover:bg-amber-600 text-white"
+                    >
+                      {updatingParticipants ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Speichere...
+                        </>
+                      ) : (
+                        <>
+                          <Check className="h-4 w-4 mr-2" />
+                          Auswahl speichern
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Participants List */}
             <Card>

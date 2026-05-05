@@ -335,6 +335,7 @@ model Participant {
   inviteToken   String?       @unique
   hasSubmitted  Boolean       @default(false)
   hasSubmittedFixedShares Boolean @default(false)
+  includedInMainVoting Boolean @default(true)
   ballots       Ballot[]
 }
 
