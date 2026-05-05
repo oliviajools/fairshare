@@ -665,8 +665,8 @@ export default function VotePage() {
                             ...(!needsFixedSharePreVote ? fixedShares.map(fs => ({
                               name: fs.name,
                               value: fs.percent,
-                              color: '#f59e0b' // amber color for fixed shares
-                            ])) : []),
+                              color: '#f59e0b' /* amber color for fixed shares */
+                            })) : []),
                             // Then participant votes
                             ...participants.map(p => ({
                               name: p.displayName,
@@ -694,7 +694,7 @@ export default function VotePage() {
                             chartData.push({
                               name: 'Nicht vergeben',
                               value: remaining,
-                              color: '#e5e7eb' // gray-200
+                              color: '#e5e7eb' /* gray-200 */
                             })
                           }
                           return chartData
