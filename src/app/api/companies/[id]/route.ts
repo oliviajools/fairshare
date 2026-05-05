@@ -60,6 +60,11 @@ export async function GET(
                 ballots: true
               }
             },
+            invoiceLineItems: {
+              select: {
+                id: true
+              }
+            },
             creator: {
               select: {
                 name: true,
@@ -100,6 +105,7 @@ export async function GET(
         creatorName: s.creator?.name || s.creator?.email,
         participantCount: s._count.participants,
         ballotCount: s._count.ballots,
+        hasInvoiceItem: s.invoiceLineItems && s.invoiceLineItems.length > 0,
         createdAt: s.createdAt
       }))
     })

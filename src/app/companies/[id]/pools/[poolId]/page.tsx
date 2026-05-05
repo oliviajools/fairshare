@@ -65,6 +65,7 @@ type CompanySession = {
   creatorName: string | null
   participantCount: number
   ballotCount: number
+  hasInvoiceItem: boolean
   createdAt: string
 }
 
@@ -110,6 +111,7 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
   const [loadingCompany, setLoadingCompany] = useState(false)
   const [showAllSessions, setShowAllSessions] = useState(false)
   const [selectedSessionIds, setSelectedSessionIds] = useState<Set<string>>(new Set())
+  const [selectedSessionForDetails, setSelectedSessionForDetails] = useState<CompanySession | null>(null)
 
   const [results, setResults] = useState<AggregatedResult[]>([])
   const [loadingResults, setLoadingResults] = useState(false)
@@ -133,16 +135,20 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
   const poolSessionIds = useMemo(() => new Set((pool?.sessions || []).map((ps) => ps.sessionId)), [pool?.sessions])
 
   const suggestedSessions = useMemo(() => {
-    if (showAllSessions) {
-      return companySessions
-    }
-    const { start, end } = selectedRange
-    const inRange = companySessions.filter((s) => {
+    let sessions = showAllSessions ? companySessions : companySessions.filter((s) => {
       if (!s.date) return false
+      const { start, end } = selectedRange
       const d = new Date(s.date)
       return d >= start && d <= end
     })
-    return inRange
+
+    // Sort by invoice status: sessions without invoice first
+    sessions.sort((a, b) => {
+      if (a.hasInvoiceItem === b.hasInvoiceItem) return 0
+      return a.hasInvoiceItem ? 1 : -1
+    })
+
+    return sessions
   }, [companySessions, selectedRange, showAllSessions])
 
   const fetchPool = useCallback(async () => {
@@ -572,62 +578,105 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
                           </Button>
                         </div>
                       )}
-                      <div className="space-y-2">
-                        {suggestedSessions.map((s) => {
-                          const isInPool = poolSessionIds.has(s.id)
-                          const isSelected = selectedSessionIds.has(s.id)
-                          return (
-                            <div key={s.id} className={`flex items-center justify-between gap-3 p-3 rounded-lg ${isSelected ? 'bg-sky-50 border-sky-200' : 'bg-white border-gray-100'} border`}>
-                              <div className="flex items-center gap-3 min-w-0 flex-1">
-                                {canEdit && pool.status !== 'LOCKED' && (
-                                  <input
-                                    type="checkbox"
-                                    checked={isSelected}
-                                    onChange={() => toggleSessionSelection(s.id)}
-                                    className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500 cursor-pointer"
-                                  />
-                                )}
-                                <div className="min-w-0">
-                                  <p className="font-medium text-gray-900 truncate">{s.title}</p>
-                                  <p className="text-xs text-gray-500">
-                                    {formatDate(s.date) || 'ohne Datum'}
-                                    {s.status ? ` • ${s.status === 'CLOSED' ? 'Beendet' : 'Offen'}` : ''}
-                                  </p>
-                                </div>
-                              </div>
-                              {canEdit && pool.status !== 'LOCKED' && (
-                                <Button
-                                  variant={isInPool ? 'outline' : 'default'}
-                                  size="sm"
-                                  className={isInPool ? '' : 'bg-sky-500 hover:bg-sky-600'}
-                                  onClick={async () => {
-                                    try {
-                                      if (isInPool) {
-                                        await removeSessions([s.id])
-                                      } else {
-                                        await addSessions([s.id])
-                                      }
-                                    } catch (e: any) {
-                                      alert(e?.message || 'Fehler')
-                                    }
-                                  }}
-                                >
-                                  {isInPool ? (
-                                    <>
-                                      <Minus className="h-4 w-4 mr-2" />
-                                      Entfernen
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Plus className="h-4 w-4 mr-2" />
-                                      Hinzufügen
-                                    </>
+                      
+                      {/* Sessions ohne Rechnungsbeitrag */}
+                      <div className="mb-6">
+                        <h4 className="text-sm font-medium text-gray-700 mb-2">Noch nicht in Rechnung aufgeführt</h4>
+                        <div className="space-y-2">
+                          {suggestedSessions.filter(s => !s.hasInvoiceItem).map((s) => {
+                            const isInPool = poolSessionIds.has(s.id)
+                            const isSelected = selectedSessionIds.has(s.id)
+                            return (
+                              <div key={s.id} className={`flex items-center justify-between gap-3 p-3 rounded-lg ${isSelected ? 'bg-sky-50 border-sky-200' : 'bg-white border-gray-100'} border cursor-pointer hover:bg-gray-50`} onClick={() => setSelectedSessionForDetails(s)}>
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  {canEdit && pool.status !== 'LOCKED' && (
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={(e) => {
+                                        e.stopPropagation()
+                                        toggleSessionSelection(s.id)
+                                      }}
+                                      className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500 cursor-pointer"
+                                    />
                                   )}
-                                </Button>
-                              )}
-                            </div>
-                          )
-                        })}
+                                  <div className="min-w-0">
+                                    <p className="font-medium text-gray-900 truncate">{s.title}</p>
+                                    <p className="text-xs text-gray-500">
+                                      {formatDate(s.date) || 'ohne Datum'}
+                                      {s.status ? ` • ${s.status === 'CLOSED' ? 'Beendet' : 'Offen'}` : ''}
+                                    </p>
+                                  </div>
+                                </div>
+                                {canEdit && pool.status !== 'LOCKED' && !isInPool && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      addSessions([s.id])
+                                    }}
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            )
+                          })}
+                          {suggestedSessions.filter(s => !s.hasInvoiceItem).length === 0 && (
+                            <div className="text-sm text-gray-500 italic">Keine Sessions ohne Rechnungsbeitrag</div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Sessions mit Rechnungsbeitrag */}
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-2">Bereits in Rechnung aufgeführt</h4>
+                        <div className="space-y-2">
+                          {suggestedSessions.filter(s => s.hasInvoiceItem).map((s) => {
+                            const isInPool = poolSessionIds.has(s.id)
+                            const isSelected = selectedSessionIds.has(s.id)
+                            return (
+                              <div key={s.id} className={`flex items-center justify-between gap-3 p-3 rounded-lg ${isSelected ? 'bg-sky-50 border-sky-200' : 'bg-gray-50 border-gray-200'} border cursor-pointer hover:bg-gray-100`} onClick={() => setSelectedSessionForDetails(s)}>
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  {canEdit && pool.status !== 'LOCKED' && (
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={(e) => {
+                                        e.stopPropagation()
+                                        toggleSessionSelection(s.id)
+                                      }}
+                                      className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500 cursor-pointer"
+                                    />
+                                  )}
+                                  <div className="min-w-0">
+                                    <p className="font-medium text-gray-900 truncate">{s.title}</p>
+                                    <p className="text-xs text-gray-500">
+                                      {formatDate(s.date) || 'ohne Datum'}
+                                      {s.status ? ` • ${s.status === 'CLOSED' ? 'Beendet' : 'Offen'}` : ''}
+                                    </p>
+                                  </div>
+                                </div>
+                                {canEdit && pool.status !== 'LOCKED' && !isInPool && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      addSessions([s.id])
+                                    }}
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            )
+                          })}
+                          {suggestedSessions.filter(s => s.hasInvoiceItem).length === 0 && (
+                            <div className="text-sm text-gray-500 italic">Keine Sessions mit Rechnungsbeitrag</div>
+                          )}
+                        </div>
                       </div>
                     </>
                   )}
@@ -638,6 +687,52 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
       <BottomNav />
+
+      {/* Session Details Modal */}
+      {selectedSessionForDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedSessionForDetails(null)}>
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">{selectedSessionForDetails.title}</h2>
+                <button onClick={() => setSelectedSessionForDetails(null)} className="text-gray-500 hover:text-gray-700">
+                  ✕
+                </button>
+              </div>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Datum:</span>
+                  <span>{formatDate(selectedSessionForDetails.date) || 'ohne Datum'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status:</span>
+                  <span>{selectedSessionForDetails.status === 'CLOSED' ? 'Beendet' : 'Offen'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Teilnehmer:</span>
+                  <span>{selectedSessionForDetails.participantCount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Abgegebene Stimmen:</span>
+                  <span>{selectedSessionForDetails.ballotCount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">In Rechnung:</span>
+                  <span>{selectedSessionForDetails.hasInvoiceItem ? 'Ja' : 'Nein'}</span>
+                </div>
+              </div>
+              <div className="mt-6 pt-4 border-t">
+                <Link href={`/results/${selectedSessionForDetails.id}`}>
+                  <Button className="w-full bg-sky-500 hover:bg-sky-600">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Ergebnisse anzeigen
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
