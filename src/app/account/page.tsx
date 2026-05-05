@@ -43,8 +43,9 @@ export default function AccountPage() {
     try {
       const img = await new Promise<HTMLImageElement>((resolve, reject) => {
         const image = new Image()
+        image.crossOrigin = 'anonymous'
         image.onload = () => resolve(image)
-        image.onerror = () => reject(new Error('Bild konnte nicht geladen werden'))
+        image.onerror = (e) => reject(new Error('Bild konnte nicht geladen werden'))
         image.src = objectUrl
       })
 
@@ -61,7 +62,14 @@ export default function AccountPage() {
       }
       ctx.drawImage(img, 0, 0, width, height)
 
-      return canvas.toDataURL(mimeType, quality)
+      const dataUrl = canvas.toDataURL(mimeType, quality)
+      if (!dataUrl || dataUrl === 'data:,') {
+        throw new Error('Bildkonvertierung fehlgeschlagen')
+      }
+      return dataUrl
+    } catch (error) {
+      console.error('Fehler beim Komprimieren des Bildes:', error)
+      throw error
     } finally {
       URL.revokeObjectURL(objectUrl)
     }
