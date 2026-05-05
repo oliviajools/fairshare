@@ -9,6 +9,11 @@ type AggregatedResult = {
   totalPercent: number
   sessionCount: number
   isFixedShare: boolean
+  sessionBreakdown: {
+    sessionId: string
+    sessionTitle: string
+    percent: number
+  }[]
 }
 
 export async function GET(
@@ -138,17 +143,29 @@ export async function GET(
       for (const r of allResults) {
         const key = r.isFixedShare ? `fixed:${r.name}` : `person:${r.name}`
         const existing = aggregated.get(key)
+        const weightedPercent = r.averagePercent * weight
+        
         if (!existing) {
           aggregated.set(key, {
             key,
             name: r.name,
-            totalPercent: r.averagePercent * weight,
+            totalPercent: weightedPercent,
             sessionCount: 1,
             isFixedShare: r.isFixedShare,
+            sessionBreakdown: [{
+              sessionId: session.id,
+              sessionTitle: session.title,
+              percent: r.averagePercent,
+            }],
           })
         } else {
-          existing.totalPercent += r.averagePercent * weight
+          existing.totalPercent += weightedPercent
           existing.sessionCount += 1
+          existing.sessionBreakdown.push({
+            sessionId: session.id,
+            sessionTitle: session.title,
+            percent: r.averagePercent,
+          })
         }
       }
     }

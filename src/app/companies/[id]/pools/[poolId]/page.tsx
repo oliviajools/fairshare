@@ -48,6 +48,11 @@ type AggregatedResult = {
   averagePercent: number
   sessionCount: number
   isFixedShare: boolean
+  sessionBreakdown: {
+    sessionId: string
+    sessionTitle: string
+    percent: number
+  }[]
 }
 
 type PoolResultsResponse = {
@@ -115,6 +120,8 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
 
   const [results, setResults] = useState<AggregatedResult[]>([])
   const [loadingResults, setLoadingResults] = useState(false)
+  const [totalAmount, setTotalAmount] = useState<number>(0)
+  const [expandedParticipant, setExpandedParticipant] = useState<string | null>(null)
 
   const canEdit = useMemo(() => role === 'OWNER' || role === 'ADMIN', [role])
 
@@ -392,9 +399,19 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
                     <BarChart3 className="h-5 w-5" />
                     Pool-Ergebnisse
                   </CardTitle>
-                  <CardDescription>Aggregierte Verteilung über alle Sessions im Pool</CardDescription>
+                  <CardDescription>Finanzielle Verteilung über alle Sessions im Pool</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  <div className="mb-4">
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Gesamtbetrag (€)</label>
+                    <Input
+                      type="number"
+                      value={totalAmount}
+                      onChange={(e) => setTotalAmount(parseFloat(e.target.value) || 0)}
+                      placeholder="0.00"
+                      step="0.01"
+                    />
+                  </div>
                   {loadingResults ? (
                     <div className="text-center py-6">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500 mx-auto"></div>
@@ -403,25 +420,50 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
                     <div className="text-gray-600 text-sm">Noch keine Ergebnisse (oder keine Stimmen in den Sessions).</div>
                   ) : (
                     <div className="space-y-3">
-                      {results.map((r) => (
-                        <div key={r.key} className={`p-3 rounded-lg ${r.isFixedShare ? 'bg-amber-50 border border-amber-200' : 'bg-white border border-gray-100'}`}>
-                          <div className="flex items-center justify-between">
-                            <div className="min-w-0">
-                              <p className="font-medium text-gray-900 truncate">{r.name}</p>
-                              <p className="text-xs text-gray-500">{r.sessionCount} Session{r.sessionCount !== 1 ? 's' : ''}</p>
+                      {results.map((r) => {
+                        const amount = (r.totalPercent / 100) * totalAmount
+                        const isExpanded = expandedParticipant === r.key
+                        return (
+                          <div key={r.key} className={`p-3 rounded-lg ${r.isFixedShare ? 'bg-amber-50 border border-amber-200' : 'bg-white border border-gray-100'}`}>
+                            <div 
+                              className="flex items-center justify-between cursor-pointer"
+                              onClick={() => setExpandedParticipant(isExpanded ? null : r.key)}
+                            >
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-gray-900 truncate">{r.name}</p>
+                                <p className="text-xs text-gray-500">{r.sessionCount} Session{r.sessionCount !== 1 ? 's' : ''}</p>
+                              </div>
+                              <div className="text-right ml-4">
+                                <div className={`font-bold ${r.isFixedShare ? 'text-amber-700' : 'text-sky-700'}`}>
+                                  {r.totalPercent.toFixed(1)}%
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  {amount.toFixed(2)} €
+                                </div>
+                              </div>
                             </div>
-                            <div className={`font-bold ${r.isFixedShare ? 'text-amber-700' : 'text-sky-700'}`}>
-                              {r.averagePercent.toFixed(1)}%
+                            <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full ${r.isFixedShare ? 'bg-amber-500' : 'bg-sky-500'}`}
+                                style={{ width: `${Math.min(100, Math.max(0, r.totalPercent))}%` }}
+                              />
                             </div>
+                            {isExpanded && r.sessionBreakdown.length > 0 && (
+                              <div className="mt-3 pt-3 border-t border-gray-200">
+                                <p className="text-xs font-medium text-gray-700 mb-2">Pro Session:</p>
+                                <div className="space-y-1">
+                                  {r.sessionBreakdown.map((sb) => (
+                                    <div key={sb.sessionId} className="flex justify-between text-xs text-gray-600">
+                                      <span className="truncate mr-2">{sb.sessionTitle}</span>
+                                      <span className="font-medium">{sb.percent.toFixed(1)}%</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full ${r.isFixedShare ? 'bg-amber-500' : 'bg-sky-500'}`}
-                              style={{ width: `${Math.min(100, Math.max(0, r.averagePercent))}%` }}
-                            />
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   )}
                 </CardContent>
