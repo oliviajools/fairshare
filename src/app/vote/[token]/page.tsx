@@ -19,6 +19,12 @@ interface Participant {
   includedInMainVoting?: boolean
 }
 
+interface CurrentParticipant {
+  id: string
+  displayName: string
+  includedInMainVoting?: boolean
+}
+
 interface FixedShare {
   id: string
   name: string
@@ -75,6 +81,7 @@ export default function VotePage() {
   const [submitting, setSubmitting] = useState(false)
   const [session, setSession] = useState<Session | null>(null)
   const [ballot, setBallot] = useState<Ballot | null>(null)
+  const [currentParticipant, setCurrentParticipant] = useState<CurrentParticipant | null>(null)
   const [votes, setVotes] = useState<{[personId: string]: number}>({})
   const [fixedVotes, setFixedVotes] = useState<{[fixedShareId: string]: number}>({})
   const [hasSubmittedFixedVotes, setHasSubmittedFixedVotes] = useState(false)
@@ -98,6 +105,8 @@ export default function VotePage() {
 
   // Check if participant selection is complete when fixed share voting is closed
   const canVote = fixedShareVotingStatus !== 'CLOSED' || session?.participantSelectionComplete === true
+  const isParticipantSelected = currentParticipant?.includedInMainVoting !== false
+  const canParticipate = canVote && isParticipantSelected
 
   // Participants always distribute 100%, which gets scaled to the remaining percentage
   const availablePercent = 100
@@ -165,12 +174,13 @@ export default function VotePage() {
         setBallot(data.ballot)
         setIsSubmitted(data.ballot?.status === 'SUBMITTED')
         setHasSubmittedFixedVotes(!!data.participant?.hasSubmittedFixedShares)
-        
+        setCurrentParticipant(data.participant)
+
         // Save to invited sessions in localStorage
         if (data.session && data.participant) {
           saveToInvitedSessions(data.session, data.participant.displayName, data.ballot?.status === 'SUBMITTED')
         }
-        
+
         // Only load votes on initial fetch or explicit request, not during polling
         if (loadVotes && !hasLoadedInitialVotes && data.ballot?.votes) {
           const voteMap: {[personId: string]: number} = {}
@@ -418,14 +428,27 @@ export default function VotePage() {
               </div>
             </div>
 
-            {!canVote && (
-              <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-amber-800 font-medium">
-                  Der Organisator wählt noch die Teilnehmer für diese Abstimmung aus.
-                </p>
-                <p className="text-amber-700 text-sm mt-1">
-                  Bitte habe etwas Geduld, du wirst benachrichtigt, sobald die Auswahl abgeschlossen ist.
-                </p>
+            {!canParticipate && (
+              <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                {fixedShareVotingStatus === 'CLOSED' && !isParticipantSelected ? (
+                  <>
+                    <p className="text-red-800 font-medium">
+                      Du wurdest nicht für diese Abstimmung ausgewählt.
+                    </p>
+                    <p className="text-red-700 text-sm mt-1">
+                      Der Organisator hat entschieden, dass du nicht an dieser Abstimmung teilnimmst.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-amber-800 font-medium">
+                      Der Organisator wählt noch die Teilnehmer für diese Abstimmung aus.
+                    </p>
+                    <p className="text-amber-700 text-sm mt-1">
+                      Bitte habe etwas Geduld, du wirst benachrichtigt, sobald die Auswahl abgeschlossen ist.
+                    </p>
+                  </>
+                )}
               </div>
             )}
 
@@ -507,7 +530,7 @@ export default function VotePage() {
                                 value={fixedVotes[fs.id] ?? ''}
                                 onChange={(e) => updateFixedVote(fs.id, e.target.value)}
                                 placeholder="0"
-                                disabled={submitting}
+                                disabled={submitting || !canParticipate}
                                 className="text-right"
                               />
                             </div>
@@ -519,7 +542,7 @@ export default function VotePage() {
                       <div className="mt-4 flex gap-2">
                         <Button
                           onClick={submitFixedVotes}
-                          disabled={submitting}
+                          disabled={submitting || !canParticipate}
                           className="w-full bg-amber-500 hover:bg-amber-600"
                         >
                           <Send className="mr-2 h-4 w-4" />
