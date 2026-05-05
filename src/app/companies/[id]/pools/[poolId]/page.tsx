@@ -109,47 +109,26 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
 
   const [companySessions, setCompanySessions] = useState<CompanySession[]>([])
   const [loadingCompany, setLoadingCompany] = useState(false)
-  const [showAllSessions, setShowAllSessions] = useState(false)
   const [selectedSessionIds, setSelectedSessionIds] = useState<Set<string>>(new Set())
   const [selectedSessionForDetails, setSelectedSessionForDetails] = useState<CompanySession | null>(null)
+  const [draggedSessionId, setDraggedSessionId] = useState<string | null>(null)
 
   const [results, setResults] = useState<AggregatedResult[]>([])
   const [loadingResults, setLoadingResults] = useState(false)
 
-  const [year, setYear] = useState<number>(() => {
-    const y = searchParams.get('year')
-    const parsed = y ? parseInt(y, 10) : NaN
-    return Number.isFinite(parsed) ? parsed : new Date().getFullYear()
-  })
-  const [quarter, setQuarter] = useState<1 | 2 | 3 | 4>(() => {
-    const q = searchParams.get('q')
-    const parsed = q ? parseInt(q, 10) : NaN
-    if (parsed === 1 || parsed === 2 || parsed === 3 || parsed === 4) return parsed
-    return 1
-  })
-
   const canEdit = useMemo(() => role === 'OWNER' || role === 'ADMIN', [role])
-
-  const selectedRange = useMemo(() => quarterRange(year, quarter), [year, quarter])
 
   const poolSessionIds = useMemo(() => new Set((pool?.sessions || []).map((ps) => ps.sessionId)), [pool?.sessions])
 
   const suggestedSessions = useMemo(() => {
-    let sessions = showAllSessions ? companySessions : companySessions.filter((s) => {
-      if (!s.date) return false
-      const { start, end } = selectedRange
-      const d = new Date(s.date)
-      return d >= start && d <= end
-    })
-
+    const sessions = [...companySessions]
     // Sort by invoice status: sessions without invoice first
     sessions.sort((a, b) => {
       if (a.hasInvoiceItem === b.hasInvoiceItem) return 0
       return a.hasInvoiceItem ? 1 : -1
     })
-
     return sessions
-  }, [companySessions, selectedRange, showAllSessions])
+  }, [companySessions])
 
   const fetchPool = useCallback(async () => {
     const res = await fetch(`/api/pools/${poolId}`)
@@ -307,6 +286,30 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
     }
   }
 
+  const handleDragStart = (sessionId: string) => {
+    setDraggedSessionId(sessionId)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    if (!draggedSessionId || !canEdit || pool?.status === 'LOCKED') return
+
+    try {
+      await addSessions([draggedSessionId])
+    } catch (error) {
+      console.error('Error adding session:', error)
+    }
+    setDraggedSessionId(null)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedSessionId(null)
+  }
+
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50 flex items-center justify-center pb-20">
@@ -424,10 +427,16 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card
+                onDragOver={canEdit && pool.status !== 'LOCKED' ? handleDragOver : undefined}
+                onDrop={canEdit && pool.status !== 'LOCKED' ? handleDrop : undefined}
+                className={canEdit && pool.status !== 'LOCKED' && draggedSessionId ? 'border-2 border-sky-400 bg-sky-50' : ''}
+              >
                 <CardHeader>
                   <CardTitle>Sessions im Pool</CardTitle>
-                  <CardDescription>Aktuell enthaltene Sessions</CardDescription>
+                  <CardDescription>
+                    {draggedSessionId ? 'Lass los, um Session hinzuzufügen' : 'Aktuell enthaltene Sessions'}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {pool.sessions.length === 0 ? (
@@ -476,79 +485,14 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Quartal auswählen</CardTitle>
-                  <CardDescription>Sessions im Zeitraum werden vorgeschlagen</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-sm text-gray-600">Jahr</label>
-                      <Input
-                        type="number"
-                        value={year}
-                        onChange={(e) => setYear(parseInt(e.target.value || `${new Date().getFullYear()}`, 10))}
-                        min={2000}
-                        max={2100}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm text-gray-600">Quartal</label>
-                      <select
-                        value={quarter}
-                        onChange={(e) => setQuarter(parseInt(e.target.value, 10) as any)}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      >
-                        <option value={1}>Q1</option>
-                        <option value={2}>Q2</option>
-                        <option value={3}>Q3</option>
-                        <option value={4}>Q4</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="text-sm text-gray-600">
-                    Zeitraum: {selectedRange.start.toLocaleDateString('de-DE')} – {selectedRange.end.toLocaleDateString('de-DE')}
-                  </div>
-
-                  {canEdit ? (
-                    <Button
-                      className="w-full bg-sky-500 hover:bg-sky-600"
-                      disabled={pool.status === 'LOCKED'}
-                      onClick={handleAddSuggested}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Alle Sessions dieses Quartals hinzufügen
-                    </Button>
-                  ) : (
-                    <div className="text-sm text-gray-600">Du hast keine Berechtigung, den Pool zu bearbeiten.</div>
-                  )}
-
-                  <div className="text-xs text-gray-500">Hinweis: Es werden Sessions anhand ihres `date`-Felds gefiltert.</div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>Vorschläge (Sessions)</span>
-                    <button
-                      onClick={() => setShowAllSessions(!showAllSessions)}
-                      className="text-sm text-sky-600 hover:text-sky-700"
-                    >
-                      {showAllSessions ? 'Nur Quartal' : 'Alle anzeigen'}
-                    </button>
-                  </CardTitle>
+                  <CardTitle>Sessions</CardTitle>
                   <CardDescription>
-                    {loadingCompany ? 'Lädt…' : (
-                      showAllSessions
-                        ? `${companySessions.length} Session${companySessions.length !== 1 ? 's' : ''} gesamt`
-                        : `${suggestedSessions.length} Session${suggestedSessions.length !== 1 ? 's' : ''} im Zeitraum`
-                    )}
+                    {loadingCompany ? 'Lädt…' : `${companySessions.length} Session${companySessions.length !== 1 ? 's' : ''} gesamt`}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {suggestedSessions.length === 0 ? (
-                    <div className="text-sm text-gray-600">{showAllSessions ? 'Keine Sessions gefunden.' : 'Keine Sessions mit Datum in diesem Quartal gefunden.'}</div>
+                    <div className="text-sm text-gray-600">Keine Sessions gefunden.</div>
                   ) : (
                     <>
                       {canEdit && pool.status !== 'LOCKED' && selectedSessionIds.size > 0 && (
@@ -587,7 +531,14 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
                             const isInPool = poolSessionIds.has(s.id)
                             const isSelected = selectedSessionIds.has(s.id)
                             return (
-                              <div key={s.id} className={`flex items-center justify-between gap-3 p-3 rounded-lg ${isSelected ? 'bg-sky-50 border-sky-200' : 'bg-white border-gray-100'} border cursor-pointer hover:bg-gray-50`} onClick={() => setSelectedSessionForDetails(s)}>
+                              <div 
+                                key={s.id} 
+                                draggable={!isInPool && canEdit && pool.status !== 'LOCKED'}
+                                onDragStart={() => handleDragStart(s.id)}
+                                onDragEnd={handleDragEnd}
+                                className={`flex items-center justify-between gap-3 p-3 rounded-lg ${isSelected ? 'bg-sky-50 border-sky-200' : 'bg-white border-gray-100'} border cursor-pointer hover:bg-gray-50 ${!isInPool && canEdit && pool.status !== 'LOCKED' ? 'cursor-grab active:cursor-grabbing' : ''}`} 
+                                onClick={() => setSelectedSessionForDetails(s)}
+                              >
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                   {canEdit && pool.status !== 'LOCKED' && (
                                     <input
@@ -637,7 +588,14 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
                             const isInPool = poolSessionIds.has(s.id)
                             const isSelected = selectedSessionIds.has(s.id)
                             return (
-                              <div key={s.id} className={`flex items-center justify-between gap-3 p-3 rounded-lg ${isSelected ? 'bg-sky-50 border-sky-200' : 'bg-gray-50 border-gray-200'} border cursor-pointer hover:bg-gray-100`} onClick={() => setSelectedSessionForDetails(s)}>
+                              <div 
+                                key={s.id} 
+                                draggable={!isInPool && canEdit && pool.status !== 'LOCKED'}
+                                onDragStart={() => handleDragStart(s.id)}
+                                onDragEnd={handleDragEnd}
+                                className={`flex items-center justify-between gap-3 p-3 rounded-lg ${isSelected ? 'bg-sky-50 border-sky-200' : 'bg-gray-50 border-gray-200'} border cursor-pointer hover:bg-gray-100 ${!isInPool && canEdit && pool.status !== 'LOCKED' ? 'cursor-grab active:cursor-grabbing' : ''}`} 
+                                onClick={() => setSelectedSessionForDetails(s)}
+                              >
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                   {canEdit && pool.status !== 'LOCKED' && (
                                     <input
