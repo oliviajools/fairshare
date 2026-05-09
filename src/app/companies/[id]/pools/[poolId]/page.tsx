@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { BottomNav } from '@/components/BottomNav'
-import { ArrowLeft, Calendar, Layers, Plus, Minus, BarChart3, RefreshCw, FileText } from 'lucide-react'
+import { ArrowLeft, Calendar, Layers, Plus, Minus, BarChart3, RefreshCw, FileText, Download } from 'lucide-react'
 
 type PoolStatus = 'DRAFT' | 'LOCKED'
 
@@ -317,6 +317,41 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
     setDraggedSessionId(null)
   }
 
+  const handleExport = async () => {
+    if (!pool || pool.sessions.length === 0) {
+      alert('Keine Sessions zum Exportieren vorhanden.')
+      return
+    }
+
+    try {
+      const sessionIds = pool.sessions.map((ps) => ps.sessionId)
+      const response = await fetch(`/api/pools/${poolId}/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionIds }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        alert(data.error || 'Fehler beim Exportieren')
+        return
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `pool-export-${pool.name}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Error exporting:', error)
+      alert('Fehler beim Exportieren')
+    }
+  }
+
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50 flex items-center justify-center pb-20">
@@ -475,10 +510,24 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
                 className={canEdit && pool.status !== 'LOCKED' && draggedSessionId ? 'border-2 border-sky-400 bg-sky-50' : ''}
               >
                 <CardHeader>
-                  <CardTitle>Sessions im Pool</CardTitle>
-                  <CardDescription>
-                    {draggedSessionId ? 'Lass los, um Session hinzuzufügen' : 'Aktuell enthaltene Sessions'}
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Sessions im Pool</CardTitle>
+                      <CardDescription>
+                        {draggedSessionId ? 'Lass los, um Session hinzuzufügen' : 'Aktuell enthaltene Sessions'}
+                      </CardDescription>
+                    </div>
+                    {pool.sessions.length > 0 && canEdit && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleExport}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Excel exportieren
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {pool.sessions.length === 0 ? (
