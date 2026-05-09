@@ -269,10 +269,23 @@ export default function ArchivePage() {
                           
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mt-2">
                             {session.company ? (
-                              <span className="flex items-center gap-1.5 bg-sky-50 px-2 py-1 rounded-full text-sky-700">
-                                <span className="h-4 w-4">🏢</span>
-                                {session.company.name}
-                              </span>
+                              <>
+                                <span className="flex items-center gap-1.5 bg-sky-50 px-2 py-1 rounded-full text-sky-700">
+                                  <span className="h-4 w-4">🏢</span>
+                                  {session.company.name}
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    fetchCompanies()
+                                    setShowCompanySelect(session.id)
+                                  }}
+                                  className="h-6 text-xs px-2 py-0 text-sky-600 hover:text-sky-700"
+                                >
+                                  Ändern
+                                </Button>
+                              </>
                             ) : (
                               <Button
                                 size="sm"
