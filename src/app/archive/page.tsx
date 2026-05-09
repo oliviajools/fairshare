@@ -22,6 +22,12 @@ interface Session {
     name: string | null
     email: string
   }
+  companyId?: string | null
+  company?: {
+    id: string
+    name: string
+    slug: string
+  } | null
   _count: {
     participants: number
     ballots: number
@@ -43,6 +49,10 @@ export default function ArchivePage() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [companies, setCompanies] = useState<{id: string, name: string}[]>([])
+  const [loadingCompanies, setLoadingCompanies] = useState(false)
+  const [showCompanySelect, setShowCompanySelect] = useState<string | null>(null)
+  const [updatingCompany, setUpdatingCompany] = useState(false)
 
   useEffect(() => {
     if (authStatus === 'unauthenticated') {
@@ -63,6 +73,44 @@ export default function ArchivePage() {
       console.error('Error fetching sessions:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchCompanies = async () => {
+    setLoadingCompanies(true)
+    try {
+      const response = await fetch('/api/companies')
+      if (response.ok) {
+        const data = await response.json()
+        setCompanies(data.map((c: any) => ({ id: c.id, name: c.name })))
+      }
+    } catch (error) {
+      console.error('Error fetching companies:', error)
+    } finally {
+      setLoadingCompanies(false)
+    }
+  }
+
+  const updateCompany = async (sessionId: string, companyId: string) => {
+    setUpdatingCompany(true)
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId }),
+      })
+      if (response.ok) {
+        await fetchSessions()
+        setShowCompanySelect(null)
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Fehler beim Aktualisieren des Unternehmens')
+      }
+    } catch (error) {
+      console.error('Error updating company:', error)
+      alert('Fehler beim Aktualisieren des Unternehmens')
+    } finally {
+      setUpdatingCompany(false)
     }
   }
 
@@ -119,6 +167,40 @@ export default function ArchivePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50 pb-24 page-transition">
+      {/* Company Selection Modal */}
+      {showCompanySelect && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setShowCompanySelect(null)}>
+          <div className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">Unternehmen zuweisen</h2>
+              <div className="space-y-2">
+                {loadingCompanies ? (
+                  <div className="text-sm text-gray-600">Lade Unternehmen...</div>
+                ) : companies.length === 0 ? (
+                  <div className="text-sm text-gray-600">Keine Unternehmen gefunden. Erstelle zuerst ein Unternehmen.</div>
+                ) : (
+                  companies.map((company) => (
+                    <button
+                      key={company.id}
+                      onClick={() => updateCompany(showCompanySelect, company.id)}
+                      disabled={updatingCompany}
+                      className="w-full p-3 text-left rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-sky-300 transition-colors disabled:opacity-50"
+                    >
+                      <div className="font-medium">{company.name}</div>
+                    </button>
+                  ))
+                )}
+              </div>
+              <div className="mt-4">
+                <Button variant="outline" className="w-full" onClick={() => setShowCompanySelect(null)}>
+                  Abbrechen
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-4 pt-14 pb-6">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -186,6 +268,25 @@ export default function ArchivePage() {
                           </div>
                           
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mt-2">
+                            {session.company ? (
+                              <span className="flex items-center gap-1.5 bg-sky-50 px-2 py-1 rounded-full text-sky-700">
+                                <span className="h-4 w-4">🏢</span>
+                                {session.company.name}
+                              </span>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  fetchCompanies()
+                                  setShowCompanySelect(session.id)
+                                }}
+                                className="h-6 text-xs px-2 py-0"
+                              >
+                                <span className="mr-1.5 h-4 w-4">🏢</span>
+                                Unternehmen zuweisen
+                              </Button>
+                            )}
                             {session.date && (
                               <span className="flex items-center gap-1.5">
                                 <Calendar className="h-4 w-4" />
