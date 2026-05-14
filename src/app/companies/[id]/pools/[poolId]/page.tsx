@@ -407,12 +407,10 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Link href={`/companies/${companyId}/pools/${poolId}/invoice`}>
-                <Button variant="outline">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Rechnung
-                </Button>
-              </Link>
+              <Button variant="outline" onClick={handleExport} disabled={pool.sessions.length === 0}>
+                <Download className="h-4 w-4 mr-2" />
+                Excel Export
+              </Button>
               <Button variant="outline" onClick={fetchResults} disabled={loadingResults}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Aktualisieren
