@@ -155,6 +155,9 @@ export async function GET(request: NextRequest) {
         creator: {
           select: { id: true, name: true, email: true }
         },
+        company: {
+          select: { id: true, name: true, slug: true }
+        },
         _count: {
           select: {
             participants: true,
