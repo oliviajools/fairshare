@@ -63,12 +63,28 @@ export async function POST(
         companyId: pool.companyId,
       },
       include: {
-        participants: true,
-        fixedShares: true,
+        participants: {
+          select: {
+            id: true,
+            displayName: true,
+          },
+        },
+        fixedShares: {
+          select: {
+            id: true,
+            name: true,
+            percent: true,
+          },
+        },
         ballots: {
           where: { status: 'SUBMITTED' },
-          include: {
-            votes: true,
+          select: {
+            votes: {
+              select: {
+                personId: true,
+                percent: true,
+              },
+            },
           },
         },
       },
@@ -157,9 +173,10 @@ export async function POST(
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Pool Export')
 
     // Generate buffer
-    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' }) as Buffer
+    const uint8Array = new Uint8Array(buffer)
 
-    return new NextResponse(buffer as Buffer, {
+    return new NextResponse(uint8Array, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition': `attachment; filename="pool-export-${pool.name}.xlsx"`,
