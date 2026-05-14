@@ -1,20 +1,19 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { ArrowLeft, User, Mail, Calendar, Users, Trash2, AlertTriangle, Camera, Search, Pencil, Check, X } from 'lucide-react'
+import { ArrowLeft, User, Mail, Calendar, Users, Trash2, AlertTriangle, Search, Pencil, Check, X } from 'lucide-react'
 import { BottomNav } from '@/components/BottomNav'
 
 interface AccountData {
   id: string
   name: string | null
   email: string
-  image: string | null
   createdAt: string
   _count: {
     createdSessions: number
@@ -31,49 +30,6 @@ export default function AccountPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [newName, setNewName] = useState('')
-  const [uploadingImage, setUploadingImage] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const compressImage = async (file: File) => {
-    const maxDimension = 512
-    const mimeType = 'image/jpeg'
-    const quality = 0.82
-
-    const objectUrl = URL.createObjectURL(file)
-    try {
-      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const image = new Image()
-        image.crossOrigin = 'anonymous'
-        image.onload = () => resolve(image)
-        image.onerror = (e) => reject(new Error('Bild konnte nicht geladen werden'))
-        image.src = objectUrl
-      })
-
-      const scale = Math.min(1, maxDimension / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height))
-      const width = Math.max(1, Math.round((img.naturalWidth || img.width) * scale))
-      const height = Math.max(1, Math.round((img.naturalHeight || img.height) * scale))
-
-      const canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
-      const ctx = canvas.getContext('2d')
-      if (!ctx) {
-        throw new Error('Canvas nicht verfügbar')
-      }
-      ctx.drawImage(img, 0, 0, width, height)
-
-      const dataUrl = canvas.toDataURL(mimeType, quality)
-      if (!dataUrl || dataUrl === 'data:,') {
-        throw new Error('Bildkonvertierung fehlgeschlagen')
-      }
-      return dataUrl
-    } catch (error) {
-      console.error('Fehler beim Komprimieren des Bildes:', error)
-      throw error
-    } finally {
-      URL.revokeObjectURL(objectUrl)
-    }
-  }
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -94,59 +50,6 @@ export default function AccountPage() {
       console.error('Error fetching account:', error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!file.type.startsWith('image/')) {
-      alert('Bitte wähle eine Bilddatei aus')
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      return
-    }
-
-    const lowerType = (file.type || '').toLowerCase()
-    if (lowerType.includes('heic') || lowerType.includes('heif')) {
-      alert('Dieses Bildformat wird aktuell nicht unterstützt. Bitte wähle ein JPEG/PNG oder nutze „Aus Mediathek wählen“.')
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      return
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Bild darf maximal 5MB groß sein')
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      return
-    }
-
-    setUploadingImage(true)
-    try {
-      const base64 = await compressImage(file)
-      const response = await fetch('/api/account', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64 })
-      })
-
-      if (response.ok) {
-        const updated = await response.json()
-        setAccount(prev => prev ? { ...prev, image: updated.image } : null)
-      } else {
-        let message = 'Fehler beim Hochladen'
-        try {
-          const data = await response.json()
-          message = data?.error || message
-        } catch {
-        }
-        alert(message)
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error)
-      alert('Fehler beim Hochladen')
-    } finally {
-      setUploadingImage(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -246,37 +149,18 @@ export default function AccountPage() {
           <Card className="mb-6">
             <CardHeader>
               <div className="flex items-center gap-4">
-                {/* Profile Image */}
-                <div className="relative">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleImageUpload}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                  {account.image ? (
-                    <img
-                      src={account.image}
-                      alt="Profilbild"
-                      className="h-20 w-20 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-20 w-20 rounded-full bg-sky-100 flex items-center justify-center">
-                      <User className="h-10 w-10 text-sky-600" />
-                    </div>
-                  )}
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingImage}
-                    className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-sky-500 text-white flex items-center justify-center hover:bg-sky-600 transition-colors"
-                  >
-                    {uploadingImage ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                    ) : (
-                      <Camera className="h-4 w-4" />
-                    )}
-                  </button>
+                {/* Avatar with Initials */}
+                <div className="h-20 w-20 rounded-full bg-sky-500 flex items-center justify-center">
+                  <span className="text-white text-2xl font-bold">
+                    {account.name
+                      ? account.name
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')
+                          .toUpperCase()
+                          .slice(0, 2)
+                      : account.email[0].toUpperCase()}
+                  </span>
                 </div>
                 {/* Name & Email */}
                 <div className="flex-1">

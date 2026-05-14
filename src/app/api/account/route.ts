@@ -18,7 +18,6 @@ export async function GET(request: NextRequest) {
         id: true,
         name: true,
         email: true,
-        image: true,
         createdAt: true,
         _count: {
           select: {
@@ -40,7 +39,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT - Update account (name, image)
+// PUT - Update account (name)
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -49,33 +48,17 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
     }
 
-    const { name, image } = await request.json()
-
-    if (image !== undefined) {
-      if (image !== null && typeof image !== 'string') {
-        return NextResponse.json({ error: 'Ungültiges Bildformat' }, { status: 400 })
-      }
-      if (typeof image === 'string') {
-        if (!image.startsWith('data:image/')) {
-          return NextResponse.json({ error: 'Ungültiges Bildformat' }, { status: 400 })
-        }
-        if (image.length > 800_000) {
-          return NextResponse.json({ error: 'Bild ist zu groß' }, { status: 400 })
-        }
-      }
-    }
+    const { name } = await request.json()
 
     const user = await prisma.user.update({
       where: { email: session.user.email },
       data: {
-        ...(name !== undefined && { name }),
-        ...(image !== undefined && { image })
+        ...(name !== undefined && { name })
       },
       select: {
         id: true,
         name: true,
         email: true,
-        image: true,
         createdAt: true
       }
     })
