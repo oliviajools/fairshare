@@ -7,8 +7,8 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     iosScheme: 'https',
-    hostname: 'teampayer.vercel.app',
-    url: 'https://teampayer.vercel.app/',
+    hostname: 'teampayer.de',
+    url: 'https://teampayer.de/',
     cleartext: false
   },
   plugins: {
@@ -28,6 +28,9 @@ const config: CapacitorConfig = {
       resize: 'body',
       style: 'dark',
       resizeOnFullScreen: true
+    },
+    AppleSignIn: {
+      clientId: 'com.teampayer.web'
     }
   }
 };
