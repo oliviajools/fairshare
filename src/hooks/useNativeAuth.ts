@@ -99,6 +99,10 @@ export function useNativeAuth() {
 
         // Session cookie is set by the API, just redirect
         if (data.success) {
+          // Store token in localStorage for native apps
+          if (data.token) {
+            localStorage.setItem('next-auth.session-token', data.token)
+          }
           // Stay in app - reload the current page to refresh session
           window.location.reload()
         } else {

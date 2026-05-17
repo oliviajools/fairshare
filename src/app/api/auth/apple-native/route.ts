@@ -107,9 +107,10 @@ export async function POST(request: NextRequest) {
       }
     )
 
-    // Create response with session cookie
+    // Create response with session cookie and token in body
     const response = NextResponse.json({
       success: true,
+      token: sessionToken,
       user: {
         id: dbUser.id,
         email: dbUser.email,
@@ -126,7 +127,7 @@ export async function POST(request: NextRequest) {
     response.cookies.set(cookieName, sessionToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax',
+      sameSite: 'none',
       path: '/',
       maxAge: 30 * 24 * 60 * 60, // 30 days
     })
