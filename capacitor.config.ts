@@ -9,7 +9,8 @@ const config: CapacitorConfig = {
     iosScheme: 'https',
     hostname: 'teampayer.de',
     url: 'https://teampayer.de/',
-    cleartext: false
+    cleartext: false,
+    allowNavigation: ['*']
   },
   plugins: {
     SplashScreen: {

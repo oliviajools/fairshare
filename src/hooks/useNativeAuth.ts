@@ -99,8 +99,11 @@ export function useNativeAuth() {
 
         // Session cookie is set by the API, just redirect
         if (data.success) {
-          router.push('/')
-          router.refresh()
+          // Use window.location to stay in app
+          window.location.href = '/'
+        } else {
+          // Fallback: use NextAuth signIn for native apps
+          await signIn('apple', { callbackUrl: '/' })
         }
       } else if (platform === 'web') {
         // Use web OAuth
