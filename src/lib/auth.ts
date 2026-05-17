@@ -60,12 +60,7 @@ export const authOptions: NextAuthOptions = {
         clientId: process.env.APPLE_ID,
         clientSecret: process.env.APPLE_SECRET,
         allowDangerousEmailAccountLinking: true,
-        authorization: {
-          params: {
-            response_mode: "form_post",
-            response_type: "code",
-          },
-        },
+        checks: ['none'],
       })
     ] : []),
     // Credentials (email/password)
