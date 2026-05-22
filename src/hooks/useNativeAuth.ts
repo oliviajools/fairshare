@@ -22,7 +22,7 @@ export function useNativeAuth() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const appleClientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || 'com.teampayer.web'
+  const appleClientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || 'com.teampayer.app'
   const appleRedirectUri = process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI || 'https://teampayer.de/api/auth/callback/apple'
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://teampayer.de'
 

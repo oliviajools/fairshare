@@ -7,10 +7,7 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     iosScheme: 'https',
-    hostname: 'teampayer.de',
-    url: 'https://teampayer.de/',
-    cleartext: false,
-    allowNavigation: ['*']
+    cleartext: false
   },
   plugins: {
     SplashScreen: {
@@ -31,7 +28,7 @@ const config: CapacitorConfig = {
       resizeOnFullScreen: true
     },
     AppleSignIn: {
-      clientId: 'com.teampayer.web'
+      clientId: 'com.teampayer.app'
     }
   }
 };

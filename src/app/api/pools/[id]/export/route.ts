@@ -107,10 +107,20 @@ export async function POST(
     const participants = Array.from(participantSet).sort()
 
     // Build data for Excel
-    const data: any[][] = [['', ...participants]] // Header row
+    const data: any[][] = [['', 'Datum', ...participants]] // Header row
 
     for (const session of sessions) {
       const row: any[] = [session.title]
+      
+      // Format date for German locale
+      const formattedDate = session.date
+        ? new Date(session.date).toLocaleDateString('de-DE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          })
+        : ''
+      row.push(formattedDate)
 
       // Calculate results for this session
       const resultsMap = new Map<string, number>()
