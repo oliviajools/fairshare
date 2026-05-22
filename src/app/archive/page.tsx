@@ -6,7 +6,9 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { BottomNav } from '@/components/BottomNav'
-import { Archive, Calendar, Users, BarChart3, Trash2, ArrowLeft, CheckCircle2, Clock } from 'lucide-react'
+import { FeatureGuard } from '@/components/FeatureGuard'
+import { Archive, Calendar, Users, BarChart3, Trash2, ArrowLeft, CheckCircle2, Clock, GraduationCap, FolderOpen } from 'lucide-react'
+import { isSchoolApp } from '@/lib/app-mode'
 
 interface Session {
   id: string
@@ -34,6 +36,21 @@ interface Session {
   }
 }
 
+interface ClassroomProject {
+  id: string
+  name: string
+  description?: string | null
+  dueDate?: string | null
+  resultsSentAt?: string | null
+  teacherPoints?: number | null
+  classroomId: string
+  classroom: {
+    id: string
+    name: string
+  }
+  createdAt: string
+}
+
 const CARD_COLORS = [
   'from-sky-500 to-blue-600',
   'from-emerald-500 to-green-600',
@@ -47,6 +64,7 @@ export default function ArchivePage() {
   const router = useRouter()
   const { data: authSession, status: authStatus } = useSession()
   const [sessions, setSessions] = useState<Session[]>([])
+  const [projects, setProjects] = useState<ClassroomProject[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [companies, setCompanies] = useState<{id: string, name: string}[]>([])
@@ -54,13 +72,19 @@ export default function ArchivePage() {
   const [showCompanySelect, setShowCompanySelect] = useState<string | null>(null)
   const [updatingCompany, setUpdatingCompany] = useState(false)
 
+  const isSchool = isSchoolApp()
+
   useEffect(() => {
     if (authStatus === 'unauthenticated') {
       router.push('/login')
     } else if (authStatus === 'authenticated') {
-      fetchSessions()
+      if (isSchool) {
+        fetchProjects()
+      } else {
+        fetchSessions()
+      }
     }
-  }, [authStatus, router])
+  }, [authStatus, router, isSchool])
 
   const fetchSessions = async () => {
     try {
@@ -71,6 +95,20 @@ export default function ArchivePage() {
       }
     } catch (error) {
       console.error('Error fetching sessions:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch('/api/classrooms/projects/archive')
+      if (response.ok) {
+        const data = await response.json()
+        setProjects(data)
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error)
     } finally {
       setLoading(false)
     }
@@ -167,8 +205,9 @@ export default function ArchivePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50 pb-24 page-transition">
-      {/* Company Selection Modal */}
-      {showCompanySelect && (
+      {/* Company Selection Modal - only for standard mode */}
+      <FeatureGuard feature="voting">
+      {!isSchool && showCompanySelect && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setShowCompanySelect(null)}>
           <div className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
@@ -200,6 +239,7 @@ export default function ArchivePage() {
           </div>
         </div>
       )}
+      </FeatureGuard>
 
       <div className="container mx-auto px-4 pt-14 pb-6">
         <div className="max-w-4xl mx-auto">
@@ -212,30 +252,42 @@ export default function ArchivePage() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <Archive className="h-8 w-8 text-sky-500 flex-shrink-0" />
+              {isSchool ? (
+                <GraduationCap className="h-8 w-8 text-sky-500 flex-shrink-0" />
+              ) : (
+                <Archive className="h-8 w-8 text-sky-500 flex-shrink-0" />
+              )}
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Archiv</h1>
-                <p className="text-gray-500">{sessions.length} abgeschlossene Sessions</p>
+                <p className="text-gray-500">
+                  {isSchool 
+                    ? `${projects.length} abgeschlossene Projekte` 
+                    : `${sessions.length} abgeschlossene Sessions`
+                  }
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Sessions List */}
-          {sessions.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
-                <Archive className="h-10 w-10 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Noch nichts im Archiv
-              </h3>
-              <p className="text-gray-500 max-w-sm mx-auto">
-                Beendete Sessions landen automatisch hier, sobald du sie abschließt.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {sessions.map((session, index) => {
+          {/* Content - Standard Mode: Sessions */}
+          <FeatureGuard feature="voting">
+          {!isSchool && (
+            <>
+              {sessions.length === 0 ? (
+                <div className="text-center py-20">
+                  <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
+                    <Archive className="h-10 w-10 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    Noch nichts im Archiv
+                  </h3>
+                  <p className="text-gray-500 max-w-sm mx-auto">
+                    Beendete Sessions landen automatisch hier, sobald du sie abschließt.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {sessions.map((session, index) => {
                 const colorClass = CARD_COLORS[index % CARD_COLORS.length]
                 const completionRate = session._count.participants > 0 
                   ? Math.round((session._count.ballots / session._count.participants) * 100) 
@@ -362,6 +414,95 @@ export default function ArchivePage() {
                 )
               })}
             </div>
+          )}
+          </>
+          )}
+          </FeatureGuard>
+
+          {/* Content - School Mode: Classroom Projects */}
+          {isSchool && (
+            <FeatureGuard feature="classroom">
+              {projects.length === 0 ? (
+                <div className="text-center py-20">
+                  <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
+                    <FolderOpen className="h-10 w-10 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    Noch nichts im Archiv
+                  </h3>
+                  <p className="text-gray-500 max-w-sm mx-auto">
+                    Abgeschlossene Projekte landen automatisch hier.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {projects.map((project, index) => {
+                    const colorClass = CARD_COLORS[index % CARD_COLORS.length]
+                    return (
+                      <div 
+                        key={project.id} 
+                        className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
+                      >
+                        <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${colorClass}`} />
+                        <div className="p-4 sm:p-5 pl-5 sm:pl-6">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                                <h3 className="font-semibold text-gray-900 text-base sm:text-lg">
+                                  {project.name}
+                                </h3>
+                                {project.resultsSentAt && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 w-fit">
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    Ergebnisse gesendet
+                                  </span>
+                                )}
+                              </div>
+                              {project.description && (
+                                <p className="text-sm text-gray-500 mt-1">{project.description}</p>
+                              )}
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mt-2">
+                                <span className="flex items-center gap-1.5 bg-indigo-50 px-2 py-1 rounded-full text-indigo-700">
+                                  <GraduationCap className="h-4 w-4" />
+                                  {project.classroom.name}
+                                </span>
+                                {project.dueDate && (
+                                  <span className="flex items-center gap-1.5">
+                                    <Calendar className="h-4 w-4" />
+                                    {new Date(project.dueDate).toLocaleDateString('de-DE')}
+                                  </span>
+                                )}
+                                {project.teacherPoints !== null && (
+                                  <span className="flex items-center gap-1.5">
+                                    <BarChart3 className="h-4 w-4" />
+                                    {project.teacherPoints}/15 Punkte
+                                  </span>
+                                )}
+                                <span className="flex items-center gap-1.5">
+                                  <Clock className="h-4 w-4" />
+                                  {getTimeAgo(project.createdAt)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 mt-3 sm:mt-0">
+                              <Link href={`/classroom/${project.classroomId}`} className="flex-1 sm:flex-none">
+                                <Button 
+                                  size="sm"
+                                  className={`w-full sm:w-auto bg-gradient-to-r ${colorClass} hover:opacity-90 text-white shadow-md`}
+                                >
+                                  <FolderOpen className="mr-2 h-4 w-4" />
+                                  Zur Klasse
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </FeatureGuard>
           )}
         </div>
       </div>

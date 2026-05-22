@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Archive, Mail, User, Building2 } from 'lucide-react'
+import { Home, Archive, Mail, User, Building2, GraduationCap } from 'lucide-react'
+import { isSchoolApp } from '@/lib/app-mode'
 
-const navItems = [
+const standardNavItems = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/companies', label: 'Teams', icon: Building2 },
   { href: '/archive', label: 'Archiv', icon: Archive },
@@ -12,8 +13,17 @@ const navItems = [
   { href: '/account', label: 'Account', icon: User },
 ]
 
+const schoolNavItems = [
+  { href: '/', label: 'Home', icon: Home },
+  { href: '/classroom', label: 'Klassen', icon: GraduationCap },
+  { href: '/archive', label: 'Archiv', icon: Archive },
+  { href: '/invitations', label: 'Einladungen', icon: Mail },
+  { href: '/account', label: 'Account', icon: User },
+]
+
 export function BottomNav() {
   const pathname = usePathname()
+  const navItems = isSchoolApp() ? schoolNavItems : standardNavItems
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
