@@ -107,10 +107,9 @@ export async function POST(request: NextRequest) {
       }
     )
 
-    // Create response with session cookie and token in body
+    // Create response with session cookie
     const response = NextResponse.json({
       success: true,
-      token: sessionToken,
       user: {
         id: dbUser.id,
         email: dbUser.email,
