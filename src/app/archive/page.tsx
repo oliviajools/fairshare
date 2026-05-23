@@ -117,7 +117,7 @@ export default function ArchivePage() {
   const fetchCompanies = async () => {
     setLoadingCompanies(true)
     try {
-      const response = await fetch('/api/companies')
+      const response = await fetch('/api/companies?all=true')
       if (response.ok) {
         const data = await response.json()
         setCompanies(data.map((c: any) => ({ id: c.id, name: c.name })))

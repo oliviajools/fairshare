@@ -3,8 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
-// GET - Fetch user's companies
-export async function GET() {
+// GET - Fetch user's companies or all companies for session assignment
+export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions)
     
@@ -12,6 +12,34 @@ export async function GET() {
       return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
     }
 
+    const { searchParams } = new URL(request.url)
+    const all = searchParams.get('all') === 'true'
+
+    if (all) {
+      // Return all companies for session assignment
+      const companies = await prisma.company.findMany({
+        include: {
+          _count: {
+            select: {
+              members: true,
+              sessions: true
+            }
+          }
+        },
+        orderBy: { name: 'asc' }
+      })
+
+      return NextResponse.json(companies.map(c => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        description: c.description,
+        memberCount: c._count.members,
+        sessionCount: c._count.sessions
+      })))
+    }
+
+    // Return only user's companies
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       include: {

@@ -203,7 +203,7 @@ function CreateSessionContent() {
 
   const fetchCompanies = async () => {
     try {
-      const response = await fetch('/api/companies')
+      const response = await fetch('/api/companies?all=true')
       if (response.ok) {
         const data = await response.json()
         setCompanies(data)

@@ -439,6 +439,7 @@ model Classroom {
   teacher       User     @relation("TeacherClassrooms", fields: [teacherId], references: [id], onDelete: Cascade)
   students      ClassroomStudent[]
   projects      ClassroomProject[]
+  groups        ClassroomGroup[]
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -452,24 +453,51 @@ model ClassroomStudent {
   user        User?     @relation("StudentClassrooms", fields: [userId], references: [id], onDelete: SetNull)
   studentName String    // Display name for the student
   studentEmail String?
+  groupMemberships ClassroomGroupMember[]
   joinedAt    DateTime  @default(now())
 
   @@unique([classroomId, studentEmail])
 }
 
 model ClassroomProject {
-  id            String    @id @default(cuid())
+  id            String                @id @default(cuid())
   classroomId   String
-  classroom     Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  classroom     Classroom             @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   name          String
   description   String?
   dueDate       DateTime?
-  sessionId     String?   @unique
-  session       VotingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-  teacherPoints Int?      // 0-15 points given by teacher for the whole project
-  resultsSentAt DateTime? // When results were sent to teacher
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  sessionId     String?               @unique
+  session       VotingSession?        @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  teacherPoints Int?                  // 0-15 points given by teacher for the whole project
+  resultsSentAt DateTime?             // When results were sent to teacher
+  groups        ClassroomGroup[]
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+}
+
+// Classroom Groups - for group work assignments
+model ClassroomGroup {
+  id          String                @id @default(cuid())
+  classroomId String
+  classroom   Classroom             @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  name        String                // e.g. "Gruppe A", "Team 1"
+  projectId   String?               // Optional: link to a project
+  project     ClassroomProject?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  sessionId   String?               // Optional: link to a voting session for this group
+  members     ClassroomGroupMember[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+}
+
+model ClassroomGroupMember {
+  id         String         @id @default(cuid())
+  groupId    String
+  group      ClassroomGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    ClassroomStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt  DateTime       @default(now())
+
+  @@unique([groupId, studentId])
 }
 
 // Push notification device tokens

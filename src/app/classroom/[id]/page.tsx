@@ -30,6 +30,16 @@ interface Student {
   joinedAt: string
 }
 
+interface Group {
+  id: string
+  name: string
+  projectId: string | null
+  sessionId: string | null
+  members: {
+    student: Student
+  }[]
+}
+
 interface Project {
   id: string
   name: string
@@ -58,8 +68,10 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
   const { status } = useSession()
   const [classroom, setClassroom] = useState<Classroom | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
+  const [groups, setGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateProject, setShowCreateProject] = useState(false)
+  const [showGroupManagement, setShowGroupManagement] = useState(false)
   const [creating, setCreating] = useState(false)
   const [sending, setSending] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -68,6 +80,10 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
     description: '',
     dueDate: ''
   })
+  const [groupForm, setGroupForm] = useState({
+    numberOfGroups: 2
+  })
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -75,8 +91,21 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
     } else if (status === 'authenticated') {
       fetchClassroom()
       fetchProjects()
+      fetchGroups()
     }
   }, [status, id])
+
+  const fetchGroups = async () => {
+    try {
+      const response = await fetch(`/api/classrooms/${id}/groups`)
+      if (response.ok) {
+        const data = await response.json()
+        setGroups(data)
+      }
+    } catch (error) {
+      console.error('Error fetching groups:', error)
+    }
+  }
 
   const fetchClassroom = async () => {
     try {
@@ -145,6 +174,82 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
     }
   }
 
+  const createGroups = async (projectId: string) => {
+    if (!classroom || classroom.students.length === 0) {
+      alert('Es müssen Schüler in der Klasse sein, um Gruppen zu erstellen.')
+      return
+    }
+
+    setCreating(true)
+    try {
+      // Distribute students evenly across groups
+      const numGroups = groupForm.numberOfGroups
+      const students = [...classroom.students]
+      const shuffled = students.sort(() => Math.random() - 0.5)
+      
+      const groupsData = []
+      for (let i = 0; i < numGroups; i++) {
+        const groupStudents = shuffled.filter((_, idx) => idx % numGroups === i)
+        groupsData.push({
+          name: `Gruppe ${String.fromCharCode(65 + i)}`, // Gruppe A, B, C, ...
+          studentIds: groupStudents.map(s => s.id)
+        })
+      }
+
+      const response = await fetch(`/api/classrooms/${id}/groups`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          groups: groupsData,
+          projectId 
+        })
+      })
+
+      if (response.ok) {
+        await fetchGroups()
+        setSelectedProjectId(projectId)
+      }
+    } catch (error) {
+      console.error('Error creating groups:', error)
+      alert('Fehler beim Erstellen der Gruppen')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const createSessionsForGroups = async () => {
+    if (!selectedProjectId) {
+      alert('Bitte wähle zuerst ein Projekt aus')
+      return
+    }
+
+    setCreating(true)
+    try {
+      const response = await fetch(`/api/classrooms/${id}/groups/sessions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          projectId: selectedProjectId,
+          sessionTitle: 'Gruppenbewertung',
+          sessionDate: new Date().toISOString()
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        alert(`Erfolgreich ${data.sessions.length} Abstimmungen erstellt!`)
+        await fetchGroups()
+        await fetchProjects()
+        setShowGroupManagement(false)
+      }
+    } catch (error) {
+      console.error('Error creating sessions:', error)
+      alert('Fehler beim Erstellen der Abstimmungen')
+    } finally {
+      setCreating(false)
+    }
+  }
+
   const copyCode = () => {
     if (classroom) {
       navigator.clipboard.writeText(classroom.joinCode)
@@ -203,6 +308,10 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
                   </div>
                 </div>
               </div>
+              <Button onClick={() => setShowGroupManagement(true)} variant="outline">
+                <Users className="mr-2 h-4 w-4" />
+                Gruppen verwalten
+              </Button>
             </div>
           </div>
 
@@ -400,6 +509,124 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
           )}
         </div>
       </div>
+
+      {/* Group Management Modal */}
+      {showGroupManagement && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setShowGroupManagement(false)}>
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold">Gruppen verwalten</h2>
+                <Button variant="ghost" size="icon" onClick={() => setShowGroupManagement(false)}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              </div>
+
+              {/* Project Selection */}
+              <div className="mb-6">
+                <Label htmlFor="projectSelect">Projekt auswählen</Label>
+                <select
+                  id="projectSelect"
+                  value={selectedProjectId || ''}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">-- Projekt auswählen --</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Create Groups Section */}
+              {selectedProjectId && groups.filter(g => g.projectId === selectedProjectId).length === 0 && (
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Neue Gruppen erstellen</CardTitle>
+                    <CardDescription>
+                      Teile die Schüler automatisch in Gruppen ein
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="numGroups">Anzahl der Gruppen</Label>
+                        <Input
+                          id="numGroups"
+                          type="number"
+                          min="2"
+                          max={classroom?.students.length || 2}
+                          value={groupForm.numberOfGroups}
+                          onChange={(e) => setGroupForm({ ...groupForm, numberOfGroups: parseInt(e.target.value) })}
+                          className="mt-1"
+                        />
+                      </div>
+                      <Button
+                        onClick={() => selectedProjectId && createGroups(selectedProjectId)}
+                        disabled={creating}
+                      >
+                        {creating ? 'Erstellen...' : 'Gruppen erstellen'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Existing Groups */}
+              {selectedProjectId && groups.filter(g => g.projectId === selectedProjectId).length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-semibold mb-3">Vorhandene Gruppen</h3>
+                  <div className="space-y-3">
+                    {groups.filter(g => g.projectId === selectedProjectId).map((group) => (
+                      <Card key={group.id}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold">{group.name}</h4>
+                            {group.sessionId && (
+                              <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-xs">
+                                Abstimmung aktiv
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {group.members.map((member) => (
+                              <span key={member.student.id} className="px-2 py-1 bg-gray-100 rounded text-sm">
+                                {member.student.studentName}
+                              </span>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Create Sessions Button */}
+              {selectedProjectId && groups.filter(g => g.projectId === selectedProjectId).length > 0 && (
+                <div className="border-t pt-4">
+                  <Button
+                    onClick={createSessionsForGroups}
+                    disabled={creating || groups.filter(g => g.projectId === selectedProjectId).some(g => g.sessionId)}
+                    className="w-full"
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    {creating ? 'Erstellen...' : 'Abstimmungen für alle Gruppen erstellen'}
+                  </Button>
+                  {groups.filter(g => g.projectId === selectedProjectId).some(g => g.sessionId) && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      ⚠️ Einige Gruppen haben bereits eine aktive Abstimmung
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <BottomNav />
     </div>
   )
