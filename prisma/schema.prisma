@@ -255,6 +255,8 @@ model VotingSession {
   companyId      String?
   company        Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
   organizerToken String?      @unique
+  classroomProjectId String?  @unique
+  classroomProject ClassroomProject? @relation(fields: [classroomProjectId], references: [id], onDelete: SetNull)
   poolSessions   PoolSession[]
   invoiceLineItems InvoiceLineItem[]
   participants   Participant[]
@@ -268,7 +270,6 @@ model VotingSession {
   // Recurring session fields
   recurringId    String?
   recurring      RecurringSession? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
-  classroomProject ClassroomProject?
   createdAt      DateTime     @default(now())
 }
 

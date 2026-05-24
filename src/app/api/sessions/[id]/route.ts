@@ -100,15 +100,54 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authSession = await getServerSession(authOptions)
     const { id } = await params
-    
+
+    if (!authSession?.user?.email) {
+      return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: authSession.user.email }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'Benutzer nicht gefunden' }, { status: 404 })
+    }
+
     // Check if session exists
     const session = await prisma.votingSession.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        company: true,
+        creator: true
+      }
     })
 
     if (!session) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+    }
+
+    // Check if user is the creator OR admin/owner of the company
+    let canDelete = session.creatorId === user.id
+
+    if (!canDelete && session.companyId) {
+      const membership = await prisma.companyMember.findUnique({
+        where: {
+          companyId_userId: {
+            companyId: session.companyId,
+            userId: user.id
+          }
+        }
+      })
+
+      if (membership && (membership.role === 'OWNER' || membership.role === 'ADMIN')) {
+        canDelete = true
+      }
+    }
+
+    if (!canDelete) {
+      return NextResponse.json({ error: 'Keine Berechtigung zum Löschen dieser Session' }, { status: 403 })
     }
 
     // Delete session (cascade will handle related records)

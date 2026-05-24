@@ -65,7 +65,7 @@ export async function POST(
           date: sessionDate ? new Date(sessionDate) : null,
           status: 'OPEN',
           isAnonymous: true,
-          classroomProjectId: group.id
+          classroomProjectId: projectId
         }
       })
 

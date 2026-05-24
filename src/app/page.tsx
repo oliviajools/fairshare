@@ -48,6 +48,7 @@ export default function Home() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [invitedSessions, setInvitedSessions] = useState<InvitedSession[]>([])
   const [createdSessions, setCreatedSessions] = useState<{[id: string]: CreatedSession}>({})
+  const [classrooms, setClassrooms] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [deleteDialog, setDeleteDialog] = useState<{sessionId: string, title: string} | null>(null)
@@ -69,8 +70,21 @@ export default function Home() {
       fetchSessions()
       loadInvitedSessions()
       loadCreatedSessions()
+      fetchClassrooms()
     }
   }, [authStatus])
+
+  const fetchClassrooms = async () => {
+    try {
+      const response = await fetch('/api/classrooms')
+      if (response.ok) {
+        const data = await response.json()
+        setClassrooms(data)
+      }
+    } catch (error) {
+      console.error('Error fetching classrooms:', error)
+    }
+  }
 
   const fetchSessions = async () => {
     try {
@@ -233,6 +247,47 @@ export default function Home() {
               )}
             </div>
           </div>
+
+          {/* Classrooms Section - Only in school mode */}
+          {isSchoolApp() && classrooms.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <GraduationCap className="h-5 w-5 text-indigo-600" />
+                Meine Klassen
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {classrooms.map((classroom) => (
+                  <Link key={classroom.id} href={`/classroom/${classroom.id}`}>
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-gray-900">{classroom.name}</h3>
+                          <Badge variant={classroom.role === 'teacher' ? 'default' : 'secondary'}>
+                            {classroom.role === 'teacher' ? 'Lehrer' : 'Schüler'}
+                          </Badge>
+                        </div>
+                        {classroom.description && (
+                          <p className="text-sm text-gray-600 mb-2">{classroom.description}</p>
+                        )}
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            {classroom._count.students} Schüler
+                          </span>
+                          {classroom._count.projects > 0 && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              {classroom._count.projects} Projekte
+                            </span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Section Header - only show for voting apps */}
           {hasFeature('voting') && (

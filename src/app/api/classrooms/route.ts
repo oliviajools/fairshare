@@ -12,7 +12,7 @@ function generateJoinCode(): string {
   return code
 }
 
-// GET - Get all classrooms for the current user (as teacher)
+// GET - Get all classrooms for the current user (as teacher or student)
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
@@ -23,7 +23,8 @@ export async function GET() {
 
     const userId = (session.user as any).id
 
-    const classrooms = await prisma.classroom.findMany({
+    // Get classrooms where user is teacher
+    const teacherClassrooms = await prisma.classroom.findMany({
       where: { teacherId: userId },
       include: {
         students: true,
@@ -34,6 +35,37 @@ export async function GET() {
       },
       orderBy: { createdAt: 'desc' }
     })
+
+    // Get classrooms where user is student
+    const studentClassrooms = await prisma.classroom.findMany({
+      where: {
+        students: {
+          some: {
+            userId: userId
+          }
+        }
+      },
+      include: {
+        teacher: {
+          select: {
+            name: true,
+            email: true
+          }
+        },
+        students: true,
+        projects: true,
+        _count: {
+          select: { students: true, projects: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    // Combine both and mark role
+    const classrooms = [
+      ...teacherClassrooms.map(c => ({ ...c, role: 'teacher' })),
+      ...studentClassrooms.map(c => ({ ...c, role: 'student' }))
+    ]
 
     return NextResponse.json(classrooms)
   } catch (error: any) {

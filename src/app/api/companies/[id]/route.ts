@@ -181,3 +181,50 @@ export async function PUT(
     return NextResponse.json({ error: 'Fehler beim Aktualisieren' }, { status: 500 })
   }
 }
+
+// DELETE - Delete company (only owner can delete)
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    const { id } = await params
+    
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'Benutzer nicht gefunden' }, { status: 404 })
+    }
+
+    // Check if user is owner of company
+    const membership = await prisma.companyMember.findUnique({
+      where: {
+        companyId_userId: {
+          companyId: id,
+          userId: user.id
+        }
+      }
+    })
+
+    if (!membership || membership.role !== 'OWNER') {
+      return NextResponse.json({ error: 'Nur der Eigentümer kann das Unternehmen löschen' }, { status: 403 })
+    }
+
+    // Delete company (cascade will handle related data)
+    await prisma.company.delete({
+      where: { id }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting company:', error)
+    return NextResponse.json({ error: 'Fehler beim Löschen des Unternehmens' }, { status: 500 })
+  }
+}
