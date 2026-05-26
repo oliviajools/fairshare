@@ -64,8 +64,7 @@ export async function POST(
           title: sessionTitle || `${group.name} - Gruppenbewertung`,
           date: sessionDate ? new Date(sessionDate) : null,
           status: 'OPEN',
-          isAnonymous: true,
-          classroomProjectId: projectId
+          isAnonymous: true
         }
       })
 
