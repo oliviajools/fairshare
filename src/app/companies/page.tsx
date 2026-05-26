@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { BottomNav } from '@/components/BottomNav'
-import { Building2, Users, BarChart3, Plus, Crown, Shield, User, ArrowLeft } from 'lucide-react'
+import { Building2, Users, BarChart3, Plus, Crown, Shield, User, ArrowLeft, Trash2 } from 'lucide-react'
 
 interface Company {
   id: string
@@ -31,6 +31,8 @@ export default function CompaniesPage() {
   const [newCompanyName, setNewCompanyName] = useState('')
   const [newCompanyDesc, setNewCompanyDesc] = useState('')
   const [creating, setCreating] = useState(false)
+  const [deleteDialog, setDeleteDialog] = useState<{id: string, name: string} | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -51,6 +53,30 @@ export default function CompaniesPage() {
       console.error('Error fetching companies:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const deleteCompany = async () => {
+    if (!deleteDialog) return
+
+    setDeleting(deleteDialog.id)
+    try {
+      const response = await fetch(`/api/companies/${deleteDialog.id}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        setCompanies(companies.filter(c => c.id !== deleteDialog.id))
+        setDeleteDialog(null)
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Fehler beim Löschen des Unternehmens')
+      }
+    } catch (error) {
+      console.error('Error deleting company:', error)
+      alert('Fehler beim Löschen des Unternehmens')
+    } finally {
+      setDeleting(null)
     }
   }
 
@@ -198,40 +224,85 @@ export default function CompaniesPage() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {companies.map((company) => (
-                <Link key={company.id} href={`/companies/${company.id}`}>
-                  <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{company.name}</CardTitle>
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          {getRoleIcon(company.role)}
-                          {getRoleLabel(company.role)}
-                        </Badge>
-                      </div>
-                      {company.description && (
-                        <CardDescription>{company.description}</CardDescription>
-                      )}
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
-                        <span className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {company.memberCount} Mitglieder
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <BarChart3 className="h-4 w-4" />
-                          {company.sessionCount} Sessions
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <div key={company.id} className="relative">
+                  <Link href={`/companies/${company.id}`}>
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">{company.name}</CardTitle>
+                          <Badge variant="secondary" className="flex items-center gap-1">
+                            {getRoleIcon(company.role)}
+                            {getRoleLabel(company.role)}
+                          </Badge>
+                        </div>
+                        {company.description && (
+                          <CardDescription>{company.description}</CardDescription>
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <span className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            {company.memberCount} Mitglieder
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <BarChart3 className="h-4 w-4" />
+                            {company.sessionCount} Sessions
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                  {company.role === 'OWNER' && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setDeleteDialog({ id: company.id, name: company.name })
+                      }}
+                      className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md z-10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           )}
         </div>
       </div>
       <BottomNav />
+
+      {/* Delete Confirmation Dialog */}
+      {deleteDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <Card className="max-w-md w-full">
+            <CardHeader>
+              <CardTitle>Unternehmen löschen?</CardTitle>
+              <CardDescription>
+                Bist du sicher, dass du "{deleteDialog.name}" löschen möchtest? Alle zugehörigen Sessions und Daten werden ebenfalls gelöscht.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteDialog(null)}
+                  disabled={deleting === deleteDialog.id}
+                >
+                  Abbrechen
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={deleteCompany}
+                  disabled={deleting === deleteDialog.id}
+                >
+                  {deleting === deleteDialog.id ? 'Löschen...' : 'Löschen'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

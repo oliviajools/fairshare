@@ -468,7 +468,7 @@ model ClassroomProject {
   description   String?
   dueDate       DateTime?
   sessionId     String?               @unique
-  session       VotingSession?        @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  session       VotingSession?        @relation
   teacherPoints Int?                  // 0-15 points given by teacher for the whole project
   resultsSentAt DateTime?             // When results were sent to teacher
   groups        ClassroomGroup[]
