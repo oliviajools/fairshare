@@ -20,7 +20,8 @@ import {
   Send,
   BarChart3,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Trash2
 } from 'lucide-react'
 
 interface Student {
@@ -216,6 +217,28 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
     } catch (error) {
       console.error('Error assigning students to group:', error)
       alert('Fehler beim Zuweisen der Schüler')
+    }
+  }
+
+  const removeStudent = async (studentId: string, studentName: string) => {
+    if (!confirm(`Möchtest du ${studentName} wirklich aus der Klasse entfernen?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/classrooms/${id}/students/${studentId}`, {
+        method: 'DELETE'
+      })
+      if (response.ok) {
+        await fetchClassroom()
+        await fetchGroups()
+        alert('Schüler wurde entfernt!')
+      } else {
+        alert('Fehler beim Entfernen des Schülers')
+      }
+    } catch (error) {
+      console.error('Error removing student:', error)
+      alert('Fehler beim Entfernen des Schülers')
     }
   }
 
@@ -463,9 +486,16 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {classroom.students?.map((student) => (
-                    <span key={student.id} className="px-3 py-1 bg-gray-100 rounded-full text-sm">
-                      {student.studentName}
-                    </span>
+                    <div key={student.id} className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-sm group">
+                      <span>{student.studentName}</span>
+                      <button
+                        onClick={() => removeStudent(student.id, student.studentName)}
+                        className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+                        title="Schüler entfernen"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
