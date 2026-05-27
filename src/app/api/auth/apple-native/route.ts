@@ -124,26 +124,15 @@ export async function POST(request: NextRequest) {
       }
     )
 
-    // Create response with session cookie
+    // Create response with session token
     const response = NextResponse.json({
       success: true,
+      token: sessionToken,
       user: {
         id: dbUser.id,
         email: dbUser.email,
         name: dbUser.name,
       },
-    })
-
-    // Set the NextAuth session cookie
-    // For native apps, use lax sameSite to work with Capacitor
-    const cookieName = 'next-auth.session-token'
-    
-    response.cookies.set(cookieName, sessionToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 30 * 24 * 60 * 60, // 30 days
     })
 
     return response
