@@ -53,6 +53,25 @@ interface Project {
   } | null
 }
 
+interface Grade {
+  id: string
+  groupId: string
+  studentId: string
+  score: number
+  comment: string | null
+  sentAt: string | null
+  student: {
+    studentName: string
+    studentEmail: string | null
+  }
+  group: {
+    name: string
+    project: {
+      name: string | null
+    } | null
+  }
+}
+
 interface Classroom {
   id: string
   name: string
@@ -69,9 +88,11 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
   const [classroom, setClassroom] = useState<Classroom | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
   const [groups, setGroups] = useState<Group[]>([])
+  const [grades, setGrades] = useState<Grade[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateProject, setShowCreateProject] = useState(false)
   const [showGroupManagement, setShowGroupManagement] = useState(false)
+  const [showGrades, setShowGrades] = useState(false)
   const [creating, setCreating] = useState(false)
   const [sending, setSending] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -92,8 +113,64 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
       fetchClassroom()
       fetchProjects()
       fetchGroups()
+      fetchGrades()
     }
   }, [status, id])
+
+  const fetchGrades = async () => {
+    try {
+      const response = await fetch(`/api/classrooms/${id}/grades`)
+      if (response.ok) {
+        const data = await response.json()
+        setGrades(data)
+      }
+    } catch (error) {
+      console.error('Error fetching grades:', error)
+    }
+  }
+
+  const saveGrades = async (gradesData: { groupId: string, studentId: string, score: number, comment: string }[]) => {
+    try {
+      const response = await fetch(`/api/classrooms/${id}/grades`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ grades: gradesData })
+      })
+      if (response.ok) {
+        await fetchGrades()
+        alert('Noten gespeichert!')
+      } else {
+        alert('Fehler beim Speichern der Noten')
+      }
+    } catch (error) {
+      console.error('Error saving grades:', error)
+      alert('Fehler beim Speichern der Noten')
+    }
+  }
+
+  const saveSingleGrade = async (grade: Grade) => {
+    await saveGrades([{ groupId: grade.groupId, studentId: grade.studentId, score: grade.score, comment: grade.comment || '' }])
+  }
+
+  const sendGrades = async () => {
+    try {
+      setSending('all')
+      const response = await fetch(`/api/classrooms/${id}/grades/send`, {
+        method: 'POST'
+      })
+      if (response.ok) {
+        await fetchGrades()
+        alert('Noten per E-Mail versendet!')
+      } else {
+        alert('Fehler beim Versenden der Noten')
+      }
+    } catch (error) {
+      console.error('Error sending grades:', error)
+      alert('Fehler beim Versenden der Noten')
+    } finally {
+      setSending(null)
+    }
+  }
 
   const fetchGroups = async () => {
     try {
@@ -308,10 +385,16 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
                   </div>
                 </div>
               </div>
-              <Button onClick={() => setShowGroupManagement(true)} variant="outline">
-                <Users className="mr-2 h-4 w-4" />
-                Gruppen verwalten
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button onClick={() => setShowGroupManagement(true)} variant="outline">
+                  <Users className="mr-2 h-4 w-4" />
+                  Gruppen verwalten
+                </Button>
+                <Button onClick={() => setShowGrades(!showGrades)} variant="outline">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Noten
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -341,6 +424,68 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
               )}
             </CardContent>
           </Card>
+
+          {/* Grades Section */}
+          {showGrades && (
+            <Card className="mb-6">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-indigo-600" />
+                    <CardTitle className="text-lg">Noten</CardTitle>
+                  </div>
+                  <Button onClick={() => sendGrades()} size="sm" disabled={sending === 'all'}>
+                    {sending === 'all' ? 'Sende...' : 'Noten per E-Mail versenden'}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {grades.length === 0 ? (
+                  <p className="text-gray-500 text-sm">
+                    Noch keine Noten vergeben. Erstelle zuerst Gruppen und Sessions, um Noten einzugeben.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {grades.map((grade) => (
+                      <div key={grade.id} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <h4 className="font-semibold">{grade.student.studentName}</h4>
+                            <p className="text-sm text-gray-500">{grade.group.name} - {grade.group.project?.name || 'Kein Projekt'}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              step="0.1"
+                              min="1"
+                              max="6"
+                              defaultValue={grade.score}
+                              className="w-20"
+                              onChange={(e) => {
+                                const newScore = parseFloat(e.target.value)
+                                setGrades(grades.map(g => 
+                                  g.id === grade.id ? { ...g, score: newScore } : g
+                                ))
+                              }}
+                            />
+                            <Button size="sm" onClick={() => saveSingleGrade(grade)}>
+                              Speichern
+                            </Button>
+                          </div>
+                        </div>
+                        {grade.comment && (
+                          <p className="text-sm text-gray-600 mt-2">Kommentar: {grade.comment}</p>
+                        )}
+                        {grade.sentAt && (
+                          <p className="text-xs text-green-600 mt-2">✓ Versendet am {new Date(grade.sentAt).toLocaleDateString('de-DE')}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Projects Section */}
           <div className="flex items-center justify-between mb-4">
