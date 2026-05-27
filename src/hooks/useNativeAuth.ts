@@ -54,7 +54,6 @@ export function useNativeAuth() {
         
         const result: AppleSignInResult = await SignInWithApple.authorize({
           clientId: appleClientId,
-          redirectURI: appleRedirectUri,
           scopes: 'email name',
         })
 
@@ -103,8 +102,9 @@ export function useNativeAuth() {
           if (data.token) {
             localStorage.setItem('next-auth.session-token', data.token)
           }
-          // Stay in app - reload the current page to refresh session
-          window.location.reload()
+          // Navigate to home page instead of reloading
+          router.push('/')
+          router.refresh()
         } else {
           // Fallback: use NextAuth signIn for native apps
           await signIn('apple', { callbackUrl: '/' })
