@@ -454,6 +454,7 @@ model ClassroomStudent {
   studentName String    // Display name for the student
   studentEmail String?
   groupMemberships ClassroomGroupMember[]
+  grades      ClassroomGrade[] @relation("StudentGrades")
   joinedAt    DateTime  @default(now())
 
   @@unique([classroomId, studentEmail])
@@ -485,6 +486,7 @@ model ClassroomGroup {
   project     ClassroomProject?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
   sessionId   String?               // Optional: link to a voting session for this group
   members     ClassroomGroupMember[]
+  grades      ClassroomGrade[]      // Grades for this group
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
 }
@@ -495,7 +497,24 @@ model ClassroomGroupMember {
   group      ClassroomGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
   studentId  String
   student    ClassroomStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  grade      ClassroomGrade? // Grade for this student
   createdAt  DateTime       @default(now())
+
+  @@unique([groupId, studentId])
+}
+
+// Classroom Grades - grades for group work
+model ClassroomGrade {
+  id          String   @id @default(cuid())
+  groupId     String
+  group       ClassroomGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     ClassroomStudent @relation("StudentGrades", fields: [studentId], references: [id], onDelete: Cascade)
+  score       Float    // Grade score (e.g., 1.0 - 6.0 or 0-100)
+  comment     String?  // Optional comment from teacher
+  sentAt      DateTime? // When grade was sent to student via email
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@unique([groupId, studentId])
 }
