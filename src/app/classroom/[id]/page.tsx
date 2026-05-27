@@ -172,6 +172,25 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
     }
   }
 
+  const assignUnassignedStudents = async (projectId: string) => {
+    try {
+      const response = await fetch(`/api/classrooms/${id}/groups/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId })
+      })
+      if (response.ok) {
+        await fetchGroups()
+        alert('Neue Schüler wurden Gruppen zugeordnet!')
+      } else {
+        alert('Fehler beim Zuweisen der Schüler')
+      }
+    } catch (error) {
+      console.error('Error assigning students:', error)
+      alert('Fehler beim Zuweisen der Schüler')
+    }
+  }
+
   const fetchGroups = async () => {
     try {
       const response = await fetch(`/api/classrooms/${id}/groups`)
@@ -722,7 +741,17 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
               {/* Existing Groups */}
               {selectedProjectId && groups.filter(g => g.projectId === selectedProjectId).length > 0 && (
                 <div className="mb-6">
-                  <h3 className="font-semibold mb-3">Vorhandene Gruppen</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold">Vorhandene Gruppen</h3>
+                    <Button 
+                      onClick={() => selectedProjectId && assignUnassignedStudents(selectedProjectId)}
+                      size="sm"
+                      variant="outline"
+                    >
+                      <Users className="mr-2 h-4 w-4" />
+                      Neue Schüler zuweisen
+                    </Button>
+                  </div>
                   <div className="space-y-3">
                     {groups.filter(g => g.projectId === selectedProjectId).map((group) => (
                       <Card key={group.id}>
