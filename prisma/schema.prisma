@@ -497,7 +497,6 @@ model ClassroomGroupMember {
   group      ClassroomGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
   studentId  String
   student    ClassroomStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  grade      ClassroomGrade? // Grade for this student
   createdAt  DateTime       @default(now())
 
   @@unique([groupId, studentId])
