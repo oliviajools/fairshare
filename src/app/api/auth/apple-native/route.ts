@@ -118,15 +118,13 @@ export async function POST(request: NextRequest) {
     })
 
     // Set the NextAuth session cookie
-    const isProduction = process.env.NODE_ENV === 'production'
-    const cookieName = isProduction 
-      ? '__Secure-next-auth.session-token' 
-      : 'next-auth.session-token'
+    // For native apps, use lax sameSite to work with Capacitor
+    const cookieName = 'next-auth.session-token'
     
     response.cookies.set(cookieName, sessionToken, {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: 'none',
+      secure: true,
+      sameSite: 'lax',
       path: '/',
       maxAge: 30 * 24 * 60 * 60, // 30 days
     })
