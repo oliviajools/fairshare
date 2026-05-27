@@ -6,7 +6,15 @@ export async function POST(request: NextRequest) {
   try {
     const { identityToken, email, fullName } = await request.json()
 
+    console.log('Apple native auth request received:', {
+      hasIdentityToken: !!identityToken,
+      hasEmail: !!email,
+      hasFullName: !!fullName,
+      email: email || 'not provided'
+    })
+
     if (!identityToken) {
+      console.error('Apple native auth: No identity token provided')
       return NextResponse.json({ error: 'Identity token required' }, { status: 400 })
     }
 
@@ -19,7 +27,16 @@ export async function POST(request: NextRequest) {
       iss: string
     }
 
+    console.log('Apple token decoded:', {
+      hasSub: !!decoded?.sub,
+      hasEmail: !!decoded?.email,
+      emailVerified: decoded?.email_verified,
+      aud: decoded?.aud,
+      iss: decoded?.iss
+    })
+
     if (!decoded || !decoded.sub) {
+      console.error('Apple native auth: Invalid identity token - no sub')
       return NextResponse.json({ error: 'Invalid identity token' }, { status: 400 })
     }
 
