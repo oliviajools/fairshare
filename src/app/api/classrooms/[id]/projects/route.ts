@@ -20,12 +20,25 @@ export async function GET(
     const { id } = await params
     const userId = (session.user as any).id
 
+    // Check if user is teacher or student in this classroom
     const classroom = await prisma.classroom.findFirst({
-      where: { id, teacherId: userId }
+      where: {
+        id,
+        OR: [
+          { teacherId: userId },
+          {
+            students: {
+              some: {
+                userId
+              }
+            }
+          }
+        ]
+      }
     })
 
     if (!classroom) {
-      return NextResponse.json({ error: 'Classroom not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Classroom not found or access denied' }, { status: 404 })
     }
 
     const projects = await prisma.classroomProject.findMany({
