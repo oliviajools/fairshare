@@ -8,6 +8,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
     
     // Check if running in Capacitor (native app)
     const checkNative = async () => {
@@ -26,7 +30,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
     }
     checkNative()
-  }, [])
+  }, [mounted])
 
   // Prevent hydration mismatch
   if (!mounted) {
