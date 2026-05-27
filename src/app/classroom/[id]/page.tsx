@@ -105,6 +105,8 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
     numberOfGroups: 2
   })
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([])
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -187,6 +189,32 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
       }
     } catch (error) {
       console.error('Error assigning students:', error)
+      alert('Fehler beim Zuweisen der Schüler')
+    }
+  }
+
+  const assignStudentsToGroup = async () => {
+    if (!selectedGroupId || selectedStudentIds.length === 0) {
+      alert('Bitte wähle eine Gruppe und mindestens einen Schüler aus')
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/classrooms/${id}/groups/${selectedGroupId}/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentIds: selectedStudentIds })
+      })
+      if (response.ok) {
+        await fetchGroups()
+        setSelectedStudentIds([])
+        setSelectedGroupId(null)
+        alert('Schüler wurden der Gruppe zugeordnet!')
+      } else {
+        alert('Fehler beim Zuweisen der Schüler')
+      }
+    } catch (error) {
+      console.error('Error assigning students to group:', error)
       alert('Fehler beim Zuweisen der Schüler')
     }
   }
@@ -743,15 +771,79 @@ export default function ClassroomDetailPage({ params }: { params: Promise<{ id: 
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold">Vorhandene Gruppen</h3>
-                    <Button 
-                      onClick={() => selectedProjectId && assignUnassignedStudents(selectedProjectId)}
-                      size="sm"
-                      variant="outline"
-                    >
-                      <Users className="mr-2 h-4 w-4" />
-                      Neue Schüler zuweisen
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => selectedProjectId && assignUnassignedStudents(selectedProjectId)}
+                        size="sm"
+                        variant="outline"
+                      >
+                        <Users className="mr-2 h-4 w-4" />
+                        Neue Schüler zuweisen
+                      </Button>
+                    </div>
                   </div>
+                  
+                  {/* Manual Assignment Section */}
+                  <Card className="mb-4 bg-sky-50 border-sky-200">
+                    <CardContent className="p-4">
+                      <h4 className="font-semibold mb-3">Manuelle Schülerzuweisung</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <Label>Gruppe auswählen</Label>
+                          <select
+                            value={selectedGroupId || ''}
+                            onChange={(e) => setSelectedGroupId(e.target.value)}
+                            className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                          >
+                            <option value="">-- Gruppe auswählen --</option>
+                            {groups.filter(g => g.projectId === selectedProjectId).map((group) => (
+                              <option key={group.id} value={group.id}>
+                                {group.name} ({group.members.length} Mitglieder)
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <Label>Schüler auswählen</Label>
+                          <div className="mt-1 max-h-40 overflow-y-auto border border-gray-300 rounded-md p-2 bg-white">
+                            {classroom?.students.filter(student => {
+                              // Show students not in any group for this project
+                              const studentGroupIds = new Set(
+                                groups
+                                  .filter(g => g.projectId === selectedProjectId)
+                                  .flatMap(g => g.members.map(m => m.student.id))
+                              )
+                              return !studentGroupIds.has(student.id)
+                            }).map((student) => (
+                              <label key={student.id} className="flex items-center gap-2 py-1">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedStudentIds.includes(student.id)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setSelectedStudentIds([...selectedStudentIds, student.id])
+                                    } else {
+                                      setSelectedStudentIds(selectedStudentIds.filter(id => id !== student.id))
+                                    }
+                                  }}
+                                  className="rounded"
+                                />
+                                <span className="text-sm">{student.studentName}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <Button 
+                          onClick={assignStudentsToGroup}
+                          disabled={!selectedGroupId || selectedStudentIds.length === 0}
+                          size="sm"
+                        >
+                          Zuweisen
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
                   <div className="space-y-3">
                     {groups.filter(g => g.projectId === selectedProjectId).map((group) => (
                       <Card key={group.id}>
