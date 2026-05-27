@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { hashToken } from '@/lib/jwt'
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(
   request: NextRequest,
@@ -136,6 +139,38 @@ export async function POST(
         data: { status: 'CLOSED' }
       })
       sessionClosed = true
+
+      // Check if this session is linked to a classroom group and send email to teacher
+      const group = await prisma.classroomGroup.findFirst({
+        where: { sessionId: participant.session.id },
+        include: {
+          classroom: {
+            include: {
+              teacher: true
+            }
+          },
+          project: true
+        }
+      })
+
+      if (group && group.classroom.teacher.email) {
+        try {
+          await resend.emails.send({
+            from: 'noreply@teampayer.de',
+            to: group.classroom.teacher.email,
+            subject: `Gruppe ${group.name} hat abgestimmt`,
+            html: `
+              <h1>Gruppe vollständig abgestimmt</h1>
+              <p>Die Gruppe <strong>${group.name}</strong> hat vollständig abgestimmt.</p>
+              ${group.project ? `<p><strong>Projekt:</strong> ${group.project.name}</p>` : ''}
+              <p>Du kannst jetzt die Noten berechnen und eintragen.</p>
+              <p><a href="${process.env.NEXTAUTH_URL || 'https://teampayer.de'}/classroom/${group.classroom.id}" style="background-color: #0ea5e9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Zur Klasse</a></p>
+            `
+          })
+        } catch (emailError) {
+          console.error('Failed to send email to teacher', emailError)
+        }
+      }
     }
 
     return NextResponse.json({ 

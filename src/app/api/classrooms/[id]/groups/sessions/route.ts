@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { randomUUID } from 'crypto'
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 // POST - Create voting sessions for all groups in a classroom
 export async function POST(
@@ -100,6 +103,35 @@ export async function POST(
         where: { id: group.id },
         data: { sessionId: votingSession.id }
       })
+
+      // Send email notifications to students
+      for (const member of group.members) {
+        if (!member.student.studentEmail) {
+          continue
+        }
+
+        try {
+          const inviteLink = `${process.env.NEXTAUTH_URL || 'https://teampayer.de'}/vote/${participants.find(p => p.displayName === member.student.studentName)?.inviteToken}`
+          
+          await resend.emails.send({
+            from: 'noreply@teampayer.de',
+            to: member.student.studentEmail,
+            subject: `Neue Abstimmung: ${votingSession.title}`,
+            html: `
+              <h1>Neue Abstimmung</h1>
+              <p>Hallo ${member.student.studentName},</p>
+              <p>Eine neue Abstimmung für deine Gruppe <strong>${group.name}</strong> wurde gestartet.</p>
+              <p><strong>Titel:</strong> ${votingSession.title}</p>
+              ${votingSession.date ? `<p><strong>Datum:</strong> ${new Date(votingSession.date).toLocaleDateString('de-DE')}</p>` : ''}
+              <p>Du kannst hier abstimmen:</p>
+              <p><a href="${inviteLink}" style="background-color: #0ea5e9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Jetzt abstimmen</a></p>
+              <p>Viele Grüße,<br>Dein Lehrer</p>
+            `
+          })
+        } catch (emailError) {
+          console.error('Failed to send email to', member.student.studentEmail, emailError)
+        }
+      }
 
       createdSessions.push({
         group: group.name,
