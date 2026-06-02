@@ -44,14 +44,17 @@ export function useNativeAuth() {
     setError('')
 
     try {
-      // Always try native first when on iOS
+      // Robust iOS native detection
       const { Capacitor } = await import('@capacitor/core')
       const platform = Capacitor.getPlatform()
-      
-      if (platform === 'ios') {
-        // Use native Apple Sign-In
+      const isIOSNative =
+        platform === 'ios' ||
+        (Capacitor.isNativePlatform?.() && /iPhone|iPad|iPod/.test(navigator.userAgent))
+
+      if (isIOSNative) {
+        // ALWAYS use native Apple Sign-In on iOS - never fall back to web
         const { SignInWithApple } = await import('@capacitor-community/apple-sign-in')
-        
+
         const result: AppleSignInResult = await SignInWithApple.authorize({
           clientId: appleClientId,
           scopes: 'email name',
@@ -81,39 +84,21 @@ export function useNativeAuth() {
           data = null
         }
 
-        if (!data && !response.ok) {
-          let text = ''
-          try {
-            text = await response.text()
-          } catch {
-            text = ''
-          }
-          console.log('Apple native auth <- non-JSON error body', text)
-        }
-
-        if (!response.ok) {
-          const msg = data?.error || `Authentication failed (${response.status})`
+        if (!response.ok || !data?.success) {
+          const msg = data?.error || `Apple-Anmeldung fehlgeschlagen (${response.status})`
           throw new Error(msg)
         }
 
-        // Session cookie is set by the API, just redirect
-        if (data.success) {
-          // Store token in localStorage for native apps
-          if (data.token) {
-            localStorage.setItem('next-auth.session-token', data.token)
-          }
-          // Navigate to home page instead of reloading
-          router.push('/')
-          router.refresh()
-        } else {
-          // Fallback: use NextAuth signIn for native apps
-          await signIn('apple', { callbackUrl: '/' })
+        // Store token in localStorage for native apps
+        if (data.token) {
+          localStorage.setItem('next-auth.session-token', data.token)
         }
-      } else if (platform === 'web') {
-        // Use web OAuth
-        await signIn('apple', { callbackUrl: '/' })
+        // Navigate to home page
+        router.push('/')
+        router.refresh()
       } else {
-        throw new Error('Apple Sign-In is only available on iOS and web')
+        // Web flow only outside iOS native app
+        await signIn('apple', { callbackUrl: '/' })
       }
     } catch (err: any) {
       console.error('Apple Sign-In error:', err)

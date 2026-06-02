@@ -5,6 +5,7 @@ const config: CapacitorConfig = {
   appName: 'TeamPayer',
   webDir: 'out',
   server: {
+    url: 'https://teampayer.vercel.app',
     androidScheme: 'https',
     iosScheme: 'https',
     cleartext: false
