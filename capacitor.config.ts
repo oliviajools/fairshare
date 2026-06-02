@@ -8,7 +8,15 @@ const config: CapacitorConfig = {
     url: 'https://teampayer.de',
     androidScheme: 'https',
     iosScheme: 'https',
-    cleartext: false
+    cleartext: false,
+    allowNavigation: [
+      'teampayer.de',
+      '*.teampayer.de',
+      'appleid.apple.com',
+      '*.apple.com',
+      'accounts.google.com',
+      'login.microsoftonline.com'
+    ]
   },
   plugins: {
     SplashScreen: {

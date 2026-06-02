@@ -53,12 +53,11 @@ export function useNativeAuth() {
 
       console.log('[AppleAuth] platform:', platform, 'isNative:', isNative, 'UA iOS:', uaIsIOS, 'UA:', ua)
 
-      // Use native flow if Capacitor reports native OR if running iOS UA AND plugin loads
+      // Only use native flow when truly running in a Capacitor native app
       const isIOSNative = platform === 'ios' || isNative
 
-      // Try to load the native plugin (works only if registered in the iOS app)
       let SignInWithApple: any = null
-      if (isIOSNative || uaIsIOS) {
+      if (isIOSNative) {
         try {
           const mod = await import('@capacitor-community/apple-sign-in')
           SignInWithApple = mod.SignInWithApple
