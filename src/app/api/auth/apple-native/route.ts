@@ -135,6 +135,17 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Set the NextAuth session cookie so useSession() picks it up
+    const isProd = process.env.NODE_ENV === 'production'
+    const cookieName = isProd ? '__Secure-next-auth.session-token' : 'next-auth.session-token'
+    response.cookies.set(cookieName, sessionToken, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60,
+    })
+
     return response
   } catch (error) {
     console.error('Apple native auth error:', error)
