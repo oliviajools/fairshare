@@ -44,16 +44,30 @@ export function useNativeAuth() {
     setError('')
 
     try {
-      // Robust iOS native detection
+      // Robust iOS native detection - log everything for debugging
       const { Capacitor } = await import('@capacitor/core')
       const platform = Capacitor.getPlatform()
-      const isIOSNative =
-        platform === 'ios' ||
-        (Capacitor.isNativePlatform?.() && /iPhone|iPad|iPod/.test(navigator.userAgent))
+      const isNative = Capacitor.isNativePlatform?.() ?? false
+      const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
+      const uaIsIOS = /iPhone|iPad|iPod/.test(ua)
 
-      if (isIOSNative) {
-        // ALWAYS use native Apple Sign-In on iOS - never fall back to web
-        const { SignInWithApple } = await import('@capacitor-community/apple-sign-in')
+      console.log('[AppleAuth] platform:', platform, 'isNative:', isNative, 'UA iOS:', uaIsIOS, 'UA:', ua)
+
+      // Use native flow if Capacitor reports native OR if running iOS UA AND plugin loads
+      const isIOSNative = platform === 'ios' || isNative
+
+      // Try to load the native plugin (works only if registered in the iOS app)
+      let SignInWithApple: any = null
+      if (isIOSNative || uaIsIOS) {
+        try {
+          const mod = await import('@capacitor-community/apple-sign-in')
+          SignInWithApple = mod.SignInWithApple
+        } catch (e) {
+          console.log('[AppleAuth] native plugin not available:', e)
+        }
+      }
+
+      if (SignInWithApple) {
 
         const result: AppleSignInResult = await SignInWithApple.authorize({
           clientId: appleClientId,
