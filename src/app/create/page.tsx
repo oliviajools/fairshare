@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { ArrowLeft, Plus, Trash2, Copy, Mail, Check, Eye, EyeOff, Building2, UsersRound, Sparkles, Users, Calendar, PartyPopper, Briefcase, Home, Trophy, ChevronRight, Info, GraduationCap, Percent } from 'lucide-react'
 import { hasFeature } from '@/lib/app-mode'
+import { useCapacitor } from '@/hooks/useCapacitor'
 
 interface Company {
   id: string
@@ -142,6 +143,13 @@ function CreateSessionContent() {
   const [selectedGroup, setSelectedGroup] = useState<string>('')
   const [loadingGroups, setLoadingGroups] = useState(false)
   const [showParticipantsStep, setShowParticipantsStep] = useState(false)
+  const [creationMode, setCreationMode] = useState<'session' | 'fixed-shares' | null>(null)
+  const [mounted, setMounted] = useState(false)
+  const { isNative } = useCapacitor()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const [formData, setFormData] = useState({
     title: '',
@@ -460,6 +468,55 @@ function CreateSessionContent() {
       </div>
     )
   }
+
+  // Mode selection step (web only)
+  const renderModeSelectionStep = () => (
+    <div className="space-y-6 pb-4">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Was möchtest du erstellen?</h2>
+        <p className="text-gray-600">Wähle zwischen einer vollständigen Session oder einer reinen Feste-Anteile-Abstimmung.</p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={() => setCreationMode('session')}
+          className="text-left rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50 p-6 border-2 border-transparent hover:border-sky-300 transition-all group"
+        >
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-400 to-blue-500 text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <Sparkles className="h-6 w-6" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Neue Session</h3>
+          <p className="text-sm text-gray-600">
+            Erstelle eine vollständige Abstimmung mit Titel, Teilnehmern, Hinweisen und optionalen festen Anteilen.
+          </p>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => router.push('/create/fixed-shares')}
+          className="text-left rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 p-6 border-2 border-transparent hover:border-amber-300 transition-all group"
+        >
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <Percent className="h-6 w-6" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Feste Anteile bestimmen</h3>
+          <p className="text-sm text-gray-600">
+            Konzentriere dich auf feste Anteile wie Unternehmen, Overhead oder Steuern und lass darüber abstimmen.
+          </p>
+        </button>
+      </div>
+
+      <div className="text-center">
+        <Link href="/">
+          <Button variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Zurück zur Übersicht
+          </Button>
+        </Link>
+      </div>
+    </div>
+  )
 
   // Session Details
   const renderDetailsStep = () => (
@@ -853,34 +910,55 @@ function CreateSessionContent() {
     </form>
   )
 
+  const showModeSelection = mounted && !isNative && creationMode === null
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-amber-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Laden...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-amber-50 pb-24 page-transition">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => {
-                  if (showParticipantsStep) {
-                    setShowParticipantsStep(false)
-                  } else {
-                    router.push('/')
-                  }
-                }}
-                className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Neue Session
-              </h1>
-            </div>
-          </div>
+          {showModeSelection ? (
+            renderModeSelectionStep()
+          ) : (
+            <>
+              {/* Header */}
+              <div className="mb-8">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => {
+                      if (showParticipantsStep) {
+                        setShowParticipantsStep(false)
+                      } else if (!isNative) {
+                        setCreationMode(null)
+                      } else {
+                        router.push('/')
+                      }
+                    }}
+                    className="w-10 h-10 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </button>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    Neue Session
+                  </h1>
+                </div>
+              </div>
 
-          {/* Step Content */}
-          {!showParticipantsStep && renderDetailsStep()}
-          {showParticipantsStep && renderParticipantsStep()}
+              {/* Step Content */}
+              {!showParticipantsStep && renderDetailsStep()}
+              {showParticipantsStep && renderParticipantsStep()}
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -7,9 +7,10 @@ import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Users, Calendar, BarChart3, Trash2, Crown, Settings, LogOut, EyeOff, X, GraduationCap, UserPlus } from 'lucide-react'
+import { Plus, Users, Calendar, BarChart3, Trash2, Crown, Settings, LogOut, EyeOff, X, GraduationCap, UserPlus, Percent } from 'lucide-react'
 import { BottomNav } from '@/components/BottomNav'
 import { hasFeature, isSchoolApp, getAppName } from '@/lib/app-mode'
+import { useCapacitor } from '@/hooks/useCapacitor'
 
 interface Session {
   id: string
@@ -52,6 +53,12 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [deleteDialog, setDeleteDialog] = useState<{sessionId: string, title: string} | null>(null)
+  const [mounted, setMounted] = useState(false)
+  const { isNative } = useCapacitor()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Redirect to onboarding or login if not authenticated
   useEffect(() => {
@@ -229,6 +236,14 @@ export default function Home() {
                   </Button>
                 </Link>
               )}
+              {hasFeature('voting') && mounted && !isNative && (
+                <Link href="/create/fixed-shares">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-amber-200 text-amber-600 hover:bg-amber-50 shadow-lg">
+                    <Percent className="mr-2 h-5 w-5" />
+                    Feste Anteile bestimmen
+                  </Button>
+                </Link>
+              )}
               {hasFeature('classroom') && (
                 <Link href="/classroom">
                   <Button size="lg" variant={isSchoolApp() ? "default" : "outline"} className={isSchoolApp() ? "bg-indigo-500 hover:bg-indigo-600 w-full sm:w-auto shadow-lg" : "w-full sm:w-auto border-indigo-200 text-indigo-600 hover:bg-indigo-50"}>
@@ -320,12 +335,22 @@ export default function Home() {
                     <p className="text-gray-600 mb-6 text-lg">
                       Keine aktive Session – aber das ändern wir jetzt!
                     </p>
-                    <Link href="/create">
-                      <Button size="lg" className="bg-sky-500 hover:bg-sky-600 shadow-lg hover:shadow-xl transition-all">
-                        <Plus className="mr-2 h-5 w-5" />
-                        Neue Session erstellen
-                      </Button>
-                    </Link>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Link href="/create">
+                        <Button size="lg" className="bg-sky-500 hover:bg-sky-600 shadow-lg hover:shadow-xl transition-all">
+                          <Plus className="mr-2 h-5 w-5" />
+                          Neue Session erstellen
+                        </Button>
+                      </Link>
+                      {mounted && !isNative && (
+                        <Link href="/create/fixed-shares">
+                          <Button size="lg" variant="outline" className="border-amber-200 text-amber-600 hover:bg-amber-50 shadow-lg hover:shadow-xl transition-all">
+                            <Percent className="mr-2 h-5 w-5" />
+                            Feste Anteile bestimmen
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ) : (
