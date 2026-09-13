@@ -67,33 +67,52 @@ export function useNativeAuth() {
       }
 
       if (SignInWithApple) {
+        console.log('[AppleAuth] Calling SignInWithApple.authorize()...')
 
         const result: AppleSignInResult = await SignInWithApple.authorize({
           clientId: appleClientId,
           scopes: 'email name',
         })
 
+        console.log('[AppleAuth] Raw result:', JSON.stringify(result, null, 2))
+        console.log('[AppleAuth] identityToken exists:', !!result?.response?.identityToken)
+        console.log('[AppleAuth] user exists:', !!result?.response?.user)
+        console.log('[AppleAuth] email exists:', !!result?.response?.email)
+
+        // Validate we have at least identityToken or user
+        if (!result?.response?.identityToken && !result?.response?.user) {
+          throw new Error('Apple Sign-In lieferte keine gültigen Anmeldedaten')
+        }
+
         // Send to our backend to create session
         const endpoint = `${apiBaseUrl}/api/auth/apple-native`
-        console.log('Apple native auth -> POST', endpoint)
+        console.log('[AppleAuth] POST ->', endpoint)
+
+        const requestBody = {
+          identityToken: result.response.identityToken,
+          user: result.response.user,
+          email: result.response.email,
+          fullName: result.response.fullName,
+        }
+        console.log('[AppleAuth] Request body:', JSON.stringify(requestBody, null, 2))
+
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({
-            identityToken: result.response.identityToken,
-            user: result.response.user,
-            email: result.response.email,
-            fullName: result.response.fullName,
-          }),
+          body: JSON.stringify(requestBody),
         })
 
-        console.log('Apple native auth <- status', response.status)
+        console.log('[AppleAuth] Response status:', response.status)
 
         let data: any = null
+        const responseText = await response.text()
+        console.log('[AppleAuth] Raw response:', responseText)
+
         try {
-          data = await response.json()
-        } catch {
+          data = responseText ? JSON.parse(responseText) : null
+        } catch (e) {
+          console.error('[AppleAuth] Failed to parse response as JSON:', e)
           data = null
         }
 
@@ -102,10 +121,16 @@ export function useNativeAuth() {
           throw new Error(msg)
         }
 
+        console.log('[AppleAuth] Success! Storing token and navigating...')
+
         // Store token in localStorage for native apps
         if (data.token) {
           localStorage.setItem('next-auth.session-token', data.token)
+          console.log('[AppleAuth] Token stored in localStorage')
+        } else {
+          console.warn('[AppleAuth] No token in response!')
         }
+
         // Navigate to home page
         router.push('/')
         router.refresh()

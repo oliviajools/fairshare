@@ -4,45 +4,58 @@ import jwt from 'jsonwebtoken'
 
 export async function POST(request: NextRequest) {
   try {
-    const { identityToken, email, fullName } = await request.json()
+    const { identityToken, user: appleUserIdFromRequest, email, fullName } = await request.json()
 
     console.log('Apple native auth request received:', {
       hasIdentityToken: !!identityToken,
+      hasAppleUserId: !!appleUserIdFromRequest,
       hasEmail: !!email,
       hasFullName: !!fullName,
       email: email || 'not provided'
     })
 
-    if (!identityToken) {
-      console.error('Apple native auth: No identity token provided')
-      return NextResponse.json({ error: 'Identity token required' }, { status: 400 })
+    let appleUserId: string | null = null
+    let decodedToken: { sub?: string; email?: string; email_verified?: boolean } | null = null
+
+    // Try to decode identity token first
+    if (identityToken) {
+      try {
+        decodedToken = jwt.decode(identityToken) as {
+          sub: string
+          email?: string
+          email_verified?: boolean
+          aud: string
+          iss: string
+        }
+
+        console.log('Apple token decoded:', {
+          hasSub: !!decodedToken?.sub,
+          hasEmail: !!decodedToken?.email,
+          emailVerified: decodedToken?.email_verified,
+          aud: (decodedToken as any)?.aud,
+          iss: (decodedToken as any)?.iss
+        })
+
+        if (decodedToken?.sub) {
+          appleUserId = decodedToken.sub
+        }
+      } catch (e) {
+        console.error('Failed to decode identity token:', e)
+      }
     }
 
-    // Decode the Apple identity token (it's a JWT)
-    const decoded = jwt.decode(identityToken) as {
-      sub: string  // Apple user ID
-      email?: string
-      email_verified?: boolean
-      aud: string
-      iss: string
+    // Fallback to user ID from request if token decoding failed
+    if (!appleUserId && appleUserIdFromRequest) {
+      appleUserId = appleUserIdFromRequest
+      console.log('Using Apple User ID from request:', appleUserId)
     }
 
-    console.log('Apple token decoded:', {
-      hasSub: !!decoded?.sub,
-      hasEmail: !!decoded?.email,
-      emailVerified: decoded?.email_verified,
-      aud: decoded?.aud,
-      iss: decoded?.iss
-    })
-
-    if (!decoded || !decoded.sub) {
-      console.error('Apple native auth: Invalid identity token - no sub')
-      return NextResponse.json({ error: 'Invalid identity token' }, { status: 400 })
+    if (!appleUserId) {
+      console.error('Apple native auth: No Apple User ID available (neither from token nor request)')
+      return NextResponse.json({ error: 'Apple User ID required' }, { status: 400 })
     }
 
-    const appleUserId = decoded.sub
-
-    const userEmail = email || decoded.email
+    const userEmail = email || decodedToken?.email
     const userName = fullName?.givenName && fullName?.familyName
       ? `${fullName.givenName} ${fullName.familyName}`
       : fullName?.givenName || userEmail?.split('@')[0] || 'Apple User'

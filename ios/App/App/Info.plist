@@ -53,7 +53,8 @@
 	<string>Wir benötigen Zugriff, um auf Wunsch ein aufgenommenes Profilbild in deiner Mediathek zu speichern.</string>
 	<key>WKAppBoundDomains</key>
 	<array>
-		<string>teampayer.vercel.app</string>
+		<string>teampayer.de</string>
+		<string>appleid.apple.com</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
