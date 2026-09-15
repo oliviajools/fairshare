@@ -157,8 +157,18 @@ export default function CreateFixedSharesPage() {
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 pb-24">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">Feste Anteile angelegt!</h1>
+            <div className="mb-8">
+              <div className="flex items-center gap-4 mb-4">
+                <button
+                  type="button"
+                  onClick={() => router.replace('/')}
+                  aria-label="Zurück zur Übersicht"
+                  className="w-10 h-10 rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+                <h1 className="text-3xl font-bold text-gray-900">Feste Anteile angelegt!</h1>
+              </div>
               <p className="text-gray-600">Teile die Links mit den Teilnehmern, damit sie über die festen Anteile abstimmen können.</p>
             </div>
 
@@ -247,7 +257,9 @@ export default function CreateFixedSharesPage() {
           <div className="mb-8">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => router.push('/create')}
+                type="button"
+                onClick={() => router.replace('/create')}
+                aria-label="Zurück zur Auswahl"
                 className="w-10 h-10 rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center transition-colors shadow-md flex-shrink-0"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -495,7 +507,7 @@ export default function CreateFixedSharesPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push('/create')}
+                onClick={() => router.replace('/create')}
                 className="flex-1 h-12"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
