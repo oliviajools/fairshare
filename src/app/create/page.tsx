@@ -259,6 +259,13 @@ function CreateSessionContent() {
 
   const totalFixedPercent = fixedShares.reduce((sum, fs) => sum + (fs.percent || 0), 0)
 
+  const selectFixedShareSetupMode = (mode: FixedShareSetupMode) => {
+    setFixedShareSetupMode(mode)
+    if (mode === 'PRE_VOTE') {
+      setFixedShares(fixedShares.map((share) => ({ ...share, percent: 0 })))
+    }
+  }
+
   const addParticipant = () => {
     setParticipants([...participants, { name: '', email: '' }])
   }
@@ -653,8 +660,10 @@ function CreateSessionContent() {
                 <div className="text-left">
                   <p className="font-medium text-gray-900">Feste Anteile</p>
                   <p className="text-sm text-gray-500">
-                    {fixedShares.length > 0 
-                      ? `${fixedShares.length} feste Anteile (${totalFixedPercent.toFixed(1)}%)`
+                    {fixedShares.length > 0
+                      ? fixedShareSetupMode === 'MANUAL'
+                        ? `${fixedShares.length} feste Anteile (${totalFixedPercent.toFixed(1)}%)`
+                        : `${fixedShares.length} feste Anteile zur Abstimmung`
                       : 'z.B. Unternehmen, Overhead, Steuern'}
                   </p>
                 </div>
@@ -664,8 +673,7 @@ function CreateSessionContent() {
 
             {showFixedShareSection && (
               <div className="mt-4 space-y-4">
-                {fixedShares.length > 0 && (
-                  <div className="space-y-2">
+                <div className="space-y-2">
                     <Label className="text-sm font-medium">Wie soll der feste Anteil festgelegt werden?</Label>
                     <div className="grid grid-cols-1 gap-2">
                       <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${fixedShareSetupMode === 'MANUAL' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'}`}>
@@ -673,7 +681,7 @@ function CreateSessionContent() {
                           type="radio"
                           name="fixedShareSetupMode"
                           checked={fixedShareSetupMode === 'MANUAL'}
-                          onChange={() => setFixedShareSetupMode('MANUAL')}
+                          onChange={() => selectFixedShareSetupMode('MANUAL')}
                           className="mt-1"
                         />
                         <div>
@@ -686,7 +694,7 @@ function CreateSessionContent() {
                           type="radio"
                           name="fixedShareSetupMode"
                           checked={fixedShareSetupMode === 'PRE_VOTE'}
-                          onChange={() => setFixedShareSetupMode('PRE_VOTE')}
+                          onChange={() => selectFixedShareSetupMode('PRE_VOTE')}
                           className="mt-1"
                         />
                         <div>
@@ -696,7 +704,6 @@ function CreateSessionContent() {
                       </label>
                     </div>
                   </div>
-                )}
 
                 {fixedShares.length > 0 && (
                   <div className="space-y-1">
@@ -718,18 +725,20 @@ function CreateSessionContent() {
                         onChange={(e) => updateFixedShare(index, 'name', e.target.value)}
                         className="flex-1 bg-white"
                       />
-                      <div className="relative w-24">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={share.percent || ''}
-                          onChange={(e) => updateFixedShare(index, 'percent', e.target.value)}
-                          className="bg-white pr-8"
-                          placeholder="0"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
-                      </div>
+                      {fixedShareSetupMode === 'MANUAL' && (
+                        <div className="relative w-24">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={share.percent || ''}
+                            onChange={(e) => updateFixedShare(index, 'percent', e.target.value)}
+                            className="bg-white pr-8"
+                            placeholder="0"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
+                        </div>
+                      )}
                       <Button
                         type="button"
                         variant="ghost"
@@ -747,14 +756,14 @@ function CreateSessionContent() {
                   type="button"
                   variant="outline"
                   onClick={addFixedShare}
-                  disabled={totalFixedPercent >= 99}
+                  disabled={fixedShareSetupMode === 'MANUAL' && totalFixedPercent >= 99}
                   className="w-full"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Festen Anteil hinzufügen
                 </Button>
 
-                {totalFixedPercent > 0 && (
+                {fixedShareSetupMode === 'MANUAL' && totalFixedPercent > 0 && (
                   <p className="text-sm text-amber-600 font-medium">
                     Gesamt: {totalFixedPercent.toFixed(1)}% fest → {(100 - totalFixedPercent).toFixed(1)}% für Teilnehmer
                   </p>

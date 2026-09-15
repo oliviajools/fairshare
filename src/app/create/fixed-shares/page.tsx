@@ -61,6 +61,13 @@ export default function CreateFixedSharesPage() {
 
   const totalFixedPercent = fixedShares.reduce((sum, fs) => sum + (fs.percent || 0), 0)
 
+  const selectFixedShareSetupMode = (mode: FixedShareSetupMode) => {
+    setFixedShareSetupMode(mode)
+    if (mode === 'PRE_VOTE') {
+      setFixedShares(fixedShares.map((share) => ({ ...share, percent: 0 })))
+    }
+  }
+
   const addParticipant = () => {
     setParticipants([...participants, { name: '', email: '' }])
   }
@@ -181,17 +188,23 @@ export default function CreateFixedSharesPage() {
                 {fixedShares.map((share, index) => (
                   <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-amber-50">
                     <span className="font-medium">{share.name}</span>
-                    <span className="text-amber-700 font-bold">{share.percent.toFixed(1)}%</span>
+                    <span className="text-amber-700 font-bold">
+                      {fixedShareSetupMode === 'MANUAL' ? `${share.percent.toFixed(1)}%` : 'Wird abgestimmt'}
+                    </span>
                   </div>
                 ))}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-100">
-                  <span className="font-medium">Gesamt feste Anteile</span>
-                  <span className="font-bold">{totalFixedPercent.toFixed(1)}%</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-100">
-                  <span className="font-medium">Verbleibend für Teilnehmer</span>
-                  <span className="font-bold">{(100 - totalFixedPercent).toFixed(1)}%</span>
-                </div>
+                {fixedShareSetupMode === 'MANUAL' && (
+                  <>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-100">
+                      <span className="font-medium">Gesamt feste Anteile</span>
+                      <span className="font-bold">{totalFixedPercent.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-100">
+                      <span className="font-medium">Verbleibend für Teilnehmer</span>
+                      <span className="font-bold">{(100 - totalFixedPercent).toFixed(1)}%</span>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -328,7 +341,9 @@ export default function CreateFixedSharesPage() {
                         <p className="font-medium text-gray-900">Feste Anteile</p>
                         <p className="text-sm text-gray-500">
                           {fixedShares.length > 0
-                            ? `${fixedShares.length} feste Anteile (${totalFixedPercent.toFixed(1)}%)`
+                            ? fixedShareSetupMode === 'MANUAL'
+                              ? `${fixedShares.length} feste Anteile (${totalFixedPercent.toFixed(1)}%)`
+                              : `${fixedShares.length} feste Anteile zur Abstimmung`
                             : 'z. B. Unternehmen, Overhead, Steuern'}
                         </p>
                       </div>
@@ -340,8 +355,7 @@ export default function CreateFixedSharesPage() {
 
                   {showFixedShareSection && (
                     <div className="mt-4 space-y-4">
-                      {fixedShares.length > 0 && (
-                        <div className="space-y-2">
+                      <div className="space-y-2">
                           <Label className="text-sm font-medium">Wie soll der feste Anteil festgelegt werden?</Label>
                           <div className="grid grid-cols-1 gap-2">
                             <label
@@ -355,7 +369,7 @@ export default function CreateFixedSharesPage() {
                                 type="radio"
                                 name="fixedShareSetupMode"
                                 checked={fixedShareSetupMode === 'MANUAL'}
-                                onChange={() => setFixedShareSetupMode('MANUAL')}
+                                onChange={() => selectFixedShareSetupMode('MANUAL')}
                                 className="mt-1"
                               />
                               <div>
@@ -374,7 +388,7 @@ export default function CreateFixedSharesPage() {
                                 type="radio"
                                 name="fixedShareSetupMode"
                                 checked={fixedShareSetupMode === 'PRE_VOTE'}
-                                onChange={() => setFixedShareSetupMode('PRE_VOTE')}
+                                onChange={() => selectFixedShareSetupMode('PRE_VOTE')}
                                 className="mt-1"
                               />
                               <div>
@@ -384,7 +398,6 @@ export default function CreateFixedSharesPage() {
                             </label>
                           </div>
                         </div>
-                      )}
 
                       <div className="space-y-2">
                         {fixedShares.map((share, index) => (
@@ -395,18 +408,20 @@ export default function CreateFixedSharesPage() {
                               onChange={(e) => updateFixedShare(index, 'name', e.target.value)}
                               className="flex-1 bg-white"
                             />
-                            <div className="relative w-24">
-                              <Input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={share.percent || ''}
-                                onChange={(e) => updateFixedShare(index, 'percent', e.target.value)}
-                                className="bg-white pr-8"
-                                placeholder="0"
-                              />
-                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
-                            </div>
+                            {fixedShareSetupMode === 'MANUAL' && (
+                              <div className="relative w-24">
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={share.percent || ''}
+                                  onChange={(e) => updateFixedShare(index, 'percent', e.target.value)}
+                                  className="bg-white pr-8"
+                                  placeholder="0"
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
+                              </div>
+                            )}
                             <Button
                               type="button"
                               variant="ghost"
@@ -424,14 +439,14 @@ export default function CreateFixedSharesPage() {
                         type="button"
                         variant="outline"
                         onClick={addFixedShare}
-                        disabled={totalFixedPercent >= 99}
+                        disabled={fixedShareSetupMode === 'MANUAL' && totalFixedPercent >= 99}
                         className="w-full"
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Festen Anteil hinzufügen
                       </Button>
 
-                      {totalFixedPercent > 0 && (
+                      {fixedShareSetupMode === 'MANUAL' && totalFixedPercent > 0 && (
                         <p className="text-sm text-amber-600 font-medium">
                           Gesamt: {totalFixedPercent.toFixed(1)}% fest → {(100 - totalFixedPercent).toFixed(1)}% für Teilnehmer
                         </p>
