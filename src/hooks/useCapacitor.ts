@@ -7,14 +7,10 @@ export const useCapacitor = () => {
   useEffect(() => {
     const checkCapacitor = async () => {
       if (typeof window !== 'undefined') {
-        // Check if running in Capacitor
-        const isCapacitor = !!(window as any).Capacitor;
+        const { Capacitor } = await import('@capacitor/core');
+        const isCapacitor = Capacitor.isNativePlatform();
         setIsNative(isCapacitor);
-        
-        if (isCapacitor) {
-          const { Capacitor } = await import('@capacitor/core');
-          setPlatform(Capacitor.getPlatform() as 'ios' | 'android');
-        }
+        setPlatform(Capacitor.getPlatform() as 'web' | 'ios' | 'android');
       }
     };
 
