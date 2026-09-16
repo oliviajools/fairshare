@@ -1,0 +1,5 @@
+CREATE TYPE "FixedShareVoteUnit" AS ENUM ('PERCENT', 'AMOUNT');
+
+ALTER TABLE "VotingSession" ADD COLUMN "fixedShareVoteUnit" "FixedShareVoteUnit" NOT NULL DEFAULT 'PERCENT';
+ALTER TABLE "FixedShare" ADD COLUMN "amount" DOUBLE PRECISION;
+ALTER TABLE "FixedShareVote" ADD COLUMN "amount" DOUBLE PRECISION;

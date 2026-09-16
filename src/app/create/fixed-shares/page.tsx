@@ -20,6 +20,7 @@ interface FixedShare {
 }
 
 type FixedShareSetupMode = 'MANUAL' | 'PRE_VOTE'
+type FixedShareVoteUnit = 'PERCENT' | 'AMOUNT'
 
 interface InviteLink {
   name: string
@@ -35,6 +36,7 @@ export default function CreateFixedSharesPage() {
   const [participants, setParticipants] = useState<Participant[]>([{ name: '', email: '' }])
   const [fixedShares, setFixedShares] = useState<FixedShare[]>([])
   const [fixedShareSetupMode, setFixedShareSetupMode] = useState<FixedShareSetupMode>('PRE_VOTE')
+  const [fixedShareVoteUnit, setFixedShareVoteUnit] = useState<FixedShareVoteUnit>('PERCENT')
   const [showFixedShareSection, setShowFixedShareSection] = useState(false)
   const [inviteLinks, setInviteLinks] = useState<InviteLink[]>([])
   const [organizerLink, setOrganizerLink] = useState('')
@@ -127,6 +129,7 @@ export default function CreateFixedSharesPage() {
           fixedShares: validFixedShares,
           fixedShareMode: 'TRANSPARENT_FULL',
           fixedShareVotingStatus: fixedShareSetupMode === 'PRE_VOTE' ? 'OPEN' : 'CLOSED',
+          fixedShareVoteUnit: fixedShareSetupMode === 'PRE_VOTE' ? fixedShareVoteUnit : 'PERCENT',
         }),
       })
 
@@ -398,6 +401,37 @@ export default function CreateFixedSharesPage() {
                             </label>
                           </div>
                         </div>
+
+                      {fixedShareSetupMode === 'PRE_VOTE' && (
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Wie sollen die Teilnehmer abstimmen?</Label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${fixedShareVoteUnit === 'PERCENT' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                              <input
+                                type="radio"
+                                name="fixedShareVoteUnit"
+                                checked={fixedShareVoteUnit === 'PERCENT'}
+                                onChange={() => setFixedShareVoteUnit('PERCENT')}
+                              />
+                              <span className="font-medium text-sm">Prozentuale Abstimmung</span>
+                            </label>
+                            <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${fixedShareVoteUnit === 'AMOUNT' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                              <input
+                                type="radio"
+                                name="fixedShareVoteUnit"
+                                checked={fixedShareVoteUnit === 'AMOUNT'}
+                                onChange={() => setFixedShareVoteUnit('AMOUNT')}
+                              />
+                              <span className="font-medium text-sm">Abstimmung Geldbetrag</span>
+                            </label>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            {fixedShareVoteUnit === 'PERCENT'
+                              ? 'Der Durchschnitt der abgegebenen Prozentwerte wird übernommen.'
+                              : 'Der Durchschnitt der abgegebenen Euro-Beträge wird übernommen.'}
+                          </p>
+                        </div>
+                      )}
 
                       <div className="space-y-2">
                         {fixedShares.map((share, index) => (

@@ -10,7 +10,7 @@ export async function POST(
     const { token } = await params
     const body = await request.json()
     const { fixedVotes } = body as {
-      fixedVotes: { fixedShareId: string; percent: number }[]
+      fixedVotes: { fixedShareId: string; value?: number; percent?: number }[]
     }
 
     if (!Array.isArray(fixedVotes) || fixedVotes.length === 0) {
@@ -39,6 +39,7 @@ export async function POST(
 
     const fixedShares = (participant.session as any).fixedShares || []
     const fixedShareVotingStatus = (participant.session as any).fixedShareVotingStatus
+    const fixedShareVoteUnit = (participant.session as any).fixedShareVoteUnit || 'PERCENT'
 
     if (fixedShares.length === 0) {
       return NextResponse.json({ error: 'Keine festen Anteile in dieser Session' }, { status: 400 })
@@ -52,20 +53,24 @@ export async function POST(
 
     const sanitizedVotes = fixedVotes.map((v) => ({
       fixedShareId: v.fixedShareId,
-      percent: typeof v.percent === 'number' ? v.percent : Number(v.percent),
+      value: Number(v.value ?? v.percent),
     }))
 
     for (const v of sanitizedVotes) {
       if (!fixedShareIds.has(v.fixedShareId)) {
         return NextResponse.json({ error: 'Ungültiger fester Anteil' }, { status: 400 })
       }
-      if (!Number.isFinite(v.percent) || v.percent < 0 || v.percent > 100) {
-        return NextResponse.json({ error: 'Prozent muss zwischen 0 und 100 liegen' }, { status: 400 })
+      if (!Number.isFinite(v.value) || v.value < 0 || (fixedShareVoteUnit === 'PERCENT' && v.value > 100)) {
+        return NextResponse.json({
+          error: fixedShareVoteUnit === 'PERCENT'
+            ? 'Prozent muss zwischen 0 und 100 liegen'
+            : 'Der Geldbetrag muss mindestens 0 Euro betragen'
+        }, { status: 400 })
       }
     }
 
-    const total = sanitizedVotes.reduce((sum, v) => sum + v.percent, 0)
-    if (total > 99) {
+    const total = sanitizedVotes.reduce((sum, v) => sum + v.value, 0)
+    if (fixedShareVoteUnit === 'PERCENT' && total > 99) {
       return NextResponse.json({ error: `Gesamtprozent darf maximal 99% sein. Aktuell: ${total.toFixed(1)}%` }, { status: 400 })
     }
 
@@ -88,7 +93,8 @@ export async function POST(
             deleteMany: {},
             create: sanitizedVotes.map((v) => ({
               fixedShareId: v.fixedShareId,
-              percent: v.percent,
+              percent: fixedShareVoteUnit === 'PERCENT' ? v.value : 0,
+              amount: fixedShareVoteUnit === 'AMOUNT' ? v.value : null,
             })),
           },
         },
@@ -99,7 +105,8 @@ export async function POST(
           fixedShareVotes: {
             create: sanitizedVotes.map((v) => ({
               fixedShareId: v.fixedShareId,
-              percent: v.percent,
+              percent: fixedShareVoteUnit === 'PERCENT' ? v.value : 0,
+              amount: fixedShareVoteUnit === 'AMOUNT' ? v.value : null,
             })),
           },
         },
@@ -132,15 +139,19 @@ export async function POST(
           },
           _avg: {
             percent: true,
+            amount: true,
           },
         })
 
         for (const fs of fixedShares as any[]) {
-          const avg = averages.find((a) => a.fixedShareId === fs.id)?._avg.percent
-          if (typeof avg === 'number' && Number.isFinite(avg)) {
+          const average = averages.find((item) => item.fixedShareId === fs.id)?._avg
+          const value = fixedShareVoteUnit === 'AMOUNT' ? average?.amount : average?.percent
+          if (typeof value === 'number' && Number.isFinite(value)) {
             await tx.fixedShare.update({
               where: { id: fs.id },
-              data: { percent: avg },
+              data: fixedShareVoteUnit === 'AMOUNT'
+                ? { amount: value, percent: 0 }
+                : { percent: value, amount: null },
             })
           }
         }

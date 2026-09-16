@@ -263,6 +263,11 @@ enum FixedShareVotingStatus {
   CLOSED
 }
 
+enum FixedShareVoteUnit {
+  PERCENT
+  AMOUNT
+}
+
 // App Models
 model VotingSession {
   id             String       @id @default(uuid())
@@ -286,6 +291,7 @@ model VotingSession {
   fixedShares    FixedShare[]
   fixedShareMode FixedShareMode?
   fixedShareVotingStatus FixedShareVotingStatus @default(CLOSED)
+  fixedShareVoteUnit FixedShareVoteUnit @default(PERCENT)
   participantSelectionComplete Boolean @default(false)
   // Recurring session fields
   recurringId    String?
@@ -301,6 +307,7 @@ model FixedShare {
   session     VotingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   name        String        // e.g., "Unternehmen", "Overhead", "Steuern"
   percent     Float         // e.g., 20.0 for 20%
+  amount      Float?
   votes       FixedShareVote[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -395,6 +402,7 @@ model FixedShareVote {
   fixedShareId String
   fixedShare  FixedShare @relation(fields: [fixedShareId], references: [id], onDelete: Cascade)
   percent     Float
+  amount      Float?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

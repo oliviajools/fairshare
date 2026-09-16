@@ -41,6 +41,7 @@ interface Session {
   creatorId?: string
   participants: Participant[]
   ballots: Ballot[]
+  fixedShareVoteUnit?: 'PERCENT' | 'AMOUNT'
 }
 
 interface ResultData {
@@ -49,6 +50,7 @@ interface ResultData {
   totalPercent: number
   voteCount: number
   averagePercent: number
+  fixedAmount?: number
   voters?: string[]
   isFixedShare?: boolean
 }
@@ -330,7 +332,9 @@ export default function ResultsPage() {
                         <div className="flex items-center gap-2">
                           <div className="text-right">
                             <span className={`text-2xl font-bold ${result.isFixedShare ? 'text-amber-600' : 'text-sky-600'}`}>
-                              {result.averagePercent.toFixed(1)}%
+                              {result.isFixedShare && session.fixedShareVoteUnit === 'AMOUNT' && result.fixedAmount != null
+                                ? result.fixedAmount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
+                                : `${result.averagePercent.toFixed(1)}%`}
                             </span>
                             {!result.isFixedShare && (
                               <span className="text-sm text-gray-500 ml-2">
@@ -358,12 +362,14 @@ export default function ResultsPage() {
                       </div>
                       
                       {/* Progress bar */}
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className={`h-3 rounded-full transition-all duration-500 ${result.isFixedShare ? 'bg-amber-500' : 'bg-sky-500'}`}
-                          style={{ width: `${Math.min(result.averagePercent, 100)}%` }}
-                        />
-                      </div>
+                      {!(result.isFixedShare && session.fixedShareVoteUnit === 'AMOUNT') && (
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className={`h-3 rounded-full transition-all duration-500 ${result.isFixedShare ? 'bg-amber-500' : 'bg-sky-500'}`}
+                            style={{ width: `${Math.min(result.averagePercent, 100)}%` }}
+                          />
+                        </div>
+                      )}
 
                       {/* Show voters if not anonymous */}
                       {!session.isAnonymous && result.voters && result.voters.length > 0 && (

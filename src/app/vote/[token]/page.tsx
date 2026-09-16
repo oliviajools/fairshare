@@ -29,11 +29,13 @@ interface FixedShare {
   id: string
   name: string
   percent: number
+  amount?: number | null
 }
 
 interface FixedShareVote {
   fixedShareId: string
   percent: number
+  amount?: number | null
 }
 
 type FixedShareMode = 'TRANSPARENT_REDUCED' | 'TRANSPARENT_FULL' | 'RESULTS_ONLY' | 'PAYOUT_ONLY'
@@ -49,6 +51,7 @@ interface Session {
   fixedShares?: FixedShare[]
   fixedShareMode?: FixedShareMode
   fixedShareVotingStatus?: 'OPEN' | 'CLOSED'
+  fixedShareVoteUnit?: 'PERCENT' | 'AMOUNT'
   participantSelectionComplete?: boolean
 }
 
@@ -93,6 +96,7 @@ export default function VotePage() {
   // Calculate fixed shares total
   const fixedShares = session?.fixedShares || []
   const fixedShareVotingStatus = session?.fixedShareVotingStatus
+  const fixedShareVoteUnit = session?.fixedShareVoteUnit || 'PERCENT'
   const totalFixedPercent = fixedShares.reduce((sum, fs) => sum + fs.percent, 0)
 
   // Filter participants based on includedInMainVoting when fixed share voting is closed
@@ -194,7 +198,7 @@ export default function VotePage() {
         if (loadVotes && !hasLoadedInitialFixedVotes && data.ballot?.fixedShareVotes) {
           const fixedVoteMap: {[fixedShareId: string]: number} = {}
           data.ballot.fixedShareVotes.forEach((vote: FixedShareVote) => {
-            fixedVoteMap[vote.fixedShareId] = vote.percent
+            fixedVoteMap[vote.fixedShareId] = data.session?.fixedShareVoteUnit === 'AMOUNT' ? vote.amount || 0 : vote.percent
           })
           setFixedVotes(fixedVoteMap)
           setHasLoadedInitialFixedVotes(true)
@@ -241,11 +245,11 @@ export default function VotePage() {
     try {
       const fixedVoteArray = fixedShares.map((fs) => ({
         fixedShareId: fs.id,
-        percent: fixedVotes[fs.id] || 0,
+        value: fixedVotes[fs.id] || 0,
       }))
 
-      const total = fixedVoteArray.reduce((sum, v) => sum + v.percent, 0)
-      if (total > 99) {
+      const total = fixedVoteArray.reduce((sum, v) => sum + v.value, 0)
+      if (fixedShareVoteUnit === 'PERCENT' && total > 99) {
         setError(`Die Gesamtsumme der festen Anteile darf maximal 99% sein. Aktuell: ${total.toFixed(1)}%`)
         return
       }
@@ -470,7 +474,7 @@ export default function VotePage() {
                   <CardTitle>{needsFixedSharePreVote ? 'Festen Anteil festlegen' : 'Bewertung abgeben'}</CardTitle>
                   <CardDescription>
                     {needsFixedSharePreVote
-                      ? 'Bevor es losgeht: Stimmt ab, wie viel der feste Anteil bekommen soll. Danach wird der Rest verteilt.'
+                      ? `Bevor es losgeht: Stimmt ab, welchen ${fixedShareVoteUnit === 'AMOUNT' ? 'Geldbetrag' : 'Prozentanteil'} der feste Anteil bekommen soll.`
                       : 'Gib für jede Person einen Prozentwert an (0-100%). Du musst nicht alle Felder ausfüllen. Fehlende Stimmen werden ignoriert'}
                   </CardDescription>
                 </CardHeader>
@@ -525,8 +529,8 @@ export default function VotePage() {
                               <Input
                                 type="number"
                                 min="0"
-                                max="100"
-                                step="0.1"
+                                max={fixedShareVoteUnit === 'PERCENT' ? 100 : undefined}
+                                step={fixedShareVoteUnit === 'PERCENT' ? '0.1' : '0.01'}
                                 value={fixedVotes[fs.id] ?? ''}
                                 onChange={(e) => updateFixedVote(fs.id, e.target.value)}
                                 placeholder="0"
@@ -534,7 +538,7 @@ export default function VotePage() {
                                 className="text-right"
                               />
                             </div>
-                            <span className="text-sm text-amber-800 w-8">%</span>
+                            <span className="text-sm text-amber-800 w-8">{fixedShareVoteUnit === 'AMOUNT' ? '€' : '%'}</span>
                           </div>
                         ))}
                       </div>
@@ -567,13 +571,19 @@ export default function VotePage() {
                         {fixedShares.map((fs) => (
                           <div key={fs.id} className="flex justify-between items-center text-sm">
                             <span className="text-amber-700">{fs.name}</span>
-                            <span className="font-medium text-amber-800">{fs.percent.toFixed(1)}%</span>
+                            <span className="font-medium text-amber-800">
+                              {fixedShareVoteUnit === 'AMOUNT' && fs.amount != null
+                                ? fs.amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
+                                : `${fs.percent.toFixed(1)}%`}
+                            </span>
                           </div>
                         ))}
                       </div>
                       <div className="mt-3 pt-3 border-t border-amber-200">
                         <p className="text-sm text-amber-700">
-                          Du verteilst 100% auf die Teilnehmer, die automatisch auf den verbleibenden {(100 - totalFixedPercent).toFixed(0)}% skaliert werden.
+                          {fixedShareVoteUnit === 'AMOUNT'
+                            ? 'Du verteilst weiterhin 100% auf die Teilnehmer. Der feste Geldbetrag wird bei der Auszahlung vorab abgezogen.'
+                            : `Du verteilst 100% auf die Teilnehmer, die automatisch auf den verbleibenden ${(100 - totalFixedPercent).toFixed(0)}% skaliert werden.`}
                         </p>
                       </div>
                     </div>

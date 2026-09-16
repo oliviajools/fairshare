@@ -15,6 +15,8 @@ interface ResultData {
   participantId: string
   name: string
   averagePercent: number
+  fixedAmount?: number
+  isFixedShare?: boolean
 }
 
 interface PayoutData {
@@ -76,13 +78,30 @@ export default function PayoutPage({ params }: { params: Promise<{ id: string }>
     const amount = parseFloat(totalAmount)
     if (isNaN(amount) || amount <= 0) return
 
-    const totalPercent = results.reduce((sum, r) => sum + r.averagePercent, 0)
-    
-    const calculated = results.map(r => ({
-      name: r.name,
-      percent: totalPercent > 0 ? (r.averagePercent / totalPercent) * 100 : 0,
-      amount: totalPercent > 0 ? (r.averagePercent / totalPercent) * amount : 0
-    })).sort((a, b) => b.amount - a.amount)
+    const fixedAmountResults = results.filter((result) => result.isFixedShare && result.fixedAmount != null)
+    const totalFixedAmount = fixedAmountResults.reduce((sum, result) => sum + (result.fixedAmount || 0), 0)
+
+    if (totalFixedAmount > amount) {
+      alert(`Die festen Geldbeträge (${totalFixedAmount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}) überschreiten den Gesamtbetrag.`)
+      return
+    }
+
+    const percentageResults = results.filter((result) => result.fixedAmount == null)
+    const totalPercent = percentageResults.reduce((sum, result) => sum + result.averagePercent, 0)
+    const remainingAmount = amount - totalFixedAmount
+
+    const calculated = [
+      ...fixedAmountResults.map((result) => ({
+        name: result.name,
+        percent: amount > 0 ? ((result.fixedAmount || 0) / amount) * 100 : 0,
+        amount: result.fixedAmount || 0,
+      })),
+      ...percentageResults.map((result) => ({
+        name: result.name,
+        percent: amount > 0 && totalPercent > 0 ? ((result.averagePercent / totalPercent) * remainingAmount / amount) * 100 : 0,
+        amount: totalPercent > 0 ? (result.averagePercent / totalPercent) * remainingAmount : 0,
+      })),
+    ].sort((a, b) => b.amount - a.amount)
 
     setPayouts(calculated)
   }

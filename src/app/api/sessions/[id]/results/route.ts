@@ -81,11 +81,13 @@ export async function GET(
     // Handle fixed shares based on mode
     const fixedShares = (session as any).fixedShares || []
     const fixedShareMode = (session as any).fixedShareMode
+    const fixedShareVoteUnit = (session as any).fixedShareVoteUnit || 'PERCENT'
     const totalFixedPercent = fixedShares.reduce((sum: number, fs: any) => sum + fs.percent, 0)
+    const totalFixedAmount = fixedShares.reduce((sum: number, fs: any) => sum + (fs.amount || 0), 0)
 
     // For RESULTS_ONLY and PAYOUT_ONLY modes, add fixed shares to results
     // For TRANSPARENT modes, they're already factored into voting
-    if (fixedShareMode === 'RESULTS_ONLY' || fixedShareMode === 'PAYOUT_ONLY') {
+    if (fixedShareVoteUnit === 'PERCENT' && (fixedShareMode === 'RESULTS_ONLY' || fixedShareMode === 'PAYOUT_ONLY')) {
       // Scale down participant percentages to make room for fixed shares
       const scaleFactor = (100 - totalFixedPercent) / 100
       results = results.map(r => ({
@@ -101,7 +103,8 @@ export async function GET(
           name: fs.name,
           totalPercent: fs.percent,
           voteCount: 0,
-          averagePercent: fs.percent,
+          averagePercent: fixedShareVoteUnit === 'AMOUNT' ? 0 : fs.percent,
+          fixedAmount: fixedShareVoteUnit === 'AMOUNT' ? fs.amount : undefined,
           voters: undefined,
           isFixedShare: true
         }))
@@ -120,6 +123,7 @@ export async function GET(
       participants: session.participants,
       fixedShares: fixedShares,
       fixedShareMode: fixedShareMode,
+      fixedShareVoteUnit,
       // Don't expose ballot details if anonymous
       ballots: session.isAnonymous ? [] : session.ballots
     }
@@ -131,7 +135,8 @@ export async function GET(
       session: sessionResponse,
       results: allResults,
       fixedShares: fixedShareResults,
-      totalFixedPercent
+      totalFixedPercent,
+      totalFixedAmount
     })
   } catch (error) {
     console.error('Error fetching results:', error)
