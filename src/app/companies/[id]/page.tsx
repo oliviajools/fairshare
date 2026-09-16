@@ -101,6 +101,9 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
   const [groupFormData, setGroupFormData] = useState({ name: '', description: '', memberIds: [] as string[] })
   const [savingGroup, setSavingGroup] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [newMemberEmail, setNewMemberEmail] = useState('')
+  const [addingMember, setAddingMember] = useState(false)
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -198,6 +201,66 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
   }
 
   const canEdit = company?.role === 'OWNER' || company?.role === 'ADMIN'
+  const canManageMembers = company?.role === 'OWNER'
+
+  const addMember = async () => {
+    if (!company || !canManageMembers || !newMemberEmail.trim()) return
+
+    setAddingMember(true)
+    try {
+      const response = await fetch(`/api/companies/${id}/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newMemberEmail.trim() }),
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data?.error || 'Fehler beim Hinzufügen des Mitglieds')
+        return
+      }
+
+      setCompany((prev) => prev ? { ...prev, members: [...prev.members, data] } : prev)
+      setNewMemberEmail('')
+    } catch (error) {
+      console.error('Error adding company member:', error)
+      alert('Fehler beim Hinzufügen des Mitglieds')
+    } finally {
+      setAddingMember(false)
+    }
+  }
+
+  const removeMember = async (member: Member) => {
+    if (!company || !canManageMembers || member.role === 'OWNER') return
+    if (!window.confirm(`${member.name || member.email} wirklich aus dem Unternehmen entfernen?`)) return
+
+    setRemovingMemberId(member.id)
+    try {
+      const response = await fetch(`/api/companies/${id}/members`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: member.id }),
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data?.error || 'Fehler beim Entfernen des Mitglieds')
+        return
+      }
+
+      setCompany((prev) => prev ? { ...prev, members: prev.members.filter((item) => item.id !== member.id) } : prev)
+      setGroups((prev) => prev.map((group) => ({
+        ...group,
+        members: group.members.filter((item) => item.id !== member.id),
+        memberCount: group.members.filter((item) => item.id !== member.id).length,
+      })))
+    } catch (error) {
+      console.error('Error removing company member:', error)
+      alert('Fehler beim Entfernen des Mitglieds')
+    } finally {
+      setRemovingMemberId(null)
+    }
+  }
 
   const updateMemberRole = async (userId: string, role: Member['role']) => {
     if (!company) return
@@ -650,6 +713,45 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
           {/* Members Tab */}
           {activeTab === 'members' && (
             <div className="space-y-4">
+              {canManageMembers && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Mitglied hinzufügen</CardTitle>
+                    <CardDescription>Füge einen bereits registrierten TeamPayer-Benutzer per E-Mail hinzu.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form
+                      className="flex flex-col sm:flex-row gap-2"
+                      onSubmit={(event) => {
+                        event.preventDefault()
+                        addMember()
+                      }}
+                    >
+                      <Input
+                        type="email"
+                        value={newMemberEmail}
+                        onChange={(event) => setNewMemberEmail(event.target.value)}
+                        placeholder="name@beispiel.de"
+                        required
+                        className="flex-1"
+                      />
+                      <Button
+                        type="submit"
+                        disabled={addingMember || !newMemberEmail.trim()}
+                        className="bg-sky-500 hover:bg-sky-600"
+                      >
+                        {addingMember ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                        ) : (
+                          <Plus className="mr-2 h-4 w-4" />
+                        )}
+                        Hinzufügen
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              )}
+
               {company.members.map((member) => (
                 <Card key={member.id}>
                   <CardContent className="flex items-center justify-between py-4">
@@ -678,6 +780,23 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
                         {getRoleIcon(member.role)}
                         {getRoleLabel(member.role)}
                       </Badge>
+                      {canManageMembers && member.role !== 'OWNER' && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeMember(member)}
+                          disabled={removingMemberId === member.id}
+                          aria-label={`${member.name || member.email} entfernen`}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          {removingMemberId === member.id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
