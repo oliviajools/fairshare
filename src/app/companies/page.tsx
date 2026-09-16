@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { BottomNav } from '@/components/BottomNav'
 import { Building2, Users, BarChart3, Plus, Crown, Shield, User, ArrowLeft, Trash2 } from 'lucide-react'
 
 interface Company {
@@ -270,7 +269,6 @@ export default function CompaniesPage() {
           )}
         </div>
       </div>
-      <BottomNav />
 
       {/* Delete Confirmation Dialog */}
       {deleteDialog && (

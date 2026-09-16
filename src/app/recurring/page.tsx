@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { BottomNav } from '@/components/BottomNav'
 import { 
   ArrowLeft, 
   Plus, 
@@ -400,7 +399,6 @@ export default function RecurringSessionsPage() {
           )}
         </div>
       </div>
-      <BottomNav />
     </div>
   )
 }

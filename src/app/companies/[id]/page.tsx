@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { BottomNav } from '@/components/BottomNav'
 import { Building2, Users, Calendar, ArrowLeft, Plus, Crown, Shield, User, BarChart3, Camera, Globe, Pencil, Check, X, UsersRound, Trash2, LogOut, Layers } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 
@@ -862,7 +861,6 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
           )}
         </div>
       </div>
-      <BottomNav />
     </div>
   )
 }

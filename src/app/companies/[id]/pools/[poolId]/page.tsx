@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { BottomNav } from '@/components/BottomNav'
 import { ArrowLeft, Calendar, Layers, Plus, Minus, BarChart3, RefreshCw, FileText, Download } from 'lucide-react'
 
 type PoolStatus = 'DRAFT' | 'LOCKED'
@@ -742,7 +741,6 @@ export default function PoolDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
       </div>
-      <BottomNav />
 
       {/* Session Details Modal */}
       {selectedSessionForDetails && (

@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { BottomNav } from '@/components/BottomNav'
 import {
   ArrowLeft,
   GraduationCap,
@@ -334,7 +333,6 @@ export default function ProjectGradePage({ params }: { params: Promise<{ id: str
           )}
         </div>
       </div>
-      <BottomNav />
     </div>
   )
 }

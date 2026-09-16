@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { BottomNav } from '@/components/BottomNav'
 import { FeatureGuard } from '@/components/FeatureGuard'
 import { Archive, Calendar, Users, BarChart3, Trash2, ArrowLeft, CheckCircle2, Clock, GraduationCap, FolderOpen } from 'lucide-react'
 import { isSchoolApp } from '@/lib/app-mode'
@@ -506,7 +505,6 @@ export default function ArchivePage() {
           )}
         </div>
       </div>
-      <BottomNav />
     </div>
   )
 }

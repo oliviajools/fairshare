@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Users, Calendar, BarChart3, Trash2, Crown, Settings, LogOut, EyeOff, X, GraduationCap, UserPlus, Percent } from 'lucide-react'
-import { BottomNav } from '@/components/BottomNav'
 import { hasFeature, isSchoolApp, getAppName } from '@/lib/app-mode'
 import { useCapacitor } from '@/hooks/useCapacitor'
 
@@ -451,7 +450,6 @@ export default function Home() {
           )}
         </div>
       </div>
-      <BottomNav />
 
       {/* Delete Dialog */}
       {deleteDialog && (

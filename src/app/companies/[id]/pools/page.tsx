@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { BottomNav } from '@/components/BottomNav'
 import { ArrowLeft, Plus, Layers, Lock } from 'lucide-react'
 
 type PoolStatus = 'DRAFT' | 'LOCKED'
@@ -212,7 +211,6 @@ export default function CompanyPoolsPage({ params }: { params: Promise<{ id: str
           )}
         </div>
       </div>
-      <BottomNav />
     </div>
   )
 }

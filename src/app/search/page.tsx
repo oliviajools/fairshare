@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { BottomNav } from '@/components/BottomNav'
 import { Search, User, Building2, Users, BarChart3, UserPlus, Check, ArrowLeft } from 'lucide-react'
 
 interface SearchUser {
@@ -289,7 +288,6 @@ export default function SearchPage() {
           )}
         </div>
       </div>
-      <BottomNav />
     </div>
   )
 }

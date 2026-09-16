@@ -7,7 +7,6 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { BottomNav } from '@/components/BottomNav'
 import { Mail, Calendar, ArrowLeft, EyeOff, Eye, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface InvitedSession {
@@ -296,7 +295,6 @@ export default function InvitationsPage() {
           )}
         </div>
       </div>
-      <BottomNav />
     </div>
   )
 }

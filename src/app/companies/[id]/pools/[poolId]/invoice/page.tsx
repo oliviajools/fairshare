@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { BottomNav } from '@/components/BottomNav'
 import { ArrowLeft, FileText, Plus, Trash2, Download, CheckCircle2 } from 'lucide-react'
 
 type InvoiceStatus = 'DRAFT' | 'FINAL'
@@ -443,7 +442,6 @@ export default function PoolInvoicePage({
           </div>
         </div>
       </div>
-      <BottomNav />
     </div>
   )
 }

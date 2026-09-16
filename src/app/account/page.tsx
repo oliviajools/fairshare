@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { ArrowLeft, User, Mail, Calendar, Users, Trash2, AlertTriangle, Search, Pencil, Check, X } from 'lucide-react'
-import { BottomNav } from '@/components/BottomNav'
 
 interface AccountData {
   id: string
@@ -290,7 +289,6 @@ export default function AccountPage() {
           </Card>
         </div>
       </div>
-      <BottomNav />
     </div>
   )
 }
