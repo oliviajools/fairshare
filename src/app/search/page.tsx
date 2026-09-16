@@ -26,6 +26,7 @@ interface SearchCompany {
   sessionCount: number
   isMember: boolean
   role: string | null
+  joinRequestStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | null
 }
 
 export default function SearchPage() {
@@ -79,10 +80,13 @@ export default function SearchPage() {
       const response = await fetch(`/api/companies/${companyId}/join`, {
         method: 'POST'
       })
+      const data = await response.json()
       if (response.ok) {
-        setCompanies(companies.map(c => 
-          c.id === companyId ? { ...c, isMember: true, role: 'MEMBER' } : c
+        setCompanies(companies.map(c =>
+          c.id === companyId ? { ...c, joinRequestStatus: 'PENDING' } : c
         ))
+      } else {
+        alert(data?.error || 'Fehler beim Senden der Beitrittsanfrage')
       }
     } catch (error) {
       console.error('Error joining company:', error)
@@ -261,6 +265,8 @@ export default function SearchPage() {
                               <Check className="h-3 w-3" />
                               Mitglied
                             </Badge>
+                          ) : company.joinRequestStatus === 'PENDING' ? (
+                            <Badge variant="secondary">Anfrage offen</Badge>
                           ) : (
                             <Button
                               size="sm"
@@ -273,7 +279,7 @@ export default function SearchPage() {
                               ) : (
                                 <>
                                   <UserPlus className="h-4 w-4 mr-1" />
-                                  Beitreten
+                                  Beitritt anfragen
                                 </>
                               )}
                             </Button>

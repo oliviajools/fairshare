@@ -53,10 +53,16 @@ export async function POST(
       return NextResponse.json({ error: 'Dieser Benutzer ist bereits Mitglied' }, { status: 409 })
     }
 
-    const membership = await prisma.companyMember.create({
-      data: { companyId, userId: user.id, role: 'MEMBER' },
-      select: { role: true, joinedAt: true },
-    })
+    const [membership] = await prisma.$transaction([
+      prisma.companyMember.create({
+        data: { companyId, userId: user.id, role: 'MEMBER' },
+        select: { role: true, joinedAt: true },
+      }),
+      prisma.companyJoinRequest.updateMany({
+        where: { companyId, userId: user.id },
+        data: { status: 'APPROVED' },
+      }),
+    ])
 
     return NextResponse.json({
       id: user.id,
@@ -114,6 +120,9 @@ export async function DELETE(
       }),
       prisma.companyMember.delete({
         where: { companyId_userId: { companyId, userId } },
+      }),
+      prisma.companyJoinRequest.deleteMany({
+        where: { companyId, userId },
       }),
     ])
 

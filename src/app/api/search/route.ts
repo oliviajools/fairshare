@@ -89,6 +89,10 @@ export async function GET(request: NextRequest) {
           members: {
             where: { userId: currentUser?.id },
             select: { role: true }
+          },
+          joinRequests: {
+            where: { userId: currentUser?.id },
+            select: { status: true }
           }
         },
         take: 10
@@ -102,7 +106,8 @@ export async function GET(request: NextRequest) {
         memberCount: c._count.members,
         sessionCount: c._count.sessions,
         isMember: c.members.length > 0,
-        role: c.members[0]?.role || null
+        role: c.members[0]?.role || null,
+        joinRequestStatus: c.joinRequests[0]?.status || null
       }))
     }
 

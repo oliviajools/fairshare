@@ -47,16 +47,37 @@ export async function POST(
       return NextResponse.json({ error: 'Du bist bereits Mitglied' }, { status: 400 })
     }
 
-    // Add user as member
-    await prisma.companyMember.create({
-      data: {
-        companyId: id,
-        userId: user.id,
-        role: 'MEMBER'
+    const existingRequest = await prisma.companyJoinRequest.findUnique({
+      where: {
+        companyId_userId: {
+          companyId: id,
+          userId: user.id
+        }
       }
     })
 
-    return NextResponse.json({ success: true, message: 'Erfolgreich beigetreten' })
+    if (existingRequest?.status === 'PENDING') {
+      return NextResponse.json({ error: 'Deine Beitrittsanfrage ist bereits offen' }, { status: 409 })
+    }
+    if (existingRequest?.status === 'APPROVED') {
+      return NextResponse.json({ error: 'Deine Beitrittsanfrage wurde bereits angenommen' }, { status: 409 })
+    }
+
+    await prisma.companyJoinRequest.upsert({
+      where: {
+        companyId_userId: {
+          companyId: id,
+          userId: user.id
+        }
+      },
+      update: { status: 'PENDING' },
+      create: {
+        companyId: id,
+        userId: user.id
+      }
+    })
+
+    return NextResponse.json({ success: true, status: 'PENDING', message: 'Beitrittsanfrage wurde gesendet' })
   } catch (error) {
     console.error('Error joining company:', error)
     return NextResponse.json({ error: 'Fehler beim Beitreten' }, { status: 500 })

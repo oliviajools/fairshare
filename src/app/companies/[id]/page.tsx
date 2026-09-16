@@ -21,6 +21,14 @@ interface Member {
   joinedAt: string
 }
 
+interface CompanyJoinRequest {
+  id: string
+  userId: string
+  name: string | null
+  email: string
+  createdAt: string
+}
+
 interface CompanySession {
   id: string
   title: string
@@ -104,6 +112,8 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
   const [newMemberEmail, setNewMemberEmail] = useState('')
   const [addingMember, setAddingMember] = useState(false)
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
+  const [joinRequests, setJoinRequests] = useState<CompanyJoinRequest[]>([])
+  const [processingJoinRequestId, setProcessingJoinRequestId] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -120,6 +130,9 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
       if (response.ok) {
         const data = await response.json()
         setCompany(data)
+        if (data.role === 'OWNER') {
+          fetchJoinRequests()
+        }
         // Find current user's ID from members
         const currentMember = data.members.find((m: Member) => m.email === session?.user?.email)
         if (currentMember) {
@@ -202,6 +215,48 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
 
   const canEdit = company?.role === 'OWNER' || company?.role === 'ADMIN'
   const canManageMembers = company?.role === 'OWNER'
+
+  const fetchJoinRequests = async () => {
+    try {
+      const response = await fetch(`/api/companies/${id}/join-requests`)
+      if (response.ok) {
+        setJoinRequests(await response.json())
+      }
+    } catch (error) {
+      console.error('Error fetching company join requests:', error)
+    }
+  }
+
+  const processJoinRequest = async (joinRequest: CompanyJoinRequest, action: 'approve' | 'reject') => {
+    if (!canManageMembers) return
+
+    setProcessingJoinRequestId(joinRequest.id)
+    try {
+      const response = await fetch(`/api/companies/${id}/join-requests`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId: joinRequest.id, action }),
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data?.error || 'Fehler beim Bearbeiten der Beitrittsanfrage')
+        return
+      }
+
+      setJoinRequests((prev) => prev.filter((item) => item.id !== joinRequest.id))
+      if (action === 'approve' && data.member) {
+        setCompany((prev) => prev && !prev.members.some((member) => member.id === data.member.id)
+          ? { ...prev, members: [...prev.members, data.member] }
+          : prev)
+      }
+    } catch (error) {
+      console.error('Error processing company join request:', error)
+      alert('Fehler beim Bearbeiten der Beitrittsanfrage')
+    } finally {
+      setProcessingJoinRequestId(null)
+    }
+  }
 
   const addMember = async () => {
     if (!company || !canManageMembers || !newMemberEmail.trim()) return
@@ -713,6 +768,51 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
           {/* Members Tab */}
           {activeTab === 'members' && (
             <div className="space-y-4">
+              {canManageMembers && joinRequests.length > 0 && (
+                <Card className="border-amber-200">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Offene Beitrittsanfragen</CardTitle>
+                    <CardDescription>{joinRequests.length} Anfrage{joinRequests.length === 1 ? '' : 'n'} wartet auf deine Entscheidung.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {joinRequests.map((joinRequest) => (
+                      <div key={joinRequest.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg bg-amber-50 p-3">
+                        <div>
+                          <p className="font-medium">{joinRequest.name || joinRequest.email}</p>
+                          <p className="text-sm text-gray-500">{joinRequest.email}</p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Angefragt am {new Date(joinRequest.createdAt).toLocaleDateString('de-DE')}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => processJoinRequest(joinRequest, 'reject')}
+                            disabled={processingJoinRequestId === joinRequest.id}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Ablehnen
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => processJoinRequest(joinRequest, 'approve')}
+                            disabled={processingJoinRequestId === joinRequest.id}
+                            className="bg-emerald-500 hover:bg-emerald-600"
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            Annehmen
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
               {canManageMembers && (
                 <Card>
                   <CardHeader>

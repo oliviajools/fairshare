@@ -28,6 +28,7 @@ model User {
   participants  Participant[]
   invitations   Invitation[]
   companies     CompanyMember[]
+  companyJoinRequests CompanyJoinRequest[]
   groupMemberships CompanyGroupMember[]
   hiddenSessions HiddenSession[]
   teacherClassrooms Classroom[] @relation("TeacherClassrooms")
@@ -101,6 +102,7 @@ model Company {
   slackWebhook String?  // Slack integration webhook URL
   slackChannel String?  // Default Slack channel
   members     CompanyMember[]
+  joinRequests CompanyJoinRequest[]
   sessions    VotingSession[]
   pools       Pool[]
   customers   Customer[]
@@ -120,6 +122,26 @@ model CompanyMember {
   joinedAt  DateTime @default(now())
 
   @@unique([companyId, userId])
+}
+
+model CompanyJoinRequest {
+  id        String                   @id @default(cuid())
+  companyId String
+  company   Company                  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    CompanyJoinRequestStatus @default(PENDING)
+  createdAt DateTime                 @default(now())
+  updatedAt DateTime                 @updatedAt
+
+  @@unique([companyId, userId])
+  @@index([companyId, status])
+}
+
+enum CompanyJoinRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum CompanyRole {
