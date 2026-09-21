@@ -22,7 +22,7 @@ interface AccountData {
 
 export default function AccountPage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { data: session, status, update } = useSession()
   const [account, setAccount] = useState<AccountData | null>(null)
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
@@ -63,6 +63,7 @@ export default function AccountPage() {
       if (response.ok) {
         const updated = await response.json()
         setAccount(prev => prev ? { ...prev, name: updated.name } : null)
+        await update()
         setEditingName(false)
       }
     } catch (error) {
