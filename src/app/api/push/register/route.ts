@@ -34,13 +34,9 @@ export async function POST(request: NextRequest) {
     // Check if DeviceToken table exists, if not return error gracefully
     try {
       await (prisma as any).deviceToken.upsert({
-        where: {
-          userId_token: {
-            userId: user.id,
-            token,
-          },
-        },
+        where: { token },
         update: {
+          userId: user.id,
           isActive: true,
           platform,
           updatedAt: new Date(),

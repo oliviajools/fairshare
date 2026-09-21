@@ -553,7 +553,7 @@ model DeviceToken {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String   // FCM device token
+  token     String   @unique // FCM device token
   platform  String   // 'ios' or 'android'
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())

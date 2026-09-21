@@ -82,6 +82,9 @@ export async function GET(
     const fixedShares = (session as any).fixedShares || []
     const fixedShareMode = (session as any).fixedShareMode
     const fixedShareVoteUnit = (session as any).fixedShareVoteUnit || 'PERCENT'
+    if (fixedShareVoteUnit === 'AMOUNT') {
+      results = []
+    }
     const totalFixedPercent = fixedShares.reduce((sum: number, fs: any) => sum + fs.percent, 0)
     const totalFixedAmount = fixedShares.reduce((sum: number, fs: any) => sum + (fs.amount || 0), 0)
 

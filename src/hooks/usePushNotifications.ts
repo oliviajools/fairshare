@@ -41,7 +41,8 @@ export function usePushNotifications() {
     }
 
     try {
-      const result = await PushNotifications.addListener('registration', async (token) => {
+      await PushNotifications.removeAllListeners()
+      await PushNotifications.addListener('registration', async (token) => {
         console.log('Push registration success, token:', token.value)
 
         // Send token to server
@@ -86,8 +87,9 @@ export function usePushNotifications() {
       await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
         console.log('Push notification action performed', notification.actionId, notification.inputValue)
         // Handle notification tap - navigate to relevant page
-        if (notification.notification?.data?.sessionId) {
-          window.location.href = `/results/${notification.notification.data.sessionId}`
+        const path = notification.notification?.data?.path
+        if (typeof path === 'string' && path.startsWith('/')) {
+          window.location.href = path
         }
       })
     } catch (error) {

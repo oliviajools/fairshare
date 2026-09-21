@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
+import { sendSessionInvitationNotifications } from '@/lib/push'
 import crypto from 'crypto'
 
 export async function POST(
@@ -71,6 +72,12 @@ export async function POST(
     // Generate invite link
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
     const inviteLink = `${baseUrl}/vote/${inviteToken}`
+
+    try {
+      await sendSessionInvitationNotifications(votingSession.title, [{ email: newParticipant.invitedEmail || undefined, token: inviteToken }])
+    } catch (error) {
+      console.error('Error sending participant invitation notification:', error)
+    }
 
     return NextResponse.json({ 
       success: true, 

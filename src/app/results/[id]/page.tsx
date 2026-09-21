@@ -187,7 +187,11 @@ export default function ResultsPage() {
     )
   }
 
-  const sortedResults = [...results].sort((a, b) => b.averagePercent - a.averagePercent)
+  const sortedResults = [...results].sort((a, b) =>
+    session.fixedShareVoteUnit === 'AMOUNT'
+      ? (b.fixedAmount || 0) - (a.fixedAmount || 0)
+      : b.averagePercent - a.averagePercent
+  )
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-amber-50 page-transition">
@@ -222,7 +226,7 @@ export default function ResultsPage() {
               </div>
               
               <div className="flex flex-wrap items-center gap-2">
-                {isCreator && session.status === 'CLOSED' && (
+                {isCreator && session.status === 'CLOSED' && session.fixedShareVoteUnit !== 'AMOUNT' && (
                   <Link href={`/results/${sessionId}/payout`}>
                     <Button size="sm" className="bg-sky-500 hover:bg-sky-600">
                       <Calculator className="mr-2 h-4 w-4" />
@@ -246,7 +250,7 @@ export default function ResultsPage() {
                     </>
                   )}
                 </Badge>
-                {isCreator && session.status === 'CLOSED' && sortedResults.length > 0 && (
+                {isCreator && session.status === 'CLOSED' && session.fixedShareVoteUnit !== 'AMOUNT' && sortedResults.length > 0 && (
                   <ShareResults
                     targetRef={resultsRef}
                     sessionTitle={session.title}
@@ -260,7 +264,7 @@ export default function ResultsPage() {
           {/* Shareable Results Area */}
           <div ref={resultsRef} className="bg-gradient-to-br from-sky-50 to-amber-50 p-4 rounded-lg">
           {/* Pie Chart */}
-          {sortedResults.length > 0 && (
+          {sortedResults.length > 0 && session.fixedShareVoteUnit !== 'AMOUNT' && (
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="text-center">Verteilung</CardTitle>
@@ -286,10 +290,12 @@ export default function ResultsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                Ergebnisse
+                {session.fixedShareVoteUnit === 'AMOUNT' ? 'Ermittelter Geldbetrag' : 'Ergebnisse'}
               </CardTitle>
               <CardDescription>
-                Durchschnittliche Bewertung pro Teilnehmer
+                {session.fixedShareVoteUnit === 'AMOUNT'
+                  ? 'Durchschnitt der abgegebenen Euro-Beträge'
+                  : 'Durchschnittliche Bewertung pro Teilnehmer'}
                 {session.isAnonymous && (
                   <span className="block mt-1 text-amber-600">
                     Diese Session ist anonym - Abstimmungsdetails werden nicht angezeigt.
@@ -384,7 +390,7 @@ export default function ResultsPage() {
               )}
 
               {/* Add Participant Section - only for creator */}
-              {isCreator && (
+              {isCreator && session.fixedShareVoteUnit !== 'AMOUNT' && (
                 <div className="mt-6 pt-6 border-t">
                   {showAddForm ? (
                     <div className="p-4 border-2 border-dashed border-sky-200 rounded-lg bg-sky-50/50">

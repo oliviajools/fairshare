@@ -158,7 +158,13 @@ export async function POST(
 
         await tx.votingSession.update({
           where: { id: participant.sessionId },
-          data: { fixedShareVotingStatus: 'CLOSED' },
+          data: {
+            fixedShareVotingStatus: 'CLOSED',
+            ...(fixedShareVoteUnit === 'AMOUNT' && {
+              status: 'CLOSED',
+              participantSelectionComplete: true,
+            }),
+          },
         })
 
         sessionClosedFixedVoting = true

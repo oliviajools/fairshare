@@ -466,9 +466,9 @@ export default function VotePage() {
             )}
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className={`grid gap-6 ${fixedShareVoteUnit === 'AMOUNT' ? '' : 'lg:grid-cols-3'}`}>
             {/* Voting Form */}
-            <div className="lg:col-span-2">
+            <div className={fixedShareVoteUnit === 'AMOUNT' ? '' : 'lg:col-span-2'}>
               <Card>
                 <CardHeader>
                   <CardTitle>{needsFixedSharePreVote ? 'Festen Anteil festlegen' : 'Bewertung abgeben'}</CardTitle>
@@ -486,7 +486,9 @@ export default function VotePage() {
                         <span className="font-medium text-amber-800">Warte auf die anderen...</span>
                       </div>
                       <p className="text-sm text-amber-700">
-                        Du hast abgestimmt. Sobald alle abgestimmt haben, wird der Durchschnitt automatisch übernommen und danach kannst du über den Rest abstimmen.
+                        {fixedShareVoteUnit === 'AMOUNT'
+                          ? 'Du hast abgestimmt. Sobald alle abgestimmt haben, wird der durchschnittliche Geldbetrag als Ergebnis angezeigt.'
+                          : 'Du hast abgestimmt. Sobald alle abgestimmt haben, wird der Durchschnitt automatisch übernommen und danach kannst du über den Rest abstimmen.'}
                       </p>
 
                       <div className="mt-4">
@@ -555,7 +557,9 @@ export default function VotePage() {
                       </div>
 
                       <p className="text-sm text-amber-700 mt-3">
-                        Sobald alle abgestimmt haben, wird automatisch der Durchschnitt übernommen und danach kann über den Rest abgestimmt werden.
+                        {fixedShareVoteUnit === 'AMOUNT'
+                          ? 'Sobald alle abgestimmt haben, wird der durchschnittliche Geldbetrag direkt als Ergebnis angezeigt.'
+                          : 'Sobald alle abgestimmt haben, wird automatisch der Durchschnitt übernommen und danach kann über den Rest abgestimmt werden.'}
                       </p>
                     </div>
                   )}
@@ -682,6 +686,7 @@ export default function VotePage() {
             </div>
 
             {/* Summary with Pie Chart */}
+            {fixedShareVoteUnit !== 'AMOUNT' && (
             <div>
               <Card>
                 <CardHeader>
@@ -769,6 +774,7 @@ export default function VotePage() {
                 </CardContent>
               </Card>
             </div>
+            )}
           </div>
         </div>
       </div>

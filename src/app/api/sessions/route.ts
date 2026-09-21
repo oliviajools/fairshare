@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { generateToken, generateInviteToken } from '@/lib/jwt'
 import { authOptions } from '@/lib/auth'
+import { sendSessionInvitationNotifications } from '@/lib/push'
 
 const APP_URL = process.env.NEXTAUTH_URL || 'https://teampayer.de'
 
@@ -94,6 +95,12 @@ export async function POST(request: NextRequest) {
         link: `${APP_URL}/vote/${inviteToken}`,
         token: inviteToken
       })
+    }
+
+    try {
+      await sendSessionInvitationNotifications(session.title, inviteLinks)
+    } catch (error) {
+      console.error('Error sending session invitation notifications:', error)
     }
 
     return NextResponse.json({
